@@ -1,0 +1,30 @@
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+*.env
+backend/production.env
+mobile/.env
+
+# MacOS
+.DS_Store
+
+# Mobile / React Native
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+mobile/android/build/
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/*.xcworkspace
+mobile/ios/*.xcworkspace
+mobile/.expo/
+mobile/web-build/
+
+# IDEs
+.idea/
+.vscode/
