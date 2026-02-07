@@ -114,12 +114,12 @@ router.post('/', auth, canPostNews, upload.array('images', 5), async (req, res) 
 
         const newsId = result.insertId;
 
-        // Save uploaded images
+        // Save uploaded images (Cloudinary URLs)
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
                 await db.query(
                     'INSERT INTO news_media (news_id, media_url, media_type) VALUES (?, ?, ?)',
-                    [newsId, `/uploads/${file.filename}`, 'image']
+                    [newsId, file.path, 'image'] // Cloudinary provides full URL in file.path
                 );
             }
         }

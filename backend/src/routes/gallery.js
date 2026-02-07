@@ -27,8 +27,8 @@ router.get('/events', async (req, res) => {
 router.post('/events', auth, upload.single('cover_image'), async (req, res) => {
     try {
         const { title, title_hi, event_date } = req.body;
-        // Check for file upload first, then fallback to URL string if provided
-        const cover_image = req.file ? `/uploads/${req.file.filename}` : req.body.cover_image;
+        // Cloudinary provides full URL in req.file.path
+        const cover_image = req.file ? req.file.path : req.body.cover_image;
 
         // Role check
         if (!['president', 'secretary', 'reporter'].includes(req.user.role)) {
@@ -83,8 +83,8 @@ router.get('/events/:id', async (req, res) => {
 router.post('/media', auth, upload.single('media_file'), async (req, res) => {
     try {
         const { event_id, type, caption } = req.body;
-        // Check for file upload first, then fallback to URL
-        const url = req.file ? `/uploads/${req.file.filename}` : req.body.url;
+        // Cloudinary provides full URL in req.file.path
+        const url = req.file ? req.file.path : req.body.url;
 
         if (!['president', 'secretary', 'reporter'].includes(req.user.role)) {
             return res.status(403).json({ error: 'Not authorized' });
