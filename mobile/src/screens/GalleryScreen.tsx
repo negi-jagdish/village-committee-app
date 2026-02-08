@@ -37,7 +37,7 @@ export default function GalleryScreen({ navigation }: any) {
 
     const fetchEvents = async () => {
         try {
-            const response = await galleryAPI.getEvents();
+            const response = await galleryAPI.getAlbums();
             setEvents(response.data);
         } catch (error) {
             console.error('Fetch events error:', error);
