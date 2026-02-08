@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { membersAPI } from '../api/client';
-import { Picker } from '@react-native-picker/picker'; // Try using Picker for status
+import { Picker } from '@react-native-picker/picker';
+import DatePickerField from '../components/DatePickerField';
 
 export default function AddMemberScreen({ navigation, route }: any) {
     const { t } = useTranslation();
@@ -136,12 +137,12 @@ export default function AddMemberScreen({ navigation, route }: any) {
                     placeholder="Enter mother's name"
                 />
 
-                <Text style={styles.label}>{t('members.dateOfBirth')} (YYYY-MM-DD)</Text>
-                <TextInput
-                    style={styles.input}
+                <DatePickerField
+                    label={t('members.dateOfBirth')}
                     value={form.date_of_birth}
-                    onChangeText={(text) => updateForm('date_of_birth', text)}
-                    placeholder="YYYY-MM-DD"
+                    onChange={(text) => updateForm('date_of_birth', text)}
+                    placeholder="Select Date of Birth"
+                    maximumDate={new Date()}
                 />
 
                 <Text style={styles.label}>Sex</Text>

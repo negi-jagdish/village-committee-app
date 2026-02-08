@@ -1,0 +1,2 @@
+ALTER TABLE members ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL;
+ALTER TABLE members ADD COLUMN background_picture VARCHAR(255) DEFAULT NULL;

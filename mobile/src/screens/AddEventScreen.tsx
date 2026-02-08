@@ -14,6 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { galleryAPI } from '../api/client';
+import DatePickerField from '../components/DatePickerField';
 
 export default function AddEventScreen({ navigation }: any) {
     const [title, setTitle] = useState('');
@@ -108,13 +109,11 @@ export default function AddEventScreen({ navigation }: any) {
             </View>
 
             <View style={styles.formGroup}>
-                <Text style={styles.label}>Date (YYYY-MM-DD) *</Text>
-                <TextInput
-                    style={styles.input}
+                <DatePickerField
+                    label="Event Date *"
                     value={date}
-                    onChangeText={setDate}
-                    placeholder="YYYY-MM-DD"
-                    keyboardType="numeric"
+                    onChange={setDate}
+                    placeholder="Select Event Date"
                 />
             </View>
 

@@ -17,7 +17,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { newsAPI } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
+import FilterDropdown from '../components/FilterDropdown';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -44,31 +44,31 @@ interface NewsItem {
 const NEWS_CACHE_KEY = 'cached_news';
 
 const CATEGORIES = [
-    { id: 'all', label: 'All Categories' },
-    { id: 'general', label: '📋 General' },
-    { id: 'sports', label: '⚽ Sports' },
-    { id: 'political', label: '🏛️ Political' },
-    { id: 'cultural', label: '🎭 Cultural' },
-    { id: 'entertainment', label: '🎬 Entertainment' },
-    { id: 'talent', label: '⭐ Talent' },
-    { id: 'education', label: '📚 Education' },
-    { id: 'health', label: '🏥 Health' },
-    { id: 'science', label: '🔬 Science' },
+    { id: 'all', label: 'All Category' },
+    { id: 'general', label: 'General' },
+    { id: 'sports', label: 'Sports' },
+    { id: 'political', label: 'Political' },
+    { id: 'cultural', label: 'Cultural' },
+    { id: 'entertainment', label: 'Entertainment' },
+    { id: 'talent', label: 'Talent' },
+    { id: 'education', label: 'Education' },
+    { id: 'health', label: 'Health' },
+    { id: 'science', label: 'Science' },
 ];
 
 const SCOPES = [
-    { id: 'all', label: 'All Regions' },
-    { id: 'village', label: '🏘️ Village' },
-    { id: 'district', label: '🏙️ District' },
-    { id: 'state', label: '🗺️ State' },
-    { id: 'country', label: '🇮🇳 Country' },
-    { id: 'international', label: '🌐 International' },
+    { id: 'all', label: 'All Region' },
+    { id: 'village', label: 'Village' },
+    { id: 'district', label: 'District' },
+    { id: 'state', label: 'State' },
+    { id: 'country', label: 'Country' },
+    { id: 'international', label: 'World' },
 ];
 
 const SORT_OPTIONS = [
-    { id: 'latest', label: '🕒 Latest First' },
-    { id: 'likes', label: '👍 Most Liked' },
-    { id: 'views', label: '👀 Most Watched' },
+    { id: 'latest', label: 'Latest' },
+    { id: 'likes', label: 'Most Liked' },
+    { id: 'views', label: 'Most Viewed' },
 ];
 
 // Extract YouTube video ID from URL
@@ -342,48 +342,28 @@ export default function NewsScreen({ navigation }: any) {
             <View style={styles.bottomSection}>
                 {/* Filters Row */}
                 <View style={styles.filterBar}>
-                    <TouchableOpacity
-                        style={styles.filterDropdown}
-                        onPress={() => { }}
-                    >
-                        <View style={styles.pickerWrapper}>
-                            <Picker
-                                selectedValue={categoryFilter}
-                                onValueChange={setCategoryFilter}
-                                style={styles.picker}
-                                mode="dropdown"
-                            >
-                                {CATEGORIES.map((cat) => (
-                                    <Picker.Item key={cat.id} label={cat.label} value={cat.id} />
-                                ))}
-                            </Picker>
-                        </View>
-                    </TouchableOpacity>
-
-                    <View style={styles.pickerWrapper}>
-                        <Picker
-                            selectedValue={scopeFilter}
-                            onValueChange={setScopeFilter}
-                            style={styles.picker}
-                            mode="dropdown"
-                        >
-                            {SCOPES.map((s) => (
-                                <Picker.Item key={s.id} label={s.label} value={s.id} />
-                            ))}
-                        </Picker>
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={CATEGORIES}
+                            selectedValue={categoryFilter}
+                            onValueChange={setCategoryFilter}
+                        />
                     </View>
 
-                    <View style={styles.pickerWrapper}>
-                        <Picker
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={SCOPES}
+                            selectedValue={scopeFilter}
+                            onValueChange={setScopeFilter}
+                        />
+                    </View>
+
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={SORT_OPTIONS}
                             selectedValue={sortBy}
                             onValueChange={setSortBy}
-                            style={styles.picker}
-                            mode="dropdown"
-                        >
-                            {SORT_OPTIONS.map((opt) => (
-                                <Picker.Item key={opt.id} label={opt.label} value={opt.id} />
-                            ))}
-                        </Picker>
+                        />
                     </View>
                 </View>
 
@@ -417,22 +397,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         paddingVertical: 8,
         paddingHorizontal: 8,
+        gap: 8,
     },
-    filterDropdown: {
+    filterItem: {
         flex: 1,
-    },
-    pickerWrapper: {
-        flex: 1,
-        marginHorizontal: 3,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 8,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    picker: {
-        height: 48,
-        fontSize: 11,
     },
     listContent: {
         padding: 12,

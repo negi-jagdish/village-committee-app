@@ -7,12 +7,22 @@ import {
     TouchableOpacity,
     Switch,
     Alert,
+    Image,
+    ActivityIndicator,
+    Platform,
+    Dimensions,
+    ImageBackground,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, logout, clearAuth, setLanguage, persistLanguage } from '../store';
+import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser } from '../store';
 import { membersAPI } from '../api/client';
 import i18n from '../i18n';
+import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
+import ImageResizer from 'react-native-image-resizer';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HEADER_HEIGHT = 200;
 
 interface Contribution {
     id: number;
@@ -40,6 +50,8 @@ export default function ProfileScreen({ navigation }: any) {
     const [contributions, setContributions] = useState<Contribution[]>([]);
     const [pendingDues, setPendingDues] = useState<PendingDue[]>([]);
     const [loading, setLoading] = useState(true);
+    const [uploadingProfile, setUploadingProfile] = useState(false);
+    const [uploadingBackground, setUploadingBackground] = useState(false);
 
     const fetchContributions = async () => {
         if (!user) return;
@@ -87,20 +99,187 @@ export default function ProfileScreen({ navigation }: any) {
         return `₹${parseFloat(String(amount)).toLocaleString('en-IN')}`;
     };
 
+    const compressImage = async (uri: string, maxSizeMB: number): Promise<string> => {
+        try {
+            // Start with high quality and reduce if needed
+            let quality = 90;
+            let width = maxSizeMB === 2 ? 800 : 1920; // Profile: 800px, Background: 1920px
+            let height = maxSizeMB === 2 ? 800 : 1080;
+
+            const resized = await ImageResizer.createResizedImage(
+                uri,
+                width,
+                height,
+                'JPEG',
+                quality,
+                0,
+                undefined,
+                false,
+                { mode: 'contain', onlyScaleDown: true }
+            );
+
+            return resized.uri;
+        } catch (error) {
+            console.error('Image compression error:', error);
+            return uri; // Return original if compression fails
+        }
+    };
+
+    const selectImage = (type: 'profile' | 'background') => {
+        const maxSize = type === 'profile' ? 2 : 5; // MB
+
+        Alert.alert(
+            type === 'profile' ? 'Profile Picture' : 'Background Picture',
+            'Choose an option',
+            [
+                {
+                    text: '📷 Camera',
+                    onPress: () => captureFromCamera(type, maxSize),
+                },
+                {
+                    text: '🖼️ Gallery',
+                    onPress: () => pickFromGallery(type, maxSize),
+                },
+                { text: 'Cancel', style: 'cancel' },
+            ]
+        );
+    };
+
+    const captureFromCamera = async (type: 'profile' | 'background', maxSizeMB: number) => {
+        const result = await launchCamera({
+            mediaType: 'photo',
+            quality: 0.8,
+        });
+
+        if (result.didCancel) return;
+        if (result.errorCode) {
+            Alert.alert('Error', result.errorMessage || 'Failed to capture image');
+            return;
+        }
+
+        if (result.assets && result.assets[0]) {
+            await uploadImage(result.assets[0], type, maxSizeMB);
+        }
+    };
+
+    const pickFromGallery = async (type: 'profile' | 'background', maxSizeMB: number) => {
+        const result = await launchImageLibrary({
+            mediaType: 'photo',
+            quality: 0.8,
+        });
+
+        if (result.didCancel) return;
+        if (result.errorCode) {
+            Alert.alert('Error', result.errorMessage || 'Failed to pick image');
+            return;
+        }
+
+        if (result.assets && result.assets[0]) {
+            await uploadImage(result.assets[0], type, maxSizeMB);
+        }
+    };
+
+    const uploadImage = async (asset: Asset, type: 'profile' | 'background', maxSizeMB: number) => {
+        if (!user || !asset.uri) return;
+
+        const setUploading = type === 'profile' ? setUploadingProfile : setUploadingBackground;
+        setUploading(true);
+
+        try {
+            // Compress image
+            const compressedUri = await compressImage(asset.uri, maxSizeMB);
+
+            const formData = new FormData();
+            const file: any = {
+                uri: Platform.OS === 'ios' ? compressedUri.replace('file://', '') : compressedUri,
+                type: 'image/jpeg',
+                name: type === 'profile' ? 'profile.jpg' : 'background.jpg',
+            };
+
+            formData.append(type === 'profile' ? 'profile_picture' : 'background_picture', file);
+
+            const response = type === 'profile'
+                ? await membersAPI.uploadProfilePicture(user.id, formData)
+                : await membersAPI.uploadBackgroundPicture(user.id, formData);
+
+            // Update user in store
+            const updatedUser = {
+                ...user,
+                [type === 'profile' ? 'profile_picture' : 'background_picture']:
+                    response.data[type === 'profile' ? 'profile_picture' : 'background_picture'],
+            };
+            dispatch(setUser(updatedUser));
+
+            Alert.alert('Success', `${type === 'profile' ? 'Profile' : 'Background'} picture updated!`);
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            Alert.alert('Error', error.response?.data?.error || 'Failed to upload image');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const totalPending = pendingDues.reduce((sum, d) => sum + d.amount_pending, 0);
 
     return (
         <ScrollView style={styles.container}>
-            {/* Profile Header */}
-            <View style={styles.header}>
-                <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {user?.name?.charAt(0).toUpperCase()}
-                    </Text>
-                </View>
+            {/* Profile Header with Background */}
+            <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => selectImage('background')}
+                disabled={uploadingBackground}
+            >
+                <ImageBackground
+                    source={user?.background_picture ? { uri: user.background_picture } : undefined}
+                    style={styles.headerBackground}
+                    imageStyle={styles.backgroundImage}
+                >
+                    <View style={styles.headerOverlay}>
+                        {uploadingBackground && (
+                            <View style={styles.uploadingOverlay}>
+                                <ActivityIndicator size="small" color="#fff" />
+                            </View>
+                        )}
+                        <TouchableOpacity style={styles.editBackgroundHint}>
+                            <Text style={styles.editHintText}>📷 Tap to change background</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ImageBackground>
+            </TouchableOpacity>
+
+            {/* Profile Picture */}
+            <View style={styles.profilePictureContainer}>
+                <TouchableOpacity
+                    style={styles.avatarContainer}
+                    onPress={() => selectImage('profile')}
+                    disabled={uploadingProfile}
+                >
+                    {user?.profile_picture ? (
+                        <Image source={{ uri: user.profile_picture }} style={styles.avatar} />
+                    ) : (
+                        <View style={styles.avatarPlaceholder}>
+                            <Text style={styles.avatarText}>
+                                {user?.name?.charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
+                    {uploadingProfile ? (
+                        <View style={styles.avatarLoading}>
+                            <ActivityIndicator size="small" color="#1a5f2a" />
+                        </View>
+                    ) : (
+                        <View style={styles.cameraIcon}>
+                            <Text style={styles.cameraIconText}>📷</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
+
+            {/* User Info */}
+            <View style={styles.userInfo}>
                 <Text style={styles.userName}>{user?.name}</Text>
                 <Text style={styles.userRole}>
-                    {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+                    {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
                 </Text>
                 <Text style={styles.userContact}>{user?.contact}</Text>
                 <Text style={styles.userContact}>
@@ -216,39 +395,125 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f5f5f5',
     },
-    header: {
+    headerBackground: {
+        width: SCREEN_WIDTH,
+        height: HEADER_HEIGHT,
         backgroundColor: '#1a5f2a',
-        padding: 24,
+    },
+    backgroundImage: {
+        resizeMode: 'cover',
+    },
+    headerOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(26, 95, 42, 0.6)',
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        paddingTop: 40,
+        paddingBottom: 10,
+    },
+    uploadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    editBackgroundHint: {
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    editHintText: {
+        color: '#fff',
+        fontSize: 12,
+    },
+    profilePictureContainer: {
+        alignItems: 'center',
+        marginTop: -50,
+    },
+    avatarContainer: {
+        position: 'relative',
     },
     avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 4,
+        borderColor: '#fff',
+    },
+    avatarPlaceholder: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 12,
+        borderWidth: 4,
+        borderColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
     avatarText: {
-        fontSize: 32,
+        fontSize: 40,
         fontWeight: 'bold',
         color: '#1a5f2a',
+    },
+    avatarLoading: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    cameraIcon: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#1a5f2a',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    cameraIconText: {
+        fontSize: 14,
+    },
+    userInfo: {
+        alignItems: 'center',
+        paddingVertical: 16,
     },
     userName: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#333',
     },
     userRole: {
         fontSize: 14,
-        color: '#bfe6c8',
+        color: '#1a5f2a',
         marginTop: 4,
+        fontWeight: '600',
     },
     userContact: {
         fontSize: 14,
-        color: '#bfe6c8',
+        color: '#666',
         marginTop: 2,
     },
     pendingCard: {

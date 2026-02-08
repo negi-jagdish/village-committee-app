@@ -45,14 +45,6 @@ export default function LoginScreen() {
         performLogin(contact, password);
     };
 
-    const QuickLoginButton = ({ name, mobile, color }: any) => (
-        <TouchableOpacity
-            style={[styles.quickButton, { backgroundColor: color || '#455a64' }]}
-            onPress={() => performLogin(mobile, '123456')}
-        >
-            <Text style={styles.quickButtonText}>{name}</Text>
-        </TouchableOpacity>
-    );
 
     return (
         <KeyboardAvoidingView
@@ -106,23 +98,7 @@ export default function LoginScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Quick Login Section (Test Only) */}
-                    <View style={styles.quickLoginContainer}>
-                        <Text style={styles.quickLoginTitle}>Fast Login (Test Users)</Text>
-                        <View style={styles.quickLoginGrid}>
-                            <QuickLoginButton name="President" mobile="9000000001" color="#d32f2f" />
-                            <QuickLoginButton name="Cashier" mobile="9000000002" color="#2e7d32" />
-                            <QuickLoginButton name="Secretary" mobile="9000000003" color="#1976d2" />
-                            <QuickLoginButton name="Reporter" mobile="9000000004" color="#f57c00" />
 
-                            <QuickLoginButton name="Member 1" mobile="9000000011" />
-                            <QuickLoginButton name="Member 2" mobile="9000000012" />
-                            <QuickLoginButton name="Member 3" mobile="9000000013" />
-                            <QuickLoginButton name="Member 4" mobile="9000000014" />
-                            <QuickLoginButton name="Member 5" mobile="9000000015" />
-                            <QuickLoginButton name="Member 6" mobile="9000000016" />
-                        </View>
-                    </View>
                 </View>
             </React.Fragment>
         </KeyboardAvoidingView>
@@ -212,32 +188,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    quickLoginContainer: {
-        marginTop: 10,
-    },
-    quickLoginTitle: {
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 10,
-        fontWeight: 'bold',
-        opacity: 0.8,
-    },
-    quickLoginGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        justifyContent: 'center',
-    },
-    quickButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 6,
-        minWidth: '45%',
-        alignItems: 'center',
-    },
-    quickButtonText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600',
-    }
+
 });

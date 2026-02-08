@@ -12,6 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
 import api, { transactionsAPI } from '../api/client';
+import DatePickerField from '../components/DatePickerField';
 
 interface Member {
     id: number;
@@ -378,13 +379,12 @@ export default function AddIncomeScreen({ navigation }: any) {
                 {selectedDrives.length > 0 && (
                     <>
                         {/* Payment Date */}
-                        <Text style={styles.label}>Payment Date</Text>
-                        <TextInput
-                            style={styles.input}
+                        <DatePickerField
+                            label="Payment Date"
                             value={paymentDate}
-                            onChangeText={setPaymentDate}
-                            placeholder="YYYY-MM-DD"
-                            keyboardType="numbers-and-punctuation"
+                            onChange={setPaymentDate}
+                            placeholder="Select Payment Date"
+                            maximumDate={new Date()}
                         />
 
                         <Text style={styles.label}>Payment Method *</Text>

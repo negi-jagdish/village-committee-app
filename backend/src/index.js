@@ -1,7 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -50,12 +50,27 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
+const PORT = process.env.PORT || 3000;
+// Debug Cloudinary config
+app.get('/api/debug-config', (req, res) => {
+    res.json({
+        cloudinary_configured: !!process.env.CLOUDINARY_CLOUD_NAME,
+        cloud_name_masked: process.env.CLOUDINARY_CLOUD_NAME ? '***' : 'missing',
+        api_key_masked: process.env.CLOUDINARY_API_KEY ? 'ok' : 'missing',
+        api_secret_masked: process.env.CLOUDINARY_API_SECRET ? 'ok' : 'missing'
+    });
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('Global Error Handler:', err); // Log full error
+    if (err.message) {
+        res.status(500).json({ error: err.message, stack: err.stack });
+    } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { drivesAPI } from '../api/client';
+import DatePickerField from '../components/DatePickerField';
 
 export default function CreateDriveScreen({ navigation }: any) {
     const { t } = useTranslation();
@@ -137,21 +138,19 @@ export default function CreateDriveScreen({ navigation }: any) {
                 {/* Date Range */}
                 <View style={styles.dateRow}>
                     <View style={styles.dateField}>
-                        <Text style={styles.label}>Start Date *</Text>
-                        <TextInput
-                            style={styles.input}
+                        <DatePickerField
+                            label="Start Date *"
                             value={startDate}
-                            onChangeText={setStartDate}
-                            placeholder="YYYY-MM-DD"
+                            onChange={setStartDate}
+                            placeholder="Select Start Date"
                         />
                     </View>
                     <View style={styles.dateField}>
-                        <Text style={styles.label}>End Date (Optional)</Text>
-                        <TextInput
-                            style={styles.input}
+                        <DatePickerField
+                            label="End Date (Optional)"
                             value={endDate}
-                            onChangeText={setEndDate}
-                            placeholder="YYYY-MM-DD"
+                            onChange={setEndDate}
+                            placeholder="Select End Date"
                         />
                     </View>
                 </View>

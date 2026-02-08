@@ -12,18 +12,25 @@ cloudinary.config({
 // Cloudinary storage configuration
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: async (req, file) => {
-        // Determine resource type based on file mimetype
-        const isVideo = file.mimetype.startsWith('video/');
+    params: {
+        folder: 'village-committee',
+        resource_type: 'auto',
+    },
+});
 
-        return {
-            folder: 'village-committee', // Folder in Cloudinary
-            resource_type: isVideo ? 'video' : 'image',
-            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm'],
-            transformation: isVideo ? [] : [{ width: 1200, crop: 'limit' }] // Resize images
-        };
+/*
+// Local disk storage for debugging
+const path = require('path');
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '..', '..', 'uploads'));
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
+*/
 
 // File filter for allowed types
 const fileFilter = (req, file, cb) => {

@@ -18,6 +18,8 @@ export interface User {
     status?: string;
     sex?: string;
     legacy_due?: number;
+    profile_picture?: string;
+    background_picture?: string;
 }
 
 export interface AuthState {
@@ -56,6 +58,9 @@ const authSlice = createSlice({
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
+        setUser: (state, action: PayloadAction<User>) => {
+            state.user = action.payload;
+        },
     },
 });
 
@@ -72,7 +77,7 @@ const appSlice = createSlice({
     },
 });
 
-export const { setCredentials, logout, setLoading } = authSlice.actions;
+export const { setCredentials, logout, setLoading, setUser } = authSlice.actions;
 export const { setLanguage } = appSlice.actions;
 
 // Store

@@ -28,3 +28,14 @@ mobile/web-build/
 # IDEs
 .idea/
 .vscode/
+
+# Build Artifacts
+index.android.bundle
+*.jsbundle
+**/index.android.bundle // Robust ignore
+mobile/android/app/src/main/assets/index.android.bundle
+mobile/android/app/src/main/res/drawable-mdpi/
+mobile/android/app/src/main/res/drawable-xhdpi/
+mobile/android/app/src/main/res/drawable-xxhdpi/
+mobile/android/app/src/main/res/drawable-xxxhdpi/
+mobile/android/app/src/main/res/raw/

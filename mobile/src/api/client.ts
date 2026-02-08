@@ -1,10 +1,15 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { Platform } from 'react-native';
+
 // Production URL
 const API_BASE_URL = 'https://village-committee-api.onrender.com/api';
-// const API_BASE_URL = 'http://10.0.2.2:3000/api'; // Android emulator
-// const API_BASE_URL = 'http://localhost:3000/api'; // iOS simulator
+
+// Local Development URL
+// const API_BASE_URL = Platform.OS === 'android'
+//     ? 'http://10.0.2.2:3000/api'
+//     : 'http://localhost:3000/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -58,6 +63,14 @@ export const membersAPI = {
     getContributions: (id: number) => api.get(`/members/${id}/contributions`),
     waive: (memberId: number, driveId: number, reason: string) => api.post(`/members/${memberId}/waive`, { drive_id: driveId, reason }),
     removeWaiver: (memberId: number, driveId: number) => api.delete(`/members/${memberId}/waive/${driveId}`),
+    uploadProfilePicture: (id: number, formData: FormData) =>
+        api.post(`/members/${id}/profile-picture`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+    uploadBackgroundPicture: (id: number, formData: FormData) =>
+        api.post(`/members/${id}/background-picture`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
 };
 
 // Drives APIs

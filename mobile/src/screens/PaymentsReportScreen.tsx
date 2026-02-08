@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import RNPrint from 'react-native-print';
 import Share from 'react-native-share';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { reportsAPI } from '../api/client';
 
-const NAME_COL_WIDTH = 140;
+const NAME_COL_WIDTH = 160;
 const DATA_COL_WIDTH = 100;
 const TOTAL_COL_WIDTH = 100;
+
+// Transform title - replace Legacy Due with Op Balance
+const transformTitle = (title: string) => {
+    if (title.toLowerCase().includes('legacy')) {
+        return 'Op Balance';
+    }
+    return title;
+};
 
 export default function PaymentsReportScreen() {
     const { t, i18n } = useTranslation();
@@ -126,25 +134,12 @@ export default function PaymentsReportScreen() {
                 </html>
             `;
 
-            const options = {
-                html,
-                fileName: 'PaymentsReceivedReport',
-                directory: 'Documents',
-            };
+            // Use react-native-print to generate and share PDF
+            await RNPrint.print({ html });
 
-            const file = await RNHTMLtoPDF.convert(options);
-
-            if (file.filePath) {
-                await Share.open({
-                    title: 'Payments Received Report',
-                    url: 'file://' + file.filePath,
-                    type: 'application/pdf',
-                });
-            }
-
-        } catch (error) {
+        } catch (error: any) {
             console.error('PDF Error:', error);
-            Alert.alert('Error', 'Failed to generate PDF');
+            Alert.alert('Error', 'Failed to generate PDF: ' + (error.message || 'Unknown error'));
         } finally {
             setGeneratingPdf(false);
         }
@@ -203,7 +198,7 @@ export default function PaymentsReportScreen() {
                         {columns.map((col: any) => (
                             <View key={col.id} style={[styles.cell, styles.dataCell, styles.headerCell]}>
                                 <Text style={styles.headerText} numberOfLines={2}>
-                                    {i18n.language === 'hi' && col.title_hi ? col.title_hi : col.title}
+                                    {transformTitle(i18n.language === 'hi' && col.title_hi ? col.title_hi : col.title)}
                                     {'\n'}(₹{col.amount_per_member})
                                 </Text>
                             </View>

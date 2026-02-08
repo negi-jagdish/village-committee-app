@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const { auth, canManageMembers } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -265,6 +266,64 @@ router.put('/:id', auth, async (req, res) => {
     } catch (error) {
         console.error('Update member error:', error);
         res.status(500).json({ error: 'Failed to update member' });
+    }
+});
+
+// Upload profile picture
+router.post('/:id/profile-picture', auth, upload.single('profile_picture'), async (req, res) => {
+    try {
+        const targetId = parseInt(req.params.id);
+
+        // Members can only update their own profile picture
+        if (req.user.id !== targetId && req.user.role !== 'president' && req.user.role !== 'secretary') {
+            return res.status(403).json({ error: 'Not authorized to update this profile' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        let imageUrl = req.file.path;
+        // If using local storage, construct full URL
+        if (!imageUrl.startsWith('http')) {
+            imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        }
+
+        await db.query('UPDATE members SET profile_picture = ? WHERE id = ?', [imageUrl, targetId]);
+
+        res.json({ message: 'Profile picture updated', profile_picture: imageUrl });
+    } catch (error) {
+        console.error('Upload profile picture error:', error);
+        res.status(500).json({ error: 'Failed to upload profile picture' });
+    }
+});
+
+// Upload background picture
+router.post('/:id/background-picture', auth, upload.single('background_picture'), async (req, res) => {
+    try {
+        const targetId = parseInt(req.params.id);
+
+        // Members can only update their own background picture
+        if (req.user.id !== targetId && req.user.role !== 'president' && req.user.role !== 'secretary') {
+            return res.status(403).json({ error: 'Not authorized to update this profile' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        let imageUrl = req.file.path; // Cloudinary URL or safe fallback
+        // If using local storage, construct full URL
+        if (!imageUrl.startsWith('http')) {
+            imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        }
+
+        await db.query('UPDATE members SET background_picture = ? WHERE id = ?', [imageUrl, targetId]);
+
+        res.json({ message: 'Background picture updated', background_picture: imageUrl });
+    } catch (error) {
+        console.error('Upload background picture error:', error);
+        res.status(500).json({ error: 'Failed to upload background picture' });
     }
 });
 
