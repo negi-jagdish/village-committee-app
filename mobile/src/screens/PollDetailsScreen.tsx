@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Tex
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { pollsAPI } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 const PollDetailsScreen = () => {
     const route = useRoute();
@@ -18,9 +20,20 @@ const PollDetailsScreen = () => {
     // Form state
     const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
     const [textResponse, setTextResponse] = useState('');
+    const [isCustomSelected, setIsCustomSelected] = useState(false); // For "Other" option
+
+    const user = useSelector((state: RootState) => state.auth.user);
+    const canEdit = user?.role === 'president' || user?.role === 'secretary';
 
     useEffect(() => {
         loadPollDetails();
+    }, [pollId]);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadPollDetails();
+        });
+        return unsubscribe;
     }, [pollId]);
 
     const loadPollDetails = async () => {
@@ -53,12 +66,28 @@ const PollDetailsScreen = () => {
                 }
                 voteData = { text_response: textResponse };
             } else {
-                if (selectedOptions.length === 0) {
-                    Alert.alert('Error', 'Please select an option');
+                // Choice based (Single/Multiple)
+                if (isCustomSelected) {
+                    if (!textResponse.trim()) {
+                        Alert.alert('Error', 'Please enter your custom answer');
+                        setVoting(false);
+                        return;
+                    }
+                    voteData.text_response = textResponse;
+
+                    // For single choice, we shouldn't send option_ids if custom is selected
+                    // The backend checks for exclusive OR for single choice
+                }
+
+                if (selectedOptions.length > 0) {
+                    voteData.option_ids = selectedOptions;
+                }
+
+                if (!isCustomSelected && selectedOptions.length === 0) {
+                    Alert.alert('Error', 'Please select an option or provide a custom answer');
                     setVoting(false);
                     return;
                 }
-                voteData = { option_ids: selectedOptions };
             }
 
             await pollsAPI.vote(pollId, voteData);
@@ -75,6 +104,7 @@ const PollDetailsScreen = () => {
     const toggleOption = (optionId: number) => {
         if (poll.poll_type === 'single') {
             setSelectedOptions([optionId]);
+            setIsCustomSelected(false); // Deselect custom if standard option picked
         } else {
             // Multiple
             if (selectedOptions.includes(optionId)) {
@@ -85,9 +115,24 @@ const PollDetailsScreen = () => {
         }
     };
 
+    const toggleCustom = () => {
+        if (poll.poll_type === 'single') {
+            setIsCustomSelected(true);
+            setSelectedOptions([]); // Clear options if custom selected
+        } else {
+            setIsCustomSelected(!isCustomSelected);
+        }
+    };
+
+    const handleEdit = () => {
+        navigation.navigate('EditPoll', { pollId: poll.id });
+    };
+
     const hasVoted = userVote && userVote.length > 0;
     const isExpired = poll ? new Date() > new Date(poll.end_at) : false;
-    const canVote = !hasVoted && !isExpired && poll?.status === 'active';
+    const isActive = !isExpired && (poll?.status === 'active' || !poll?.status || poll?.status === 'draft');
+    // Allow changing votes - user can vote again before poll ends
+    const canVote = !isExpired && isActive;
 
     if (loading || !poll) {
         return <View style={styles.center}><Text>Loading...</Text></View>;
@@ -103,15 +148,32 @@ const PollDetailsScreen = () => {
             )}
 
             <View style={styles.header}>
-                <Text style={styles.title}>{poll.title}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Text style={[styles.title, { flex: 1 }]}>{poll.title}</Text>
+                    {canEdit && (
+                        <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
+                            <Icon name="edit" size={24} color="#1a5f2a" />
+                        </TouchableOpacity>
+                    )}
+                </View>
                 {poll.description && <Text style={styles.description}>{poll.description}</Text>}
 
                 <View style={styles.metaContainer}>
                     <Text style={styles.metaText}>
                         Ends: {new Date(poll.end_at).toLocaleString()}
                     </Text>
-                    <View style={[styles.badge, { backgroundColor: isExpired ? '#999' : '#4CAF50' }]}>
-                        <Text style={styles.badgeText}>{isExpired ? 'Closed' : 'Active'}</Text>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {!poll.is_anonymous && (
+                            <TouchableOpacity
+                                style={[styles.badge, { backgroundColor: '#2196F3' }]}
+                                onPress={() => navigation.navigate('PollVotes', { pollId })}
+                            >
+                                <Text style={styles.badgeText}>View Votes</Text>
+                            </TouchableOpacity>
+                        )}
+                        <View style={[styles.badge, { backgroundColor: isExpired ? '#999' : '#4CAF50' }]}>
+                            <Text style={styles.badgeText}>{isExpired ? 'Closed' : 'Active'}</Text>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -149,6 +211,9 @@ const PollDetailsScreen = () => {
                             const isSelected = selectedOptions.includes(opt.id);
                             const isUserChoice = userVote.some((v: any) => v.option_id === opt.id);
 
+                            // Only show results if enabled or expired or admin
+                            const showStats = (poll.show_results || isExpired || canEdit) && (hasVoted || isExpired);
+
                             return (
                                 <TouchableOpacity
                                     key={opt.id}
@@ -167,12 +232,12 @@ const PollDetailsScreen = () => {
                                         <View style={{ flex: 1 }}>
                                             <View style={styles.optionRow}>
                                                 <Text style={styles.optionText}>{opt.text}</Text>
-                                                {(hasVoted || isExpired) && (
+                                                {showStats && (
                                                     <Text style={styles.percentage}>{percentage.toFixed(1)}%</Text>
                                                 )}
                                             </View>
 
-                                            {(hasVoted || isExpired) && (
+                                            {showStats && (
                                                 <View style={styles.progressBarBg}>
                                                     <View style={[styles.progressBarFill, { width: `${percentage}%` }]} />
                                                 </View>
@@ -195,16 +260,58 @@ const PollDetailsScreen = () => {
                                 </TouchableOpacity>
                             );
                         })}
+
+                        {/* Custom Answer Option */}
+                        {!!poll.allow_custom_answer && (
+                            <View>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.optionCard,
+                                        isCustomSelected && styles.optionSelected,
+                                        // Check if user voted with custom text
+                                        userVote.some(v => v.text_response) && styles.userChoiceCard
+                                    ]}
+                                    onPress={() => canVote && toggleCustom()}
+                                    disabled={!canVote}
+                                >
+                                    <View style={styles.optionContent}>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.optionText}>Other (Type your answer)</Text>
+                                            {userVote.some(v => v.text_response) && <Text style={styles.votedBadge}>You voted: "{userVote[0].text_response}"</Text>}
+                                        </View>
+                                        <Icon
+                                            name={poll.poll_type === 'multiple'
+                                                ? (isCustomSelected ? 'check-box' : 'check-box-outline-blank')
+                                                : (isCustomSelected ? 'radio-button-checked' : 'radio-button-unchecked')
+                                            }
+                                            size={24}
+                                            color={isCustomSelected ? '#2196F3' : '#757575'}
+                                        />
+                                    </View>
+                                </TouchableOpacity>
+
+                                {isCustomSelected && (
+                                    <TextInput
+                                        style={[styles.input, { height: 60, marginTop: -8, marginBottom: 12 }]}
+                                        placeholder="Type your answer here..."
+                                        value={textResponse}
+                                        onChangeText={setTextResponse}
+                                    />
+                                )}
+                            </View>
+                        )}
                     </View>
                 )}
 
                 {canVote && (
                     <TouchableOpacity
-                        style={[styles.voteButton, (voting || (poll.poll_type !== 'text' && selectedOptions.length === 0)) && styles.disabledButton]}
+                        style={[styles.voteButton, (voting || (poll.poll_type !== 'text' && selectedOptions.length === 0 && !isCustomSelected)) && styles.disabledButton]}
                         onPress={handleVote}
-                        disabled={voting || (poll.poll_type !== 'text' && selectedOptions.length === 0)}
+                        disabled={voting || (poll.poll_type !== 'text' && selectedOptions.length === 0 && !isCustomSelected)}
                     >
-                        <Text style={styles.voteButtonText}>{voting ? 'Submitting...' : 'Vote'}</Text>
+                        <Text style={styles.voteButtonText}>
+                            {voting ? 'Submitting...' : (hasVoted ? 'Change Vote' : 'Vote')}
+                        </Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -243,6 +350,7 @@ const styles = StyleSheet.create({
     votedContainer: { backgroundColor: '#E8F5E9', padding: 16, borderRadius: 8 },
     votedTitle: { fontSize: 16, fontWeight: 'bold', color: '#2E7D32', marginBottom: 8 },
     votedText: { fontSize: 16, color: '#333' },
+    editButton: { padding: 8 },
 });
 
 export default PollDetailsScreen;

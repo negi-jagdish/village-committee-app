@@ -11,8 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { dashboardAPI, pollsAPI } from '../api/client'; // Import pollsAPI
-import PollCard from '../components/PollCard'; // Import PollCard
+import { dashboardAPI } from '../api/client'; // Import pollsAPI
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // ... existing interfaces ...
@@ -32,7 +31,7 @@ export default function DashboardScreen({ navigation }: any) {
     const user = useSelector((state: RootState) => state.auth.user);
     const language = useSelector((state: RootState) => state.app.language);
     const [data, setData] = useState<DashboardData | null>(null);
-    const [polls, setPolls] = useState<any[]>([]); // Polls state
+
     const [refreshing, setRefreshing] = useState(false);
 
     // Check role
@@ -47,14 +46,6 @@ export default function DashboardScreen({ navigation }: any) {
             console.error('Dashboard summary fetch error:', error);
         }
 
-        try {
-            // Fetch polls separately (Non-critical)
-            const pollsRes = await pollsAPI.getActive();
-            setPolls(pollsRes.data);
-        } catch (error) {
-            console.error('Polls fetch error:', error);
-            // Don't clear data or show global error if just polls fail
-        }
     };
 
     useEffect(() => {
@@ -84,40 +75,6 @@ export default function DashboardScreen({ navigation }: any) {
             contentContainerStyle={{ paddingBottom: 100 }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
-            {/* Polls Widget */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Active Polls</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {canCreatePoll && (
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('CreatePoll')}
-                            style={styles.createPollBtn}
-                        >
-                            <Icon name="add" size={20} color="#fff" />
-                            <Text style={styles.createPollText}>New</Text>
-                        </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => navigation.navigate('PollHistory')}>
-                        <Text style={styles.viewAllText}>History</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            {polls.length > 0 ? (
-                <View>
-                    {polls.slice(0, 3).map(poll => (
-                        <PollCard key={poll.id} poll={poll} />
-                    ))}
-                </View>
-            ) : (
-                <View style={styles.emptyCard}>
-                    <Text style={styles.emptyText}>No active polls.</Text>
-                </View>
-            )}
-
-            {/* Existing Dashboard Content */}
-
-
             {/* Welcome Header */}
             <View style={styles.header}>
                 <View>
@@ -129,6 +86,8 @@ export default function DashboardScreen({ navigation }: any) {
                     </Text>
                 </View>
             </View>
+
+
 
             {/* Balance Cards */}
             <View style={styles.balanceContainer}>
@@ -353,6 +312,28 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    pollSummaryCard: {
+        backgroundColor: '#e8f5e9',
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#c8e6c9',
+    },
+    pollSummaryText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1b5e20',
+    },
+    pollSummaryArrow: {
+        fontSize: 20,
+        color: '#1b5e20',
+        fontWeight: 'bold',
     },
     section: {
         padding: 16,

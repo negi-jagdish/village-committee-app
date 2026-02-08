@@ -8,8 +8,11 @@ interface PollCardProps {
 
 const PollCard = ({ poll }: PollCardProps) => {
     const navigation = useNavigation<any>();
-    const isExpired = new Date() > new Date(poll.end_at);
-    const isActive = poll.status === 'active' && !isExpired;
+    const now = new Date();
+    const endDate = new Date(poll.end_at);
+    const isExpired = now > endDate;
+    // Consider active if: time hasn't expired AND (status is 'active' OR status is undefined/null)
+    const isActive = !isExpired && (poll.status === 'active' || !poll.status || poll.status === 'draft');
 
     const handlePress = () => {
         navigation.navigate('PollDetails', { pollId: poll.id });

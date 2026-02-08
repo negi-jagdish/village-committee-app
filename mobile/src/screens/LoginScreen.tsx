@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/client';
 import { setCredentials, persistAuth } from '../store';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function LoginScreen() {
     const { t } = useTranslation();
@@ -22,6 +23,7 @@ export default function LoginScreen() {
     const [contact, setContact] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const performLogin = async (mobile: string, pass: string) => {
         setLoading(true);
@@ -77,13 +79,25 @@ export default function LoginScreen() {
                         />
 
                         <Text style={styles.label}>{t('auth.password')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
+                        <View style={styles.passwordContainer}>
+                            <TextInput
+                                style={styles.passwordInput}
+                                placeholder="Enter password"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity
+                                style={styles.eyeButton}
+                                onPress={() => setShowPassword(!showPassword)}
+                            >
+                                <Icon
+                                    name={showPassword ? 'visibility' : 'visibility-off'}
+                                    size={24}
+                                    color="#666"
+                                />
+                            </TouchableOpacity>
+                        </View>
 
                         <TouchableOpacity
                             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
@@ -187,6 +201,23 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        marginBottom: 12,
+    },
+    passwordInput: {
+        flex: 1,
+        padding: 12,
+        fontSize: 16,
+    },
+    eyeButton: {
+        padding: 12,
     },
 
 });

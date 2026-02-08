@@ -12,6 +12,8 @@ const CreatePollScreen = () => {
     const [description, setDescription] = useState('');
     const [pollType, setPollType] = useState<'single' | 'multiple' | 'text'>('single');
     const [isAnonymous, setIsAnonymous] = useState(true);
+    const [allowCustomAnswer, setAllowCustomAnswer] = useState(false);
+    const [showResults, setShowResults] = useState(true);
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Tomorrow
     const [options, setOptions] = useState<string[]>(['', '']); // Start with 2 empty options
@@ -66,6 +68,8 @@ const CreatePollScreen = () => {
             formData.append('description', description);
             formData.append('poll_type', pollType);
             formData.append('is_anonymous', isAnonymous.toString());
+            formData.append('allow_custom_answer', allowCustomAnswer.toString());
+            formData.append('show_results', showResults.toString());
             formData.append('start_at', startDate.toISOString());
             formData.append('end_at', endDate.toISOString());
 
@@ -183,6 +187,18 @@ const CreatePollScreen = () => {
                     <Switch value={isAnonymous} onValueChange={setIsAnonymous} />
                 </View>
                 <Text style={styles.hint}>{isAnonymous ? 'Voter names will be hidden.' : 'Voter names will be visible to Admins.'}</Text>
+
+                <View style={[styles.row, { marginTop: 12 }]}>
+                    <Text style={styles.label}>Allow Custom Answer</Text>
+                    <Switch value={allowCustomAnswer} onValueChange={setAllowCustomAnswer} />
+                </View>
+                <Text style={styles.hint}>Allow voters to type their own answer in choice polls.</Text>
+
+                <View style={[styles.row, { marginTop: 12 }]}>
+                    <Text style={styles.label}>Show Real-time Results</Text>
+                    <Switch value={showResults} onValueChange={setShowResults} />
+                </View>
+                <Text style={styles.hint}>If disabled, results are hidden until the poll ends.</Text>
             </View>
 
             <View style={styles.section}>

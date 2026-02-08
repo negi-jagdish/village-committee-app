@@ -37,4 +37,8 @@ const runMigrations = async () => {
     }
 };
 
-runMigrations().catch(console.error);
+if (require.main === module) {
+    runMigrations().catch(console.error);
+}
+
+module.exports = runMigrations;

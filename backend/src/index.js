@@ -63,9 +63,24 @@ app.get('/api/debug-config', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+const runMigrations = require('../migrations/run');
+
+const startServer = async () => {
+    try {
+        console.log('Running database migrations...');
+        await runMigrations();
+        console.log('Migrations completed.');
+
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();
 
 // Global Error Handler
 app.use((err, req, res, next) => {

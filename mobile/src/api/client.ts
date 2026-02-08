@@ -173,7 +173,11 @@ export const pollsAPI = {
     getHistory: () => api.get('/polls/history'),
     getDetails: (id: number) => api.get(`/polls/${id}`),
     vote: (id: number, data: { option_ids: number | number[], text_response?: string }) => api.post(`/polls/${id}/vote`, data),
+    edit: (id: number, data: { title?: string; description?: string; start_at?: string; end_at?: string; status?: string; allow_custom_answer?: boolean; show_results?: boolean }) =>
+        api.put(`/polls/${id}`, data),
     delete: (id: number) => api.delete(`/polls/${id}`),
+
+    getVotes: (id: number) => api.get(`/polls/${id}/votes`),
 };
 
 export default api;

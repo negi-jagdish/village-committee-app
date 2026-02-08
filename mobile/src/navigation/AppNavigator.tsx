@@ -31,6 +31,8 @@ import PaymentsReportScreen from '../screens/PaymentsReportScreen';
 import CreatePollScreen from '../screens/CreatePollScreen';
 import PollDetailsScreen from '../screens/PollDetailsScreen';
 import PollHistoryScreen from '../screens/PollHistoryScreen';
+import EditPollScreen from '../screens/EditPollScreen';
+import PollVotesScreen from '../screens/PollVotesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -108,6 +110,16 @@ function HomeStack() {
                 name="PollHistory"
                 component={PollHistoryScreen}
                 options={{ title: 'Poll History' }}
+            />
+            <Stack.Screen
+                name="EditPoll"
+                component={EditPollScreen}
+                options={{ title: 'Edit Poll' }}
+            />
+            <Stack.Screen
+                name="PollVotes"
+                component={PollVotesScreen}
+                options={{ title: 'Poll Votes' }}
             />
         </Stack.Navigator>
     );
@@ -208,6 +220,31 @@ function NewsStack() {
                 name="PostNews"
                 component={PostNewsScreen}
                 options={{ title: 'Post News' }}
+            />
+            <Stack.Screen
+                name="CreatePoll"
+                component={CreatePollScreen}
+                options={{ title: 'Create Poll' }}
+            />
+            <Stack.Screen
+                name="PollDetails"
+                component={PollDetailsScreen}
+                options={{ title: 'Poll Details' }}
+            />
+            <Stack.Screen
+                name="PollHistory"
+                component={PollHistoryScreen}
+                options={{ title: 'Poll History' }}
+            />
+            <Stack.Screen
+                name="EditPoll"
+                component={EditPollScreen}
+                options={{ title: 'Edit Poll' }}
+            />
+            <Stack.Screen
+                name="PollVotes"
+                component={PollVotesScreen}
+                options={{ title: 'Poll Votes' }}
             />
         </Stack.Navigator>
     );

@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { newsAPI } from '../api/client';
+import { newsAPI, pollsAPI } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FilterDropdown from '../components/FilterDropdown';
 
@@ -84,6 +84,7 @@ export default function NewsScreen({ navigation }: any) {
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
     const [news, setNews] = useState<NewsItem[]>([]);
+    const [polls, setPolls] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -94,18 +95,24 @@ export default function NewsScreen({ navigation }: any) {
 
     const canPostNews = ['reporter', 'cashier', 'secretary', 'president'].includes(user?.role || '');
     const isPresident = user?.role === 'president';
+    const canCreatePoll = user?.role === 'president' || user?.role === 'secretary';
 
-    const fetchNews = async () => {
+    const fetchData = async () => {
         try {
             const params: any = { limit: 50, sortBy };
             if (categoryFilter !== 'all') params.category = categoryFilter;
             if (scopeFilter !== 'all') params.scope = scopeFilter;
 
-            const response = await newsAPI.getAll(params);
-            setNews(response.data);
-            await AsyncStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(response.data));
+            const [newsRes, pollsRes] = await Promise.all([
+                newsAPI.getAll(params),
+                pollsAPI.getActive()
+            ]);
+
+            setNews(newsRes.data);
+            setPolls(pollsRes.data);
+            await AsyncStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsRes.data));
         } catch (error) {
-            console.error('Fetch news error:', error);
+            console.error('Fetch error:', error);
             const cached = await AsyncStorage.getItem(NEWS_CACHE_KEY);
             if (cached) {
                 setNews(JSON.parse(cached));
@@ -116,19 +123,19 @@ export default function NewsScreen({ navigation }: any) {
     };
 
     useEffect(() => {
-        fetchNews();
+        fetchData();
     }, [categoryFilter, scopeFilter, sortBy]);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchNews();
+        await fetchData();
         setRefreshing(false);
     };
 
     const handleReaction = async (newsId: number, reaction: 'like' | 'love' | 'celebrate') => {
         try {
             await newsAPI.react(newsId, reaction);
-            fetchNews();
+            fetchData();
         } catch (error) {
             console.error('Reaction error:', error);
         }
@@ -149,7 +156,7 @@ export default function NewsScreen({ navigation }: any) {
                     onPress: async () => {
                         try {
                             await newsAPI.delete(item.id);
-                            fetchNews();
+                            fetchData();
                             Alert.alert('Success', 'News deleted successfully');
                         } catch (error) {
                             Alert.alert('Error', 'Failed to delete news');
@@ -188,6 +195,60 @@ export default function NewsScreen({ navigation }: any) {
 
     const getScopeLabel = (scope: string) => {
         return SCOPES.find(s => s.id === scope)?.label || scope;
+    };
+
+    const renderPollItem = ({ item }: { item: any }) => (
+        <TouchableOpacity
+            style={styles.pollCard}
+            onPress={() => navigation.navigate('PollDetails', { pollId: item.id })}
+        >
+            {item.image_url ? (
+                <Image source={{ uri: item.image_url }} style={styles.pollImage} resizeMode="cover" />
+            ) : (
+                <View style={[styles.pollImage, { backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 40 }}>📊</Text>
+                </View>
+            )}
+            <View style={styles.pollContent}>
+                <View style={styles.pollBadge}>
+                    <Text style={styles.pollBadgeText}>Active Poll</Text>
+                </View>
+                <Text style={styles.pollTitle} numberOfLines={2}>{item.title}</Text>
+                <Text style={styles.pollMeta}>Ends: {new Date(item.end_at).toLocaleDateString()}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+
+    const renderHeader = () => {
+        if (polls.length === 0 && !canCreatePoll) return null;
+
+        return (
+            <View style={styles.carouselContainer}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 16 }}>
+                    <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>📢 Active Polls</Text>
+                    {canCreatePoll && (
+                        <TouchableOpacity onPress={() => navigation.navigate('CreatePoll')}>
+                            <Text style={{ color: '#1a5f2a', fontWeight: 'bold' }}>+ Create Poll</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {polls.length > 0 ? (
+                    <FlatList
+                        data={polls}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={renderPollItem}
+                        keyExtractor={item => item.id.toString()}
+                        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+                    />
+                ) : (
+                    <View style={{ padding: 16, alignItems: 'center', backgroundColor: '#e8f5e9', marginHorizontal: 16, borderRadius: 8 }}>
+                        <Text style={{ color: '#666' }}>No active polls.</Text>
+                    </View>
+                )}
+            </View>
+        );
     };
 
     const renderNewsItem = ({ item }: { item: NewsItem }) => {
@@ -320,6 +381,7 @@ export default function NewsScreen({ navigation }: any) {
     return (
         <View style={styles.container}>
             <FlatList
+                ListHeaderComponent={renderHeader}
                 data={news}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderNewsItem}
@@ -608,5 +670,60 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    carouselContainer: {
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1a5f2a',
+        marginLeft: 16,
+        marginBottom: 12,
+        marginTop: 16,
+    },
+    pollCard: {
+        width: 280,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        overflow: 'hidden',
+    },
+    pollImage: {
+        width: '100%',
+        height: 120,
+    },
+    pollContent: {
+        padding: 12,
+    },
+    pollBadge: {
+        position: 'absolute',
+        top: -110,
+        right: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    pollBadgeText: {
+        color: '#1a5f2a',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    pollTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 4,
+        height: 40,
+    },
+    pollMeta: {
+        fontSize: 12,
+        color: '#757575',
     },
 });

@@ -10,7 +10,7 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
     try {
         await connection.beginTransaction();
 
-        const { title, description, is_anonymous, start_at, end_at, poll_type, options } = req.body;
+        const { title, description, is_anonymous, start_at, end_at, poll_type, options, allow_custom_answer, show_results } = req.body;
         const imageUrl = req.file ? req.file.path : null;
 
         // Validate required fields
@@ -20,9 +20,20 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
 
         // Insert Poll
         const [result] = await connection.query(
-            `INSERT INTO polls (title, description, image_url, created_by, is_anonymous, start_at, end_at, poll_type) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, description, imageUrl, req.user.id, is_anonymous === 'true' || is_anonymous === true, start_at, end_at, poll_type || 'single']
+            `INSERT INTO polls (title, description, image_url, created_by, is_anonymous, start_at, end_at, poll_type, allow_custom_answer, show_results) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                title,
+                description,
+                imageUrl,
+                req.user.id,
+                is_anonymous === 'true' || is_anonymous === true,
+                start_at,
+                end_at,
+                poll_type || 'single',
+                allow_custom_answer === 'true' || allow_custom_answer === true,
+                show_results === 'false' ? false : true // Default true
+            ]
         );
 
         const pollId = result.insertId;
@@ -142,7 +153,7 @@ router.get('/:id', auth, async (req, res) => {
 router.put('/:id', auth, requireRole('president', 'secretary'), async (req, res) => {
     try {
         const pollId = req.params.id;
-        const { title, description, start_at, end_at, status } = req.body;
+        const { title, description, start_at, end_at, status, allow_custom_answer, show_results } = req.body;
 
         // Verify poll exists
         const [polls] = await db.query('SELECT * FROM polls WHERE id = ?', [pollId]);
@@ -154,11 +165,22 @@ router.put('/:id', auth, requireRole('president', 'secretary'), async (req, res)
         const updates = [];
         const values = [];
 
+        console.log('Edit poll body:', req.body);
         if (title) { updates.push('title = ?'); values.push(title); }
         if (description !== undefined) { updates.push('description = ?'); values.push(description); }
         if (start_at) { updates.push('start_at = ?'); values.push(start_at); }
         if (end_at) { updates.push('end_at = ?'); values.push(end_at); }
         if (status) { updates.push('status = ?'); values.push(status); }
+        if (allow_custom_answer !== undefined) {
+            updates.push('allow_custom_answer = ?');
+            const val = allow_custom_answer === true || allow_custom_answer === 'true' || allow_custom_answer == 1;
+            values.push(val ? 1 : 0);
+        }
+        if (show_results !== undefined) {
+            updates.push('show_results = ?');
+            const val = show_results === true || show_results === 'true' || show_results == 1;
+            values.push(val ? 1 : 0);
+        }
 
         if (updates.length === 0) {
             return res.status(400).json({ message: 'No fields to update' });
@@ -206,26 +228,47 @@ router.post('/:id/vote', auth, async (req, res) => {
                 [pollId, req.user.id, text_response]
             );
         } else {
-            // Choice based
-            let selectedOptions = Array.isArray(option_ids) ? option_ids : [option_ids];
+            // Choice based (single/multiple)
+            let selectedOptions = [];
+            if (Array.isArray(option_ids)) selectedOptions = option_ids;
+            else if (option_ids) selectedOptions = [option_ids];
 
-            if (poll.poll_type === 'single' && selectedOptions.length > 1) {
+            const hasOptions = selectedOptions.length > 0;
+            const hasCustomText = poll.allow_custom_answer && text_response && text_response.trim().length > 0;
+
+            if (!hasOptions && !hasCustomText) {
                 await connection.rollback();
-                return res.status(400).json({ message: 'Single choice poll allows only one option' });
-            }
-            if (!selectedOptions || selectedOptions.length === 0) {
-                await connection.rollback();
-                return res.status(400).json({ message: 'Selection required' });
+                return res.status(400).json({ message: 'Selection or custom answer required' });
             }
 
-            // Verify options belong to this poll? ideally yes.
-            // But strict FK checks might catch it if option_id is valid.
-            // Let's just insert.
-            const values = selectedOptions.map(optId => [pollId, optId, req.user.id]);
-            await connection.query(
-                'INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ?',
-                [values]
-            );
+            if (poll.poll_type === 'single') {
+                // Single choice logic
+                if (hasOptions && hasCustomText) {
+                    await connection.rollback();
+                    return res.status(400).json({ message: 'Please select an option OR enter a custom answer, not both.' });
+                }
+                if (hasOptions && selectedOptions.length > 1) {
+                    await connection.rollback();
+                    return res.status(400).json({ message: 'Single choice poll allows only one option' });
+                }
+            }
+
+            // Insert options
+            if (hasOptions) {
+                const values = selectedOptions.map(optId => [pollId, optId, req.user.id]);
+                await connection.query(
+                    'INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ?',
+                    [values]
+                );
+            }
+
+            // Insert custom answer
+            if (hasCustomText) {
+                await connection.query(
+                    'INSERT INTO poll_votes (poll_id, user_id, text_response) VALUES (?, ?, ?)',
+                    [pollId, req.user.id, text_response]
+                );
+            }
         }
 
         await connection.commit();
@@ -236,6 +279,40 @@ router.post('/:id/vote', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     } finally {
         connection.release();
+    }
+});
+
+// Get Detailed Votes (Non-anonymous only)
+router.get('/:id/votes', auth, async (req, res) => {
+    try {
+        const pollId = req.params.id;
+
+        // Fetch Poll to check anonymity
+        const [polls] = await db.query('SELECT * FROM polls WHERE id = ?', [pollId]);
+        if (polls.length === 0) return res.status(404).json({ message: 'Poll not found' });
+        const poll = polls[0];
+
+        if (poll.is_anonymous) {
+            return res.status(403).json({ message: 'This poll is anonymous. Votes cannot be viewed.' });
+        }
+
+        // Fetch detailed votes
+        const [votes] = await db.query(
+            `SELECT v.id, v.text_response, v.created_at,
+                    m.name as user_name, m.profile_picture,
+                    o.text as option_text, o.image_url as option_image
+             FROM poll_votes v
+             JOIN members m ON v.user_id = m.id
+             LEFT JOIN poll_options o ON v.option_id = o.id
+             WHERE v.poll_id = ?
+             ORDER BY v.created_at DESC`,
+            [pollId]
+        );
+
+        res.json(votes);
+    } catch (error) {
+        console.error('Get votes error:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
