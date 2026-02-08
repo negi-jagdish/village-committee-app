@@ -138,6 +138,42 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
+// Edit Poll (President/Secretary only)
+router.put('/:id', auth, requireRole('president', 'secretary'), async (req, res) => {
+    try {
+        const pollId = req.params.id;
+        const { title, description, start_at, end_at, status } = req.body;
+
+        // Verify poll exists
+        const [polls] = await db.query('SELECT * FROM polls WHERE id = ?', [pollId]);
+        if (polls.length === 0) {
+            return res.status(404).json({ message: 'Poll not found' });
+        }
+
+        // Build update query dynamically
+        const updates = [];
+        const values = [];
+
+        if (title) { updates.push('title = ?'); values.push(title); }
+        if (description !== undefined) { updates.push('description = ?'); values.push(description); }
+        if (start_at) { updates.push('start_at = ?'); values.push(start_at); }
+        if (end_at) { updates.push('end_at = ?'); values.push(end_at); }
+        if (status) { updates.push('status = ?'); values.push(status); }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ message: 'No fields to update' });
+        }
+
+        values.push(pollId);
+        await db.query(`UPDATE polls SET ${updates.join(', ')} WHERE id = ?`, values);
+
+        res.json({ message: 'Poll updated successfully' });
+    } catch (error) {
+        console.error('Edit poll error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Cast Vote
 router.post('/:id/vote', auth, async (req, res) => {
     const connection = await db.getConnection();
