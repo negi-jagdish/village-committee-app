@@ -81,6 +81,7 @@ export default function DashboardScreen({ navigation }: any) {
     return (
         <ScrollView
             style={styles.container}
+            contentContainerStyle={{ paddingBottom: 100 }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
             {/* Polls Widget */}
@@ -210,27 +211,29 @@ export default function DashboardScreen({ navigation }: any) {
             </TouchableOpacity>
 
             {/* Recent Transactions */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('dashboard.recentTransactions')}</Text>
-                {data?.recentTransactions?.slice(0, 5).map((tx, index) => (
-                    <View key={index} style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                            <Text style={styles.transactionType}>
-                                {tx.type === 'income' ? '↓' : '↑'} {tx.type === 'income' ? 'Income' : 'Expense'}
-                            </Text>
-                            <Text style={styles.transactionDesc}>
-                                {tx.member_name || tx.description}
+            {data?.recentTransactions && data.recentTransactions.length > 0 && (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{t('dashboard.recentTransactions')}</Text>
+                    {data.recentTransactions.slice(0, 5).map((tx, index) => (
+                        <View key={index} style={styles.transactionItem}>
+                            <View style={styles.transactionLeft}>
+                                <Text style={styles.transactionType}>
+                                    {tx.type === 'income' ? '↓' : '↑'} {tx.type === 'income' ? 'Income' : 'Expense'}
+                                </Text>
+                                <Text style={styles.transactionDesc}>
+                                    {tx.member_name || tx.description}
+                                </Text>
+                            </View>
+                            <Text style={[
+                                styles.transactionAmount,
+                                { color: tx.type === 'income' ? '#2e7d32' : '#d32f2f' }
+                            ]}>
+                                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                             </Text>
                         </View>
-                        <Text style={[
-                            styles.transactionAmount,
-                            { color: tx.type === 'income' ? '#2e7d32' : '#d32f2f' }
-                        ]}>
-                            {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                        </Text>
-                    </View>
-                ))}
-            </View>
+                    ))}
+                </View>
+            )}
         </ScrollView>
     );
 }
