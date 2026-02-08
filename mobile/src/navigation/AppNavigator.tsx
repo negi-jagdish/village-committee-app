@@ -28,6 +28,9 @@ import MemberDetailsScreen from '../screens/MemberDetailsScreen';
 import ReportsScreen from '../screens/ReportsScreen';
 import PendingDuesReportScreen from '../screens/PendingDuesReportScreen';
 import PaymentsReportScreen from '../screens/PaymentsReportScreen';
+import CreatePollScreen from '../screens/CreatePollScreen';
+import PollDetailsScreen from '../screens/PollDetailsScreen';
+import PollHistoryScreen from '../screens/PollHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -90,6 +93,21 @@ function HomeStack() {
                 name="PaymentsReport"
                 component={PaymentsReportScreen}
                 options={{ title: 'Payments Received Report' }}
+            />
+            <Stack.Screen
+                name="CreatePoll"
+                component={CreatePollScreen}
+                options={{ title: 'Create Poll' }}
+            />
+            <Stack.Screen
+                name="PollDetails"
+                component={PollDetailsScreen}
+                options={{ title: 'Poll Details' }}
+            />
+            <Stack.Screen
+                name="PollHistory"
+                component={PollHistoryScreen}
+                options={{ title: 'Poll History' }}
             />
         </Stack.Navigator>
     );

@@ -43,6 +43,8 @@ app.use('/api/news', newsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/gallery', galleryRoutes);
+const pollsRoutes = require('./routes/polls');
+app.use('/api/polls', pollsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

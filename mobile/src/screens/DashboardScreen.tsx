@@ -6,12 +6,16 @@ import {
     StyleSheet,
     RefreshControl,
     TouchableOpacity,
+    Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { dashboardAPI } from '../api/client';
+import { dashboardAPI, pollsAPI } from '../api/client'; // Import pollsAPI
+import PollCard from '../components/PollCard'; // Import PollCard
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
+// ... existing interfaces ...
 interface DashboardData {
     balances: { cash: number; bank: number };
     totalBalance: number;
@@ -28,12 +32,20 @@ export default function DashboardScreen({ navigation }: any) {
     const user = useSelector((state: RootState) => state.auth.user);
     const language = useSelector((state: RootState) => state.app.language);
     const [data, setData] = useState<DashboardData | null>(null);
+    const [polls, setPolls] = useState<any[]>([]); // Polls state
     const [refreshing, setRefreshing] = useState(false);
+
+    // Check role
+    const canCreatePoll = user?.role === 'president' || user?.role === 'secretary';
 
     const fetchData = async () => {
         try {
-            const response = await dashboardAPI.getSummary();
-            setData(response.data);
+            const [summaryRes, pollsRes] = await Promise.all([
+                dashboardAPI.getSummary(),
+                pollsAPI.getActive()
+            ]);
+            setData(summaryRes.data);
+            setPolls(pollsRes.data);
         } catch (error) {
             console.error('Dashboard fetch error:', error);
         }
@@ -42,8 +54,12 @@ export default function DashboardScreen({ navigation }: any) {
     useEffect(() => {
         fetchData();
 
-
-    }, [user]); // Re-run if user updates (though ideally they fix it and it stops)
+        // Add focus listener to refresh when returning
+        const unsubscribe = navigation.addListener('focus', () => {
+            fetchData();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -51,6 +67,7 @@ export default function DashboardScreen({ navigation }: any) {
         setRefreshing(false);
     };
 
+    // ... formatCurrency ...
     const formatCurrency = (amount: number) => {
         return `₹${amount.toLocaleString('en-IN')}`;
     };
@@ -58,10 +75,42 @@ export default function DashboardScreen({ navigation }: any) {
     return (
         <ScrollView
             style={styles.container}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
+            {/* Polls Widget */}
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Active Polls</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {canCreatePoll && (
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('CreatePoll')}
+                            style={styles.createPollBtn}
+                        >
+                            <Icon name="add" size={20} color="#fff" />
+                            <Text style={styles.createPollText}>New</Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity onPress={() => navigation.navigate('PollHistory')}>
+                        <Text style={styles.viewAllText}>History</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {polls.length > 0 ? (
+                <View>
+                    {polls.slice(0, 3).map(poll => (
+                        <PollCard key={poll.id} poll={poll} />
+                    ))}
+                </View>
+            ) : (
+                <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>No active polls.</Text>
+                </View>
+            )}
+
+            {/* Existing Dashboard Content */}
+
+
             {/* Welcome Header */}
             <View style={styles.header}>
                 <View>
@@ -330,5 +379,43 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    createPollBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2196F3',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        marginRight: 12,
+    },
+    createPollText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        marginLeft: 4,
+        fontSize: 12,
+    },
+    viewAllText: {
+        color: '#2196F3',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    emptyCard: {
+        backgroundColor: '#fff',
+        margin: 16,
+        padding: 20,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    emptyText: {
+        color: '#888',
+        fontStyle: 'italic',
+    },
 });

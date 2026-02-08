@@ -3,10 +3,9 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
-const runSpecific = async () => {
-    const file = process.argv[2];
-    if (!file) {
-        console.error('Please provide a sql file name');
+const runSpecificMigration = async (filename) => {
+    if (!filename) {
+        console.error('Please provide a migration filename');
         process.exit(1);
     }
 
@@ -19,17 +18,26 @@ const runSpecific = async () => {
         multipleStatements: true
     });
 
-    console.log(`Running migration: ${file}`);
+    console.log('Connected to database...');
+
     try {
-        const migrationFile = path.join(__dirname, file);
+        const migrationFile = path.join(__dirname, filename);
+        if (!fs.existsSync(migrationFile)) {
+            throw new Error(`Migration file not found: ${filename}`);
+        }
+
+        console.log(`Running migration: ${filename}`);
         const sql = fs.readFileSync(migrationFile, 'utf8');
         await connection.query(sql);
-        console.log('Migration success!');
+
+        console.log(`Migration ${filename} completed successfully!`);
     } catch (error) {
-        console.error('Migration failed:', error);
+        console.error('Migration failed:', error.message);
+        throw error;
     } finally {
         await connection.end();
     }
 };
 
-runSpecific();
+const fileToRun = process.argv[2];
+runSpecificMigration(fileToRun).catch(console.error);

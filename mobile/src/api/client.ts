@@ -11,6 +11,10 @@ const API_BASE_URL = 'https://village-committee-api.onrender.com/api';
 //     ? 'http://10.0.2.2:3000/api'
 //     : 'http://localhost:3000/api';
 
+// Updated API_BASE_URL for local development
+// export const API_BASE_URL = 'http://192.168.29.183:3000/api'; // Local Development (Use your machine IP)
+export { API_BASE_URL }; // Exporting the production URL
+
 const api = axios.create({
     baseURL: API_BASE_URL,
     timeout: 10000,
@@ -18,6 +22,10 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+export const setAuthToken = (token: string) => {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+};
 
 // Add token to requests
 api.interceptors.request.use(
@@ -143,17 +151,29 @@ export const reportsAPI = {
 };
 
 export const galleryAPI = {
-    getEvents: () => api.get('/gallery/events'),
-    createEvent: (data: FormData) =>
-        api.post('/gallery/events', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }),
-    getEventDetails: (id: number) => api.get(`/gallery/events/${id}`),
-    addMedia: (data: FormData) =>
-        api.post('/gallery/media', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }),
+    getAlbums: () => api.get('/gallery/albums'),
+    getAlbum: (id: number) => api.get(`/gallery/albums/${id}`),
+    createAlbum: (data: FormData) => api.post('/gallery/albums', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+    uploadMedia: (albumId: number, data: FormData) => api.post(`/gallery/albums/${albumId}/media`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
     deleteMedia: (id: number) => api.delete(`/gallery/media/${id}`),
+    deleteAlbum: (id: number) => api.delete(`/gallery/albums/${id}`),
+};
+
+export const pollsAPI = {
+    create: (data: FormData) => api.post('/polls', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
+    getActive: () => api.get('/polls'),
+    getHistory: () => api.get('/polls/history'),
+    getDetails: (id: number) => api.get(`/polls/${id}`),
+    vote: (id: number, data: { option_ids: number | number[], text_response?: string }) => api.post(`/polls/${id}/vote`, data),
+    delete: (id: number) => api.delete(`/polls/${id}`),
 };
 
 export default api;

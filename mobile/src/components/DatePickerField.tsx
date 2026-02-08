@@ -10,11 +10,12 @@ import DatePicker from 'react-native-date-picker';
 
 interface DatePickerFieldProps {
     label?: string;
-    value: string; // YYYY-MM-DD format
-    onChange: (dateString: string) => void;
+    value: Date;
+    onChange: (date: Date) => void;
     placeholder?: string;
     minimumDate?: Date;
     maximumDate?: Date;
+    mode?: 'date' | 'time' | 'datetime';
 }
 
 export default function DatePickerField({
@@ -24,41 +25,26 @@ export default function DatePickerField({
     placeholder = 'Select Date',
     minimumDate,
     maximumDate,
+    mode = 'date',
 }: DatePickerFieldProps) {
     const [open, setOpen] = useState(false);
 
-    // Parse the string value to Date object
-    const getDateValue = (): Date => {
-        if (value && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            const [year, month, day] = value.split('-').map(Number);
-            return new Date(year, month - 1, day);
-        }
-        return new Date();
-    };
-
-    // Format Date to YYYY-MM-DD string
-    const formatDate = (date: Date): string => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    // Format date for display (DD MMM YYYY)
+    // Format date for display
     const formatDisplayDate = (): string => {
         if (!value) return placeholder;
-        const date = getDateValue();
         const options: Intl.DateTimeFormatOptions = {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
+            hour: mode !== 'date' ? '2-digit' : undefined,
+            minute: mode !== 'date' ? '2-digit' : undefined,
         };
-        return date.toLocaleDateString('en-IN', options);
+        return value.toLocaleDateString('en-IN', options); // Or toLocaleString for datetime
     };
 
     const handleConfirm = (date: Date) => {
         setOpen(false);
-        onChange(formatDate(date));
+        onChange(date);
     };
 
     return (
@@ -69,7 +55,7 @@ export default function DatePickerField({
                 onPress={() => setOpen(true)}
                 activeOpacity={0.7}
             >
-                <Text style={[styles.inputText, !value && styles.placeholderText]}>
+                <Text style={styles.inputText}>
                     {formatDisplayDate()}
                 </Text>
                 <Text style={styles.calendarIcon}>📅</Text>
@@ -78,13 +64,13 @@ export default function DatePickerField({
             <DatePicker
                 modal
                 open={open}
-                date={getDateValue()}
-                mode="date"
+                date={value}
+                mode={mode}
                 minimumDate={minimumDate}
                 maximumDate={maximumDate}
                 onConfirm={handleConfirm}
                 onCancel={() => setOpen(false)}
-                title="Select Date"
+                title={label || "Select Date"}
                 confirmText="Confirm"
                 cancelText="Cancel"
                 theme="light"
