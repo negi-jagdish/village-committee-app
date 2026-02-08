@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const auth = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
+const { auth, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 // Create a new poll
-router.post('/', auth, authorize(['president', 'secretary']), upload.single('image'), async (req, res) => {
+router.post('/', auth, requireRole('president', 'secretary'), upload.single('image'), async (req, res) => {
     const connection = await db.getConnection();
     try {
         await connection.beginTransaction();
