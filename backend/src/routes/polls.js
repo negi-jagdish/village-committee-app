@@ -157,12 +157,8 @@ router.post('/:id/vote', auth, async (req, res) => {
         if (now < new Date(poll.start_at)) return res.status(400).json({ message: 'Poll has not started yet' });
         if (now > new Date(poll.end_at)) return res.status(400).json({ message: 'Poll has ended' });
 
-        // Check Previous Vote
-        const [existing] = await connection.query('SELECT * FROM poll_votes WHERE poll_id = ? AND user_id = ? LIMIT 1', [pollId, req.user.id]);
-        if (existing.length > 0) {
-            return res.status(400).json({ message: 'You have already voted' });
-            // Ideally support changing vote if needed, but 'prevent double voting' usually means 1 submission.
-        }
+        // Delete Previous Vote (allow changing vote before poll ends)
+        await connection.query('DELETE FROM poll_votes WHERE poll_id = ? AND user_id = ?', [pollId, req.user.id]);
 
         if (poll.poll_type === 'text') {
             if (!text_response) {
