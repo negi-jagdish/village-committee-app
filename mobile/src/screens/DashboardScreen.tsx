@@ -40,14 +40,20 @@ export default function DashboardScreen({ navigation }: any) {
 
     const fetchData = async () => {
         try {
-            const [summaryRes, pollsRes] = await Promise.all([
-                dashboardAPI.getSummary(),
-                pollsAPI.getActive()
-            ]);
+            // Fetch summary first (Critical)
+            const summaryRes = await dashboardAPI.getSummary();
             setData(summaryRes.data);
+        } catch (error) {
+            console.error('Dashboard summary fetch error:', error);
+        }
+
+        try {
+            // Fetch polls separately (Non-critical)
+            const pollsRes = await pollsAPI.getActive();
             setPolls(pollsRes.data);
         } catch (error) {
-            console.error('Dashboard fetch error:', error);
+            console.error('Polls fetch error:', error);
+            // Don't clear data or show global error if just polls fail
         }
     };
 
