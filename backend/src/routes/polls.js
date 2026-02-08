@@ -64,7 +64,7 @@ router.get('/', async (req, res) => {
         // Let's assume listing all polls that are NOT closed/archived, sorted by start_at desc.
         // User asked for "Active Polls" and "History".
         const [polls] = await db.query(
-            `SELECT p.*, m.full_name as created_by_name 
+            `SELECT p.*, m.name as created_by_name 
              FROM polls p 
              JOIN members m ON p.created_by = m.id 
              WHERE p.end_at > NOW() AND p.status != 'archived'
@@ -81,7 +81,7 @@ router.get('/', async (req, res) => {
 router.get('/history', async (req, res) => {
     try {
         const [polls] = await db.query(
-            `SELECT p.*, m.full_name as created_by_name 
+            `SELECT p.*, m.name as created_by_name 
              FROM polls p 
              JOIN members m ON p.created_by = m.id 
              WHERE p.end_at <= NOW() OR p.status = 'closed' OR p.status = 'archived'
