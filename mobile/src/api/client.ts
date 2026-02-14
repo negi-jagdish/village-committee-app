@@ -151,16 +151,16 @@ export const reportsAPI = {
 };
 
 export const galleryAPI = {
-    getAlbums: () => api.get('/gallery/events'),
-    getAlbum: (id: number) => api.get(`/gallery/events/${id}`),
-    createAlbum: (data: FormData) => api.post('/gallery/events', data, {
+    getEvents: () => api.get('/gallery/events'),
+    getEventDetails: (id: number) => api.get(`/gallery/events/${id}`),
+    createEvent: (data: FormData) => api.post('/gallery/events', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
-    uploadMedia: (albumId: number, data: FormData) => api.post('/gallery/media', data, {
+    addMedia: (data: FormData) => api.post('/gallery/media', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
     deleteMedia: (id: number) => api.delete(`/gallery/media/${id}`),
-    deleteAlbum: (id: number) => api.delete(`/gallery/events/${id}`), // Note: Backend implementation for delete event?
+    deleteEvent: (id: number) => api.delete(`/gallery/events/${id}`),
 };
 
 export const pollsAPI = {
