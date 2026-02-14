@@ -75,11 +75,13 @@ router.get('/', async (req, res) => {
         // Let's assume listing all polls that are NOT closed/archived, sorted by start_at desc.
         // User asked for "Active Polls" and "History".
         const [polls] = await db.query(
-            `SELECT p.*, m.name as created_by_name 
+            `SELECT p.*, m.name as created_by_name,
+            (SELECT COUNT(*) FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.user_id = ?) > 0 as has_voted
              FROM polls p 
              JOIN members m ON p.created_by = m.id 
              WHERE p.end_at > NOW() AND p.status != 'archived'
-             ORDER BY p.start_at DESC`
+             ORDER BY p.start_at DESC`,
+            [req.user.id]
         );
         res.json(polls);
     } catch (error) {

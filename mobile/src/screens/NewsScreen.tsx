@@ -109,7 +109,11 @@ export default function NewsScreen({ navigation }: any) {
             ]);
 
             setNews(newsRes.data);
-            setPolls(pollsRes.data);
+
+            // Filter polls: Members see only unvoted polls. Admins see all.
+            const visiblePolls = pollsRes.data.filter((p: any) => canCreatePoll || !p.has_voted);
+            setPolls(visiblePolls);
+
             await AsyncStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsRes.data));
         } catch (error) {
             console.error('Fetch error:', error);
@@ -213,6 +217,11 @@ export default function NewsScreen({ navigation }: any) {
                 <View style={styles.pollBadge}>
                     <Text style={styles.pollBadgeText}>Active Poll</Text>
                 </View>
+                {item.has_voted && (
+                    <View style={[styles.pollBadge, { backgroundColor: '#e8f5e9', marginLeft: 8 }]}>
+                        <Text style={[styles.pollBadgeText, { color: '#1a5f2a' }]}>✓ Voted</Text>
+                    </View>
+                )}
                 <Text style={styles.pollTitle} numberOfLines={2}>{item.title}</Text>
                 <Text style={styles.pollMeta}>Ends: {new Date(item.end_at).toLocaleDateString()}</Text>
             </View>
