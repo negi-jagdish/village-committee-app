@@ -118,4 +118,22 @@ router.delete('/media/:id', auth, async (req, res) => {
     }
 });
 
+// Delete event (President, Secretary, Reporter)
+router.delete('/events/:id', auth, async (req, res) => {
+    try {
+        if (!['president', 'secretary', 'reporter'].includes(req.user.role)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        // Deleting event should cascade to media if foreign key is set up with ON DELETE CASCADE
+        // Otherwise we should delete media first. Assuming CASCADE for now or manual cleanup.
+        await db.query('DELETE FROM events WHERE id = ?', [req.params.id]);
+
+        res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+        console.error('Delete event error:', error);
+        res.status(500).json({ error: 'Failed to delete event' });
+    }
+});
+
 module.exports = router;
