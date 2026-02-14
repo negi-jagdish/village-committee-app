@@ -10,7 +10,7 @@ import DatePicker from 'react-native-date-picker';
 
 interface DatePickerFieldProps {
     label?: string;
-    value: Date;
+    value: Date | string;
     onChange: (date: Date) => void;
     placeholder?: string;
     minimumDate?: Date;
@@ -29,9 +29,19 @@ export default function DatePickerField({
 }: DatePickerFieldProps) {
     const [open, setOpen] = useState(false);
 
+    // Helper to get Date object
+    const getDateObj = (): Date => {
+        if (!value) return new Date();
+        return typeof value === 'string' ? new Date(value) : value;
+    };
+
     // Format date for display
     const formatDisplayDate = (): string => {
         if (!value) return placeholder;
+        const dateObj = typeof value === 'string' ? new Date(value) : value;
+        // Check if date is valid
+        if (isNaN(dateObj.getTime())) return placeholder;
+
         const options: Intl.DateTimeFormatOptions = {
             day: '2-digit',
             month: 'short',
@@ -39,7 +49,7 @@ export default function DatePickerField({
             hour: mode !== 'date' ? '2-digit' : undefined,
             minute: mode !== 'date' ? '2-digit' : undefined,
         };
-        return value.toLocaleDateString('en-IN', options); // Or toLocaleString for datetime
+        return dateObj.toLocaleDateString('en-IN', options);
     };
 
     const handleConfirm = (date: Date) => {
@@ -64,7 +74,7 @@ export default function DatePickerField({
             <DatePicker
                 modal
                 open={open}
-                date={value}
+                date={getDateObj()}
                 mode={mode}
                 minimumDate={minimumDate}
                 maximumDate={maximumDate}

@@ -382,7 +382,7 @@ export default function AddIncomeScreen({ navigation }: any) {
                         <DatePickerField
                             label="Payment Date"
                             value={paymentDate}
-                            onChange={setPaymentDate}
+                            onChange={(date) => setPaymentDate(date.toISOString().split('T')[0])}
                             placeholder="Select Payment Date"
                             maximumDate={new Date()}
                         />
