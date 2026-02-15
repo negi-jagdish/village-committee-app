@@ -46,7 +46,7 @@ const TabIcon = ({ name, focused, color, size }: { name: string; focused: boolea
     let iconName = 'help-outline';
 
     switch (name) {
-        case 'Home': iconName = 'account-balance'; break; // Financials
+        case 'Home': iconName = 'payments'; break; // Financials
         case 'Drives': iconName = 'monetization-on'; break;
         case 'Transactions': iconName = 'receipt-long'; break;
         case 'News': iconName = 'article'; break;
