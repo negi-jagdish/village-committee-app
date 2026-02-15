@@ -2,35 +2,51 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Check if Cloudinary credentials are set
+const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
 
-// Cloudinary storage configuration
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'village-committee',
-        resource_type: 'auto',
-    },
-});
+let storage;
 
-/*
-// Local disk storage for debugging
-const path = require('path');
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '..', '..', 'uploads'));
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+if (isCloudinaryConfigured) {
+    // Configure Cloudinary
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+
+    // Cloudinary storage configuration
+    storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'village-committee',
+            resource_type: 'auto',
+        },
+    });
+} else {
+    // Local disk storage fallback
+    const path = require('path');
+    const fs = require('fs');
+
+    // Ensure uploads directory exists
+    const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
     }
-});
-*/
+
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, uploadDir);
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+    console.warn('Checking: Cloudinary not configured. Using local storage.');
+}
 
 // File filter for allowed types
 const fileFilter = (req, file, cb) => {
@@ -48,7 +64,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit (Cloudinary handles compression)
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
 // Export cloudinary instance for deletion operations
