@@ -68,7 +68,7 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
 });
 
 // List Active Polls
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         // Active = between start and end (or future start), status active/draft? 
         // Usually active implies published. But assuming auto-publish based on time?
