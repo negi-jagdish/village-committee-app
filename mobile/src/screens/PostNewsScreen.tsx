@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
 import { newsAPI } from '../api/client';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const CATEGORIES = [
     { id: 'general', label: 'General' },
@@ -50,6 +51,8 @@ export default function PostNewsScreen({ navigation, route }: any) {
     const [category, setCategory] = useState('general');
     const [scope, setScope] = useState('village');
 
+    const [images, setImages] = useState<any[]>([]);
+
     // Pre-fill data in edit mode
     useEffect(() => {
         if (editMode && newsItem) {
@@ -63,6 +66,22 @@ export default function PostNewsScreen({ navigation, route }: any) {
             navigation.setOptions({ title: 'Edit News' });
         }
     }, [editMode, newsItem]);
+
+    const handlePickImage = async () => {
+        try {
+            const result = await launchImageLibrary({
+                mediaType: 'photo',
+                selectionLimit: 5 - images.length,
+                quality: 0.8,
+            });
+
+            if (result.assets) {
+                setImages([...images, ...result.assets]);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to pick image');
+        }
+    };
 
     const handleSubmit = async () => {
         if (!title.trim()) {
@@ -100,6 +119,15 @@ export default function PostNewsScreen({ navigation, route }: any) {
                 if (youtubeUrl.trim()) formData.append('youtube_url', youtubeUrl.trim());
                 formData.append('category', category);
                 formData.append('scope', scope);
+
+                // Append images
+                images.forEach((img, index) => {
+                    formData.append('images', {
+                        uri: img.uri,
+                        type: img.type,
+                        name: img.fileName || `image_${index}.jpg`,
+                    } as any);
+                });
 
                 await newsAPI.create(formData);
                 Alert.alert('Success', 'News posted successfully!', [
@@ -193,20 +221,23 @@ export default function PostNewsScreen({ navigation, route }: any) {
                     </Picker>
                 </View>
 
-                {/* Image Upload - Placeholder for now */}
-                {/*
+                {/* Image Upload */}
                 <TouchableOpacity style={styles.imageButton} onPress={handlePickImage}>
                     <Text style={styles.imageButtonText}>+ Add Images</Text>
                 </TouchableOpacity>
                 <ScrollView horizontal style={styles.imageList}>
                     {images.map((img, index) => (
-                        <Image key={index} source={{ uri: img.uri }} style={styles.previewImage} />
+                        <View key={index} style={{ position: 'relative', marginRight: 8 }}>
+                            <Image source={{ uri: img.uri }} style={styles.previewImage} />
+                            <TouchableOpacity
+                                style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 10 }}
+                                onPress={() => setImages(images.filter((_, i) => i !== index))}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 16, paddingHorizontal: 6 }}>×</Text>
+                            </TouchableOpacity>
+                        </View>
                     ))}
                 </ScrollView>
-                */}
-                <Text style={styles.note}>
-                    Note: Image upload feature will be enabled soon.
-                </Text>
 
                 {/* Submit Button */}
                 <TouchableOpacity

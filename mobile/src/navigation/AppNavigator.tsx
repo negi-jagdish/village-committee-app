@@ -21,6 +21,7 @@ import TransactionDetailsScreen from '../screens/TransactionDetailsScreen';
 import CreateDriveScreen from '../screens/CreateDriveScreen';
 import DriveDetailsScreen from '../screens/DriveDetailsScreen';
 import PostNewsScreen from '../screens/PostNewsScreen';
+import NewsDetailsScreen from '../screens/NewsDetailsScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import MembersScreen from '../screens/MembersScreen';
 import AddMemberScreen from '../screens/AddMemberScreen';
@@ -252,6 +253,11 @@ function NewsStack() {
                 name="PollVotes"
                 component={PollVotesScreen}
                 options={{ title: 'Poll Votes' }}
+            />
+            <Stack.Screen
+                name="NewsDetails"
+                component={NewsDetailsScreen}
+                options={{ title: 'News Details' }}
             />
         </Stack.Navigator>
     );
