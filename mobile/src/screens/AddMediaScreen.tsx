@@ -14,8 +14,10 @@ import {
 import { galleryAPI } from '../api/client';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AddMediaScreen({ route, navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { eventId } = route.params;
     const [mode, setMode] = useState<'upload' | 'url'>('upload');
     const [type, setType] = useState<'image' | 'video'>('image');
@@ -88,7 +90,7 @@ export default function AddMediaScreen({ route, navigation }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Source</Text>
                 <View style={styles.tabContainer}>

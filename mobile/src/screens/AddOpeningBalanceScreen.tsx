@@ -12,8 +12,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { transactionsAPI } from '../api/client';
 import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AddOpeningBalanceScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [amount, setAmount] = useState('');
     const [type, setType] = useState<'cash' | 'bank'>('cash');
@@ -98,7 +100,7 @@ export default function AddOpeningBalanceScreen({ navigation }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.infoBox}>
                 <Text style={styles.infoText}>
                     Use this form to set or update the initial Cash or Bank balance.

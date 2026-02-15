@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { drivesAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Drive {
     id: number;
@@ -26,6 +27,7 @@ interface Drive {
 }
 
 export default function DrivesScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -110,7 +112,7 @@ export default function DrivesScreen({ navigation }: any) {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <FlatList
                 data={drives}
                 keyExtractor={(item) => item.id.toString()}

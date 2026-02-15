@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
 import api, { transactionsAPI } from '../api/client';
 import DatePickerField from '../components/DatePickerField';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Member {
     id: number;
@@ -34,6 +35,7 @@ interface DriveWithStatus {
 }
 
 export default function AddIncomeScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [members, setMembers] = useState<Member[]>([]);
     const [drives, setDrives] = useState<DriveWithStatus[]>([]);
@@ -291,7 +293,7 @@ export default function AddIncomeScreen({ navigation }: any) {
     const totalAmount = getTotalAmount();
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Member Selection */}
                 <Text style={styles.label}>Select Member *</Text>

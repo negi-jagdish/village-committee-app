@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { drivesAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Drive {
     id: number;
@@ -40,6 +41,7 @@ interface MemberStatus {
 }
 
 export default function DriveDetailsScreen({ route }: any) {
+    const { colors, isDark } = useTheme();
     const { driveId } = route.params;
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
@@ -187,7 +189,7 @@ export default function DriveDetailsScreen({ route }: any) {
     const totalTarget = members.reduce((sum, m) => sum + m.amount_required, 0);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Drive Summary */}
             {drive && (
                 <View style={styles.summaryCard}>

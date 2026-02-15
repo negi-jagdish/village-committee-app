@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { pollsAPI } from '../api/client';
 import DatePickerField from '../components/DatePickerField';
 import { Switch } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 const EditPollScreen = () => {
     const navigation = useNavigation();
@@ -84,7 +85,7 @@ const EditPollScreen = () => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.section}>
                 <Text style={styles.label}>Question / Topic</Text>
                 <TextInput

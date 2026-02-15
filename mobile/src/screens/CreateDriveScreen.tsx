@@ -13,8 +13,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { drivesAPI } from '../api/client';
 import DatePickerField from '../components/DatePickerField';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function CreateDriveScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [submitting, setSubmitting] = useState(false);
 
@@ -83,7 +85,7 @@ export default function CreateDriveScreen({ navigation }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Title English */}
                 <Text style={styles.label}>Drive Title (English) *</Text>

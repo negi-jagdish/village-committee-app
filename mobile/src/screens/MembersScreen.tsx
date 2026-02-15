@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { membersAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Member {
     id: number;
@@ -26,6 +27,7 @@ interface Member {
 }
 
 export default function MembersScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const user = useSelector((state: RootState) => state.auth.user);
     const [members, setMembers] = useState<Member[]>([]);
@@ -109,7 +111,7 @@ export default function MembersScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Search Bar */}
             <View style={styles.searchBar}>
                 <Text style={styles.searchIcon}>🔍</Text>

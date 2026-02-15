@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { dashboardAPI } from '../api/client'; // Import pollsAPI
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../theme/ThemeContext';
 
 // ... existing interfaces ...
 interface DashboardData {
@@ -27,6 +28,7 @@ interface DashboardData {
 }
 
 export default function DashboardScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const user = useSelector((state: RootState) => state.auth.user);
     const language = useSelector((state: RootState) => state.app.language);
@@ -71,7 +73,7 @@ export default function DashboardScreen({ navigation }: any) {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={[styles.container, { backgroundColor: colors.background }]}
             contentContainerStyle={{ paddingBottom: 100 }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >

@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootState } from '../store';
 import { galleryAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface EventItem {
     id: number;
@@ -26,6 +27,7 @@ interface EventItem {
 }
 
 export default function GalleryScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -107,7 +109,7 @@ export default function GalleryScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {loading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#1a5f2a" />

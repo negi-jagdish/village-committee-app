@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { Picker } from '@react-native-picker/picker';
 import { RootState } from '../store';
 import api, { transactionsAPI, drivesAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Transaction {
     id: number;
@@ -66,6 +67,7 @@ const MONTHS = [
 ];
 
 export default function TransactionsScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -401,7 +403,7 @@ export default function TransactionsScreen({ navigation }: any) {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Transaction Type Tabs */}
             <View style={styles.tabBar}>
                 {(['all', 'income', 'expense'] as const).map((type) => (

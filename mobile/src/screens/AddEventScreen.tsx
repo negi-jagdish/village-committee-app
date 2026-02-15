@@ -15,8 +15,10 @@ import { useTranslation } from 'react-i18next';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import { galleryAPI } from '../api/client';
 import DatePickerField from '../components/DatePickerField';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AddEventScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const [title, setTitle] = useState('');
     const [titleHi, setTitleHi] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
@@ -87,7 +89,7 @@ export default function AddEventScreen({ navigation }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Event Title (English) *</Text>
                 <TextInput

@@ -4,6 +4,7 @@ import Share from 'react-native-share';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { reportsAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 const NAME_COL_WIDTH = 160;
 const DATA_COL_WIDTH = 100;
@@ -18,6 +19,7 @@ const transformTitle = (title: string) => {
 };
 
 export default function PendingDuesReportScreen() {
+    const { colors, isDark } = useTheme();
     const { t, i18n } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any>(null);
@@ -149,7 +151,7 @@ export default function PendingDuesReportScreen() {
     const totalWidth = NAME_COL_WIDTH + (columns.length * DATA_COL_WIDTH) + TOTAL_COL_WIDTH;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.screenHeader}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View>

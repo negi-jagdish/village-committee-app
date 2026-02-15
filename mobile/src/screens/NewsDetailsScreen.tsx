@@ -15,10 +15,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { newsAPI, API_BASE_URL } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function NewsDetailsScreen({ route, navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const { newsId } = route.params;
     const user = useSelector((state: RootState) => state.auth.user);
@@ -105,7 +107,7 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
     const displayContent = language === 'hi' && newsItem.content_hi ? newsItem.content_hi : newsItem.content;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Hero Image */}
                 {heroImage ? (

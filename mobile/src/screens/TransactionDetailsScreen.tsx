@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import api, { transactionsAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface TransactionDetail {
     id: number;
@@ -38,6 +39,7 @@ interface TransactionDetail {
 }
 
 export default function TransactionDetailsScreen({ route, navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { transactionId } = route.params;
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
@@ -146,7 +148,7 @@ export default function TransactionDetailsScreen({ route, navigation }: any) {
     const isIncome = transaction.type === 'income';
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header Card */}
             <View style={[styles.headerCard, { backgroundColor: isIncome ? '#e8f5e9' : '#ffebee' }]}>
                 <Text style={styles.typeLabel}>

@@ -19,6 +19,7 @@ import { RootState } from '../store';
 import { newsAPI, pollsAPI, API_BASE_URL } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FilterDropdown from '../components/FilterDropdown';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -91,6 +92,7 @@ export default function NewsScreen({ navigation }: any) {
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
+    const { colors, isDark } = useTheme();
     const [news, setNews] = useState<NewsItem[]>([]);
     const [polls, setPolls] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -346,7 +348,7 @@ export default function NewsScreen({ navigation }: any) {
 
         return (
             <TouchableOpacity
-                style={styles.newsCard}
+                style={[styles.newsCard, { backgroundColor: colors.card }]}
                 onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
                 activeOpacity={0.85}
             >
@@ -356,7 +358,7 @@ export default function NewsScreen({ navigation }: any) {
                         {heroImage ? (
                             <Image source={{ uri: heroImage }} style={styles.thumbnail} resizeMode="cover" />
                         ) : (
-                            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
+                            <View style={[styles.thumbnail, styles.thumbnailPlaceholder, { backgroundColor: colors.border }]}>
                                 <Text style={{ fontSize: 28 }}>📰</Text>
                             </View>
                         )}
@@ -371,12 +373,12 @@ export default function NewsScreen({ navigation }: any) {
 
                     {/* Right: Title + Meta */}
                     <View style={styles.cardTextArea}>
-                        <Text style={styles.newsTitle} numberOfLines={3}>
+                        <Text style={[styles.newsTitle, { color: colors.text }]} numberOfLines={3}>
                             {displayTitle}
                         </Text>
                         <View style={styles.metaRow}>
-                            <View style={styles.categoryPill}>
-                                <Text style={styles.categoryPillText}>{getCategoryLabel(item.category)}</Text>
+                            <View style={[styles.categoryPill, { backgroundColor: colors.badge }]}>
+                                <Text style={[styles.categoryPillText, { color: colors.badgeText }]}>{getCategoryLabel(item.category)}</Text>
                             </View>
                             <Text style={styles.metaDot}>•</Text>
                             <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
@@ -386,10 +388,10 @@ export default function NewsScreen({ navigation }: any) {
                 </View>
 
                 {/* Bottom: Reactions + Actions */}
-                <View style={styles.cardBottom}>
+                <View style={[styles.cardBottom, { borderTopColor: colors.border }]}>
                     <View style={styles.reactionsRow}>
                         <TouchableOpacity
-                            style={[styles.rxnBtn, item.user_reaction === 'like' && styles.rxnActive]}
+                            style={[styles.rxnBtn, { backgroundColor: colors.inputBg }, item.user_reaction === 'like' && styles.rxnActive]}
                             onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'like'); }}
                         >
                             <Text style={styles.rxnEmoji}>👍</Text>
@@ -448,24 +450,24 @@ export default function NewsScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Top Bar: Search + Filters */}
-            <View style={styles.topBar}>
+            <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 {/* Search Input */}
                 <View style={styles.searchRow}>
-                    <View style={styles.searchBox}>
+                    <View style={[styles.searchBox, { backgroundColor: colors.inputBg }]}>
                         <Text style={styles.searchIcon}>🔍</Text>
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, { color: colors.inputText }]}
                             placeholder="Search news..."
-                            placeholderTextColor="#666"
+                            placeholderTextColor={colors.inputPlaceholder}
                             value={searchQuery}
                             onChangeText={handleSearchChange}
                             returnKeyType="search"
                         />
                         {searchQuery.length > 0 && (
                             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Text style={styles.clearBtn}>✕</Text>
+                                <Text style={[styles.clearBtn, { color: colors.textTertiary }]}>✕</Text>
                             </TouchableOpacity>
                         )}
                     </View>

@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { galleryAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -34,6 +35,7 @@ interface EventDetails {
 }
 
 export default function EventDetailsScreen({ route, navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { eventId, title } = route.params;
     const user = useSelector((state: RootState) => state.auth.user);
     const [event, setEvent] = useState<EventDetails | null>(null);
@@ -132,7 +134,7 @@ export default function EventDetailsScreen({ route, navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.header}>
                 <Text style={styles.title}>{event?.title}</Text>
                 {event?.description && (

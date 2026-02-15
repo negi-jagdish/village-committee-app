@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { pollsAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 
 const PollVotesScreen = () => {
@@ -62,7 +63,7 @@ const PollVotesScreen = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <FlatList
                 data={votes}
                 renderItem={renderItem}

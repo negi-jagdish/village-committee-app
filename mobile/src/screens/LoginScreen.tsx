@@ -16,8 +16,10 @@ import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/client';
 import { setCredentials, persistAuth } from '../store';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function LoginScreen() {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const [contact, setContact] = useState('');
@@ -50,7 +52,7 @@ export default function LoginScreen() {
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            style={[styles.container, { backgroundColor: colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <React.Fragment>

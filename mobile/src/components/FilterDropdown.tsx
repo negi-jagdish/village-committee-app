@@ -8,6 +8,7 @@ import {
     FlatList,
     Pressable,
 } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 interface DropdownOption {
     id: string;
@@ -28,6 +29,7 @@ export default function FilterDropdown({
     placeholder = 'Select',
 }: FilterDropdownProps) {
     const [modalVisible, setModalVisible] = useState(false);
+    const { colors, isDark } = useTheme();
 
     const selectedOption = options.find(opt => opt.id === selectedValue);
     const displayText = selectedOption?.label || placeholder;
@@ -40,14 +42,14 @@ export default function FilterDropdown({
     return (
         <>
             <TouchableOpacity
-                style={styles.dropdownButton}
+                style={[styles.dropdownButton, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}
                 onPress={() => setModalVisible(true)}
                 activeOpacity={0.7}
             >
-                <Text style={styles.dropdownText} numberOfLines={1}>
+                <Text style={[styles.dropdownText, { color: colors.text }]} numberOfLines={1}>
                     {displayText}
                 </Text>
-                <Text style={styles.dropdownArrow}>▼</Text>
+                <Text style={[styles.dropdownArrow, { color: colors.textTertiary }]}>▼</Text>
             </TouchableOpacity>
 
             <Modal
@@ -57,10 +59,10 @@ export default function FilterDropdown({
                 onRequestClose={() => setModalVisible(false)}
             >
                 <Pressable
-                    style={styles.modalOverlay}
+                    style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
                     onPress={() => setModalVisible(false)}
                 >
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                         <FlatList
                             data={options}
                             keyExtractor={(item) => item.id}
@@ -68,20 +70,22 @@ export default function FilterDropdown({
                                 <TouchableOpacity
                                     style={[
                                         styles.optionItem,
-                                        item.id === selectedValue && styles.optionItemSelected,
+                                        { borderBottomColor: colors.borderLight },
+                                        item.id === selectedValue && [styles.optionItemSelected, { backgroundColor: colors.primaryLight }],
                                     ]}
                                     onPress={() => handleSelect(item.id)}
                                 >
                                     <Text
                                         style={[
                                             styles.optionText,
-                                            item.id === selectedValue && styles.optionTextSelected,
+                                            { color: colors.text },
+                                            item.id === selectedValue && { color: colors.primary, fontWeight: '600' },
                                         ]}
                                     >
                                         {item.label}
                                     </Text>
                                     {item.id === selectedValue && (
-                                        <Text style={styles.checkMark}>✓</Text>
+                                        <Text style={[styles.checkMark, { color: colors.primary }]}>✓</Text>
                                     )}
                                 </TouchableOpacity>
                             )}
@@ -98,34 +102,28 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f5f5f5',
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 12,
         borderWidth: 1,
-        borderColor: '#e0e0e0',
         minHeight: 40,
     },
     dropdownText: {
         flex: 1,
         fontSize: 13,
-        color: '#333',
         fontWeight: '500',
     },
     dropdownArrow: {
         fontSize: 8,
-        color: '#666',
         marginLeft: 4,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
     },
     modalContent: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         width: '90%',
         maxHeight: '60%',
@@ -143,22 +141,13 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
     },
-    optionItemSelected: {
-        backgroundColor: '#e8f5e9',
-    },
+    optionItemSelected: {},
     optionText: {
         fontSize: 15,
-        color: '#333',
-    },
-    optionTextSelected: {
-        color: '#1a5f2a',
-        fontWeight: '600',
     },
     checkMark: {
         fontSize: 16,
-        color: '#1a5f2a',
         fontWeight: 'bold',
     },
 });

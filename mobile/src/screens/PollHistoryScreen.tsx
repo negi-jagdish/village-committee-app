@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { pollsAPI } from '../api/client';
 import PollCard from '../components/PollCard';
+import { useTheme } from '../theme/ThemeContext';
 
 const PollHistoryScreen = () => {
     const [polls, setPolls] = useState<any[]>([]);
@@ -28,7 +29,7 @@ const PollHistoryScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <FlatList
                 data={polls}
                 keyExtractor={(item) => item.id.toString()}

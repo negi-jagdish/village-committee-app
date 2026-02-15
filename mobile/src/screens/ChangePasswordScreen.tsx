@@ -10,8 +10,10 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { authAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function ChangePasswordScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [submitting, setSubmitting] = useState(false);
 
@@ -53,7 +55,7 @@ export default function ChangePasswordScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 <Text style={styles.label}>{t('auth.currentPassword') || 'Current Password'}</Text>
                 <TextInput

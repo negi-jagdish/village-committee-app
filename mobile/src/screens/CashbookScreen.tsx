@@ -14,6 +14,7 @@ import { dashboardAPI } from '../api/client';
 import { Picker } from '@react-native-picker/picker';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { useTheme } from '../theme/ThemeContext';
 
 interface CashbookEntry {
     id: number;
@@ -32,6 +33,7 @@ const MONTHS = [
 ];
 
 export default function CashbookScreen(props: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [entries, setEntries] = useState<CashbookEntry[]>([]);
     const [balances, setBalances] = useState({ cash: 0, bank: 0 });
@@ -139,7 +141,7 @@ export default function CashbookScreen(props: any) {
     const isPresident = user?.role === 'president';
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Balance Summary */}
             <View style={styles.balanceHeader}>
                 <View style={styles.balanceCard}>

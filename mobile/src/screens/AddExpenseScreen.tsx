@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { transactionsAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AddExpenseScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [submitting, setSubmitting] = useState(false);
 
@@ -85,7 +87,7 @@ export default function AddExpenseScreen({ navigation }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Info Banner */}
                 <View style={styles.infoBanner}>

@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { membersAPI, authAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 // Helper to format currency
 const formatCurrency = (amount: number) => {
@@ -28,6 +29,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function MemberDetailsScreen({ route, navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { memberId } = route.params;
     const { t, i18n } = useTranslation();
     const language = i18n.language;
@@ -104,7 +106,7 @@ export default function MemberDetailsScreen({ route, navigation }: any) {
         (currentUser?.role === 'secretary' && member.role !== 'president');
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header Profile Card */}
             <View style={styles.headerCard}>
                 <View style={styles.headerTop}>

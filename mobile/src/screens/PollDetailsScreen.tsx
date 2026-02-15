@@ -5,6 +5,7 @@ import { pollsAPI } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { useTheme } from '../theme/ThemeContext';
 
 const PollDetailsScreen = () => {
     const route = useRoute();
@@ -142,7 +143,7 @@ const PollDetailsScreen = () => {
     const totalVotes = results.reduce((acc: number, curr: any) => acc + curr.count, 0);
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             {poll.image_url && (
                 <Image source={{ uri: poll.image_url }} style={styles.banner} resizeMode="cover" />
             )}

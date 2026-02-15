@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import { RootState } from '../store';
+import { useTheme } from '../theme/ThemeContext';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -65,12 +66,13 @@ const TabIcon = ({ name, focused, color, size }: { name: string; focused: boolea
 // Home Stack (Dashboard + Cashbook + Approvals)
 function HomeStack() {
     const { t } = useTranslation();
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -138,12 +140,13 @@ import AddOpeningBalanceScreen from '../screens/AddOpeningBalanceScreen';
 // Transactions Stack (Transactions + AddIncome + AddExpense + Details + OpeningBalance)
 function TransactionsStack() {
     const { t } = useTranslation();
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -179,12 +182,13 @@ function TransactionsStack() {
 // Drives Stack (Drives + CreateDrive)
 function DrivesStack() {
     const { t } = useTranslation();
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -210,12 +214,13 @@ function DrivesStack() {
 // News Stack (News + PostNews)
 function NewsStack() {
     const { t } = useTranslation();
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -266,12 +271,13 @@ function NewsStack() {
 // Profile Stack (Profile + ChangePassword)
 function ProfileStack() {
     const { t } = useTranslation();
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -311,11 +317,13 @@ import AddEventScreen from '../screens/AddEventScreen';
 import AddMediaScreen from '../screens/AddMediaScreen';
 
 function GalleryStack() {
+    const { colors } = useTheme();
+
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: '#1a5f2a' },
-                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
                 headerTitleStyle: { fontWeight: 'bold' },
             }}
         >
@@ -347,6 +355,7 @@ function GalleryStack() {
 function MainTabs() {
     const { t } = useTranslation();
     const user = useSelector((state: RootState) => state.auth.user);
+    const { colors } = useTheme();
     const hasAdminAccess = user?.role === 'president' || user?.role === 'cashier';
 
     return (
@@ -354,12 +363,14 @@ function MainTabs() {
             initialRouteName="News"
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => <TabIcon name={route.name} focused={focused} color={color} size={size} />,
-                tabBarActiveTintColor: '#1a5f2a',
-                tabBarInactiveTintColor: '#999',
+                tabBarActiveTintColor: colors.tabBarActive,
+                tabBarInactiveTintColor: colors.tabBarInactive,
                 tabBarStyle: {
                     paddingBottom: 8,
                     paddingTop: 8,
                     height: 65,
+                    backgroundColor: colors.tabBarBg,
+                    borderTopColor: colors.tabBarBorder,
                 },
                 tabBarLabel: ({ focused, color }) => (
                     <Text style={{
@@ -377,9 +388,9 @@ function MainTabs() {
                     </Text>
                 ),
                 headerStyle: {
-                    backgroundColor: '#1a5f2a',
+                    backgroundColor: colors.headerBg,
                 },
-                headerTintColor: '#fff',
+                headerTintColor: colors.headerText,
                 headerTitleStyle: {
                     fontWeight: 'bold',
                 },

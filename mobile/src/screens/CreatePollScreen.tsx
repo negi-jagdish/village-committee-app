@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { pollsAPI } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTheme } from '../theme/ThemeContext';
 import DatePickerField from '../components/DatePickerField'; // Reused component
 
 const CreatePollScreen = () => {
@@ -98,7 +99,7 @@ const CreatePollScreen = () => {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.section}>
                 <Text style={styles.label}>Question / Topic</Text>
                 <TextInput

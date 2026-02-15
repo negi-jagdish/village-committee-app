@@ -31,6 +31,7 @@ export interface AuthState {
 
 export interface AppState {
     language: 'en' | 'hi';
+    themeMode: 'system' | 'light' | 'dark';
 }
 
 // Auth Slice
@@ -69,16 +70,20 @@ const appSlice = createSlice({
     name: 'app',
     initialState: {
         language: 'en',
+        themeMode: 'system',
     } as AppState,
     reducers: {
         setLanguage: (state, action: PayloadAction<'en' | 'hi'>) => {
             state.language = action.payload;
         },
+        setThemeMode: (state, action: PayloadAction<'system' | 'light' | 'dark'>) => {
+            state.themeMode = action.payload;
+        },
     },
 });
 
 export const { setCredentials, logout, setLoading, setUser } = authSlice.actions;
-export const { setLanguage } = appSlice.actions;
+export const { setLanguage, setThemeMode } = appSlice.actions;
 
 // Store
 export const store = configureStore({
@@ -118,4 +123,13 @@ export const persistLanguage = async (lang: 'en' | 'hi') => {
 export const loadLanguage = async (): Promise<'en' | 'hi'> => {
     const lang = await AsyncStorage.getItem('language');
     return (lang as 'en' | 'hi') || 'en';
+};
+
+export const persistTheme = async (mode: 'system' | 'light' | 'dark') => {
+    await AsyncStorage.setItem('themeMode', mode);
+};
+
+export const loadTheme = async (): Promise<'system' | 'light' | 'dark'> => {
+    const mode = await AsyncStorage.getItem('themeMode');
+    return (mode as 'system' | 'light' | 'dark') || 'system';
 };

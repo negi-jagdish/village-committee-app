@@ -15,8 +15,10 @@ import { RootState } from '../store';
 import { membersAPI } from '../api/client';
 import { Picker } from '@react-native-picker/picker';
 import DatePickerField from '../components/DatePickerField';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function AddMemberScreen({ navigation, route }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const { member, isEdit } = route.params || {};
@@ -108,7 +110,7 @@ export default function AddMemberScreen({ navigation, route }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.formCard}>
                 <Text style={styles.sectionTitle}>Personal Details</Text>
 

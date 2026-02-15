@@ -17,11 +17,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser } from '../store';
+import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser, setThemeMode, persistTheme } from '../store';
 import { membersAPI } from '../api/client';
 import i18n from '../i18n';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
+import { useTheme } from '../theme/ThemeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_HEIGHT = 180;
@@ -66,6 +67,12 @@ export default function ProfileScreen({ navigation }: any) {
     const [uploadingProfile, setUploadingProfile] = useState(false);
     const [uploadingBackground, setUploadingBackground] = useState(false);
     const [showAllDues, setShowAllDues] = useState(false);
+    const { colors, isDark, themeMode } = useTheme();
+
+    const toggleTheme = async (mode: 'system' | 'light' | 'dark') => {
+        dispatch(setThemeMode(mode));
+        await persistTheme(mode);
+    };
 
     const fetchContributions = async () => {
         if (!user) return;
@@ -397,6 +404,38 @@ export default function ProfileScreen({ navigation }: any) {
                 </View>
             </View>
 
+            {/* Theme */}
+            <View style={styles.settingsSection}>
+                <Text style={[styles.settingsSectionTitle, { color: colors.textTertiary }]}>🎨 Theme</Text>
+                <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+                    <View style={styles.themeRow}>
+                        {(['system', 'light', 'dark'] as const).map((mode) => {
+                            const isActive = themeMode === mode;
+                            const label = mode === 'system' ? '📱 System' : mode === 'light' ? '☀️ Light' : '🌙 Dark';
+                            return (
+                                <TouchableOpacity
+                                    key={mode}
+                                    style={[
+                                        styles.themeOption,
+                                        { borderColor: colors.border },
+                                        isActive && { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+                                    ]}
+                                    onPress={() => toggleTheme(mode)}
+                                >
+                                    <Text style={[
+                                        styles.themeOptionText,
+                                        { color: colors.textSecondary },
+                                        isActive && { color: colors.primary, fontWeight: '700' }
+                                    ]}>
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+            </View>
+
             {/* Account */}
             <View style={styles.settingsSection}>
                 <Text style={styles.settingsSectionTitle}>👤 Account</Text>
@@ -454,7 +493,7 @@ export default function ProfileScreen({ navigation }: any) {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Fixed Profile Header */}
             <TouchableOpacity
                 activeOpacity={0.9}
@@ -514,28 +553,28 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
 
             {/* Tab Bar */}
-            <View style={styles.tabBar}>
+            <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'overview' && styles.tabActive]}
+                    style={[styles.tab, activeTab === 'overview' && [styles.tabActive, { borderBottomColor: colors.primary }]]}
                     onPress={() => setActiveTab('overview')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'overview' && styles.tabTextActive]}>
+                    <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'overview' && { color: colors.primary, fontWeight: '700' }]}>
                         📊 Overview
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'history' && styles.tabActive]}
+                    style={[styles.tab, activeTab === 'history' && [styles.tabActive, { borderBottomColor: colors.primary }]]}
                     onPress={() => setActiveTab('history')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
+                    <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'history' && { color: colors.primary, fontWeight: '700' }]}>
                         📋 History
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
+                    style={[styles.tab, activeTab === 'settings' && [styles.tabActive, { borderBottomColor: colors.primary }]]}
                     onPress={() => setActiveTab('settings')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>
+                    <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'settings' && { color: colors.primary, fontWeight: '700' }]}>
                         ⚙️ Settings
                     </Text>
                 </TouchableOpacity>
@@ -982,5 +1021,23 @@ const styles = StyleSheet.create({
         color: '#EF5350',
         fontWeight: 'bold',
         fontSize: 15,
+    },
+    themeRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+    },
+    themeOption: {
+        flex: 1,
+        marginHorizontal: 4,
+        paddingVertical: 10,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        alignItems: 'center',
+    },
+    themeOptionText: {
+        fontSize: 13,
+        fontWeight: '500',
     },
 });

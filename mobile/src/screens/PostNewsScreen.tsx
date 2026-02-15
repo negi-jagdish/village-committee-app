@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
 import { newsAPI, API_BASE_URL } from '../api/client';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useTheme } from '../theme/ThemeContext';
 
 const CATEGORIES = [
     { id: 'general', label: 'General' },
@@ -36,6 +37,7 @@ const SCOPES = [
 ];
 
 export default function PostNewsScreen({ navigation, route }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [submitting, setSubmitting] = useState(false);
 
@@ -161,7 +163,7 @@ export default function PostNewsScreen({ navigation, route }: any) {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Title */}
                 <Text style={styles.label}>Title (English) *</Text>

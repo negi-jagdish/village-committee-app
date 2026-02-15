@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { transactionsAPI } from '../api/client';
+import { useTheme } from '../theme/ThemeContext';
 
 interface PendingExpense {
     id: number;
@@ -22,6 +23,7 @@ interface PendingExpense {
 }
 
 export default function ApprovalsScreen({ navigation }: any) {
+    const { colors, isDark } = useTheme();
     const { t } = useTranslation();
     const [expenses, setExpenses] = useState<PendingExpense[]>([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -139,7 +141,7 @@ export default function ApprovalsScreen({ navigation }: any) {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <FlatList
                 data={expenses}
                 keyExtractor={(item) => item.id.toString()}
