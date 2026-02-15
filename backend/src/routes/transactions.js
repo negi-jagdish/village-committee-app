@@ -205,7 +205,13 @@ router.post('/income', auth, upload.single('screenshot'), async (req, res) => {
         res.status(201).json({ id: result.insertId, message: 'Income entry created successfully' });
     } catch (error) {
         console.error('Create income error:', error);
-        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create income entry' });
+        const debugInfo = {
+            message: error.message,
+            sqlMessage: error.sqlMessage,
+            body: req.body,
+            user: req.user.id
+        };
+        res.status(500).json({ error: JSON.stringify(debugInfo) });
     }
 });
 
@@ -251,7 +257,7 @@ router.post('/bulk-income', auth, isCashier, upload.single('screenshot'), async 
         res.status(201).json({ payment_id: paymentId, message: 'Bulk payment recorded successfully' });
     } catch (error) {
         console.error('Create bulk income error:', error);
-        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create bulk payment' });
+        res.status(500).json({ error: JSON.stringify({ msg: error.message, sql: error.sqlMessage, body: req.body }) });
     }
 });
 
@@ -286,7 +292,7 @@ router.post('/expense', auth, isCashier, upload.single('screenshot'), async (req
         res.status(201).json({ id: result.insertId, message: 'Expense entry created. Pending president approval.' });
     } catch (error) {
         console.error('Create expense error:', error);
-        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create expense entry' });
+        res.status(500).json({ error: JSON.stringify({ msg: error.message, sql: error.sqlMessage, body: req.body }) });
     }
 });
 
