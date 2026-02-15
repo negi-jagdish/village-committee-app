@@ -333,6 +333,8 @@ function GalleryStack() {
 // Main Tab Navigator
 function MainTabs() {
     const { t } = useTranslation();
+    const user = useSelector((state: RootState) => state.auth.user);
+    const hasAdminAccess = user?.role === 'president' || user?.role === 'cashier';
 
     return (
         <Tab.Navigator
@@ -360,20 +362,26 @@ function MainTabs() {
                 component={HomeStack}
                 options={{ title: t('tabs.home'), headerShown: false }}
             />
-            <Tab.Screen
-                name="Drives"
-                component={DrivesStack}
-                options={{ title: t('tabs.drives'), headerShown: false }}
-            />
+
+            {hasAdminAccess && (
+                <>
+                    <Tab.Screen
+                        name="Drives"
+                        component={DrivesStack}
+                        options={{ title: t('tabs.drives'), headerShown: false }}
+                    />
+                    <Tab.Screen
+                        name="Transactions"
+                        component={TransactionsStack}
+                        options={{ title: t('tabs.transactions'), headerShown: false }}
+                    />
+                </>
+            )}
+
             <Tab.Screen
                 name="Gallery"
                 component={GalleryStack}
                 options={{ title: 'Gallery', headerShown: false }}
-            />
-            <Tab.Screen
-                name="Transactions"
-                component={TransactionsStack}
-                options={{ title: t('tabs.transactions'), headerShown: false }}
             />
             <Tab.Screen
                 name="News"
