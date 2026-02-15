@@ -30,6 +30,7 @@ interface NewsItem {
     youtube_url: string | null;
     category: string;
     scope: string;
+    status: string;
     posted_by: number;
     posted_by_name: string;
     posted_by_role: string;
@@ -92,6 +93,7 @@ export default function NewsScreen({ navigation }: any) {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [scopeFilter, setScopeFilter] = useState('all');
     const [sortBy, setSortBy] = useState('latest');
+    const [showArchived, setShowArchived] = useState(false);
 
     const canPostNews = ['reporter', 'cashier', 'secretary', 'president'].includes(user?.role || '');
     const isPresident = user?.role === 'president';
@@ -99,7 +101,7 @@ export default function NewsScreen({ navigation }: any) {
 
     const fetchData = async () => {
         try {
-            const params: any = { limit: 50, sortBy };
+            const params: any = { limit: 50, sortBy, status: showArchived ? 'archived' : 'active' };
             if (categoryFilter !== 'all') params.category = categoryFilter;
             if (scopeFilter !== 'all') params.scope = scopeFilter;
 
@@ -128,7 +130,7 @@ export default function NewsScreen({ navigation }: any) {
 
     useEffect(() => {
         fetchData();
-    }, [categoryFilter, scopeFilter, sortBy]);
+    }, [categoryFilter, scopeFilter, sortBy, showArchived]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -164,6 +166,31 @@ export default function NewsScreen({ navigation }: any) {
                             Alert.alert('Success', 'News deleted successfully');
                         } catch (error) {
                             Alert.alert('Error', 'Failed to delete news');
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleArchive = async (item: NewsItem) => {
+        const isArchived = item.status === 'archived';
+        Alert.alert(
+            isArchived ? 'Restore News' : 'Archive News',
+            isArchived
+                ? 'This news will be visible in the feed again.'
+                : 'This news will be hidden from the feed but can be found in Archived.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: isArchived ? 'Restore' : 'Archive',
+                    onPress: async () => {
+                        try {
+                            await newsAPI.archive(item.id);
+                            fetchData();
+                            Alert.alert('Success', `News ${isArchived ? 'restored' : 'archived'} successfully`);
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to update news status');
                         }
                     },
                 },
@@ -337,7 +364,7 @@ export default function NewsScreen({ navigation }: any) {
                             <Text style={styles.authorName}>{item.posted_by_name}</Text>
                         </View>
 
-                        {/* Edit/Delete Actions */}
+                        {/* Edit/Delete/Archive Actions */}
                         {(canEdit || canDelete) && (
                             <View style={styles.actionButtons}>
                                 {canEdit && (
@@ -348,7 +375,18 @@ export default function NewsScreen({ navigation }: any) {
                                             handleEdit(item);
                                         }}
                                     >
-                                        <Text style={styles.editBtnText}>✏️ Edit</Text>
+                                        <Text style={styles.editBtnText}>✏️</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {canDelete && (
+                                    <TouchableOpacity
+                                        style={styles.actionBtn}
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            handleArchive(item);
+                                        }}
+                                    >
+                                        <Text style={styles.editBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
                                     </TouchableOpacity>
                                 )}
                                 {canDelete && (
@@ -454,6 +492,18 @@ export default function NewsScreen({ navigation }: any) {
                         />
                     </View>
                 </View>
+
+                {/* Archive Toggle */}
+                {canPostNews && (
+                    <TouchableOpacity
+                        style={[styles.archiveToggle, showArchived && styles.archiveToggleActive]}
+                        onPress={() => setShowArchived(!showArchived)}
+                    >
+                        <Text style={[styles.archiveToggleText, showArchived && styles.archiveToggleTextActive]}>
+                            {showArchived ? '📤 Show Active' : '📥 Archived'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 {/* Post News Button */}
                 {canPostNews && (
@@ -751,5 +801,24 @@ const styles = StyleSheet.create({
     pollMeta: {
         fontSize: 12,
         color: '#757575',
+    },
+    archiveToggle: {
+        alignSelf: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 16,
+        backgroundColor: '#f0f0f0',
+        marginTop: 6,
+    },
+    archiveToggleActive: {
+        backgroundColor: '#fff3e0',
+    },
+    archiveToggleText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666',
+    },
+    archiveToggleTextActive: {
+        color: '#e65100',
     },
 });

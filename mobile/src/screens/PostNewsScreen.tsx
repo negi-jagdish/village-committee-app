@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Picker } from '@react-native-picker/picker';
-import { newsAPI } from '../api/client';
+import { newsAPI, API_BASE_URL } from '../api/client';
 import { launchImageLibrary } from 'react-native-image-picker';
 
 const CATEGORIES = [
@@ -52,6 +52,8 @@ export default function PostNewsScreen({ navigation, route }: any) {
     const [scope, setScope] = useState('village');
 
     const [images, setImages] = useState<any[]>([]);
+    const [existingImages, setExistingImages] = useState<any[]>([]);
+    const [removeMediaIds, setRemoveMediaIds] = useState<number[]>([]);
 
     // Pre-fill data in edit mode
     useEffect(() => {
@@ -64,14 +66,30 @@ export default function PostNewsScreen({ navigation, route }: any) {
             setCategory(newsItem.category || 'general');
             setScope(newsItem.scope || 'village');
             navigation.setOptions({ title: 'Edit News' });
+
+            // Load existing images
+            if (newsItem.media && newsItem.media.length > 0) {
+                setExistingImages(newsItem.media.map((m: any) => ({
+                    id: m.id,
+                    uri: m.media_url.startsWith('http')
+                        ? m.media_url
+                        : `${API_BASE_URL.replace('/api', '')}${m.media_url}`,
+                })));
+            }
         }
     }, [editMode, newsItem]);
 
+    const totalImages = existingImages.length + images.length;
+
     const handlePickImage = async () => {
+        if (totalImages >= 5) {
+            Alert.alert('Limit', 'Maximum 5 images allowed');
+            return;
+        }
         try {
             const result = await launchImageLibrary({
                 mediaType: 'photo',
-                selectionLimit: 5 - images.length,
+                selectionLimit: 5 - totalImages,
                 quality: 0.8,
             });
 
@@ -81,6 +99,11 @@ export default function PostNewsScreen({ navigation, route }: any) {
         } catch (error) {
             Alert.alert('Error', 'Failed to pick image');
         }
+    };
+
+    const handleRemoveExistingImage = (mediaId: number) => {
+        setExistingImages(existingImages.filter((img) => img.id !== mediaId));
+        setRemoveMediaIds([...removeMediaIds, mediaId]);
     };
 
     const handleSubmit = async () => {
@@ -95,40 +118,35 @@ export default function PostNewsScreen({ navigation, route }: any) {
 
         setSubmitting(true);
         try {
+            // Build FormData for both create and edit
+            const formData = new FormData();
+            formData.append('title', title.trim());
+            if (titleHi.trim()) formData.append('title_hi', titleHi.trim());
+            formData.append('content', content.trim());
+            if (contentHi.trim()) formData.append('content_hi', contentHi.trim());
+            if (youtubeUrl.trim()) formData.append('youtube_url', youtubeUrl.trim());
+            formData.append('category', category);
+            formData.append('scope', scope);
+
+            // Append new images
+            images.forEach((img, index) => {
+                formData.append('images', {
+                    uri: img.uri,
+                    type: img.type,
+                    name: img.fileName || `image_${index}.jpg`,
+                } as any);
+            });
+
             if (editMode && newsItem) {
-                // Update existing news
-                await newsAPI.update(newsItem.id, {
-                    title: title.trim(),
-                    title_hi: titleHi.trim() || null,
-                    content: content.trim(),
-                    content_hi: contentHi.trim() || null,
-                    youtube_url: youtubeUrl.trim() || null,
-                    category,
-                    scope,
-                });
+                // Send IDs of images to remove
+                if (removeMediaIds.length > 0) {
+                    formData.append('remove_media_ids', JSON.stringify(removeMediaIds));
+                }
+                await newsAPI.update(newsItem.id, formData);
                 Alert.alert('Success', 'News updated successfully!', [
                     { text: 'OK', onPress: () => navigation.goBack() },
                 ]);
             } else {
-                // Create new news
-                const formData = new FormData();
-                formData.append('title', title.trim());
-                if (titleHi.trim()) formData.append('title_hi', titleHi.trim());
-                formData.append('content', content.trim());
-                if (contentHi.trim()) formData.append('content_hi', contentHi.trim());
-                if (youtubeUrl.trim()) formData.append('youtube_url', youtubeUrl.trim());
-                formData.append('category', category);
-                formData.append('scope', scope);
-
-                // Append images
-                images.forEach((img, index) => {
-                    formData.append('images', {
-                        uri: img.uri,
-                        type: img.type,
-                        name: img.fileName || `image_${index}.jpg`,
-                    } as any);
-                });
-
                 await newsAPI.create(formData);
                 Alert.alert('Success', 'News posted successfully!', [
                     { text: 'OK', onPress: () => navigation.goBack() },
@@ -226,8 +244,21 @@ export default function PostNewsScreen({ navigation, route }: any) {
                     <Text style={styles.imageButtonText}>+ Add Images</Text>
                 </TouchableOpacity>
                 <ScrollView horizontal style={styles.imageList}>
+                    {/* Existing images (edit mode) */}
+                    {existingImages.map((img) => (
+                        <View key={`existing-${img.id}`} style={{ position: 'relative', marginRight: 8 }}>
+                            <Image source={{ uri: img.uri }} style={styles.previewImage} />
+                            <TouchableOpacity
+                                style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(200,0,0,0.7)', borderRadius: 10 }}
+                                onPress={() => handleRemoveExistingImage(img.id)}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 16, paddingHorizontal: 6 }}>×</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                    {/* New images */}
                     {images.map((img, index) => (
-                        <View key={index} style={{ position: 'relative', marginRight: 8 }}>
+                        <View key={`new-${index}`} style={{ position: 'relative', marginRight: 8 }}>
                             <Image source={{ uri: img.uri }} style={styles.previewImage} />
                             <TouchableOpacity
                                 style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 10 }}

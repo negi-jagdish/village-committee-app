@@ -127,17 +127,21 @@ export const transactionsAPI = {
 
 // News APIs
 export const newsAPI = {
-    getAll: (params?: { limit?: number; offset?: number; category?: string; scope?: string; sortBy?: string }) =>
+    getAll: (params?: { limit?: number; offset?: number; category?: string; scope?: string; sortBy?: string; status?: string }) =>
         api.get('/news', { params }),
     getById: (id: number) => api.get(`/news/${id}`),
     create: (data: FormData) =>
         api.post('/news', data, {
             headers: { 'Content-Type': 'multipart/form-data' },
         }),
-    update: (id: number, data: any) => api.put(`/news/${id}`, data),
+    update: (id: number, data: FormData) =>
+        api.put(`/news/${id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
     react: (id: number, reaction: 'like' | 'love' | 'celebrate') =>
         api.post(`/news/${id}/react`, { reaction }),
     delete: (id: number) => api.delete(`/news/${id}`),
+    archive: (id: number) => api.patch(`/news/${id}/archive`),
 };
 
 // Dashboard APIs

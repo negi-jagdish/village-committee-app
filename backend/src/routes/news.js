@@ -8,10 +8,10 @@ const router = express.Router();
 // Get all news (with reactions count)
 router.get('/', auth, async (req, res) => {
     try {
-        const { limit = 20, offset = 0, category, scope, sortBy = 'latest' } = req.query;
+        const { limit = 20, offset = 0, category, scope, sortBy = 'latest', status = 'active' } = req.query;
 
-        let whereClause = '1=1';
-        const params = [];
+        let whereClause = 'n.status = ?';
+        const params = [status];
 
         if (category && category !== 'all') {
             whereClause += ' AND n.category = ?';
@@ -200,8 +200,8 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
-// Edit news (only poster can edit)
-router.put('/:id', auth, async (req, res) => {
+// Edit news with image support (only poster can edit)
+router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
     try {
         const [news] = await db.query('SELECT * FROM news WHERE id = ?', [req.params.id]);
 
@@ -213,21 +213,64 @@ router.put('/:id', auth, async (req, res) => {
             return res.status(403).json({ error: 'Only the original poster can edit this news' });
         }
 
-        const { title, title_hi, content, content_hi, youtube_url, category, scope } = req.body;
+        const { title, title_hi, content, content_hi, youtube_url, category, scope, remove_media_ids } = req.body;
 
         if (!title || !content) {
             return res.status(400).json({ error: 'Title and content are required' });
         }
 
+        // Update news text fields
         await db.query(
             `UPDATE news SET title = ?, title_hi = ?, content = ?, content_hi = ?, youtube_url = ?, category = ?, scope = ? WHERE id = ?`,
             [title, title_hi || null, content, content_hi || null, youtube_url || null, category || 'general', scope || 'village', req.params.id]
         );
 
+        // Remove specified media
+        if (remove_media_ids) {
+            const idsToRemove = JSON.parse(remove_media_ids);
+            if (idsToRemove.length > 0) {
+                await db.query('DELETE FROM news_media WHERE id IN (?) AND news_id = ?', [idsToRemove, req.params.id]);
+            }
+        }
+
+        // Add new images
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const mediaUrl = file.path.startsWith('http') ? file.path : '/uploads/' + file.filename;
+                await db.query(
+                    'INSERT INTO news_media (news_id, media_url, media_type) VALUES (?, ?, ?)',
+                    [req.params.id, mediaUrl, 'image']
+                );
+            }
+        }
+
         res.json({ message: 'News updated successfully' });
     } catch (error) {
         console.error('Edit news error:', error);
         res.status(500).json({ error: 'Failed to update news' });
+    }
+});
+
+// Archive/Unarchive news (poster or president)
+router.patch('/:id/archive', auth, async (req, res) => {
+    try {
+        const [news] = await db.query('SELECT * FROM news WHERE id = ?', [req.params.id]);
+
+        if (news.length === 0) {
+            return res.status(404).json({ error: 'News not found' });
+        }
+
+        if (news[0].posted_by !== req.user.id && req.user.role !== 'president') {
+            return res.status(403).json({ error: 'Not authorized to archive this news' });
+        }
+
+        const newStatus = news[0].status === 'archived' ? 'active' : 'archived';
+        await db.query('UPDATE news SET status = ? WHERE id = ?', [newStatus, req.params.id]);
+
+        res.json({ message: `News ${newStatus === 'archived' ? 'archived' : 'restored'} successfully`, status: newStatus });
+    } catch (error) {
+        console.error('Archive news error:', error);
+        res.status(500).json({ error: 'Failed to archive news' });
     }
 });
 
