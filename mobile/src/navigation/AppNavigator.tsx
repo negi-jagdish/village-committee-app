@@ -344,10 +344,25 @@ function MainTabs() {
                 tabBarActiveTintColor: '#1a5f2a',
                 tabBarInactiveTintColor: '#999',
                 tabBarStyle: {
-                    paddingBottom: 5,
-                    paddingTop: 5,
-                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                    height: 65,
                 },
+                tabBarLabel: ({ focused, color }) => (
+                    <Text style={{
+                        color,
+                        fontWeight: focused ? 'bold' : 'normal',
+                        fontSize: focused ? 12 : 10,
+                        marginBottom: 4
+                    }}>
+                        {route.name === 'Home' ? 'Financials' :
+                            route.name === 'Drives' ? t('tabs.drives') :
+                                route.name === 'Transactions' ? t('tabs.transactions') :
+                                    route.name === 'News' ? t('tabs.news') :
+                                        route.name === 'Gallery' ? 'Gallery' :
+                                            t('tabs.profile')}
+                    </Text>
+                ),
                 headerStyle: {
                     backgroundColor: '#1a5f2a',
                 },
@@ -360,22 +375,29 @@ function MainTabs() {
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
-                options={{ title: t('tabs.home'), headerShown: false }}
+                options={{ title: 'Financials', headerShown: false }}
             />
 
             {hasAdminAccess && (
-                <>
-                    <Tab.Screen
-                        name="Drives"
-                        component={DrivesStack}
-                        options={{ title: t('tabs.drives'), headerShown: false }}
-                    />
-                    <Tab.Screen
-                        name="Transactions"
-                        component={TransactionsStack}
-                        options={{ title: t('tabs.transactions'), headerShown: false }}
-                    />
-                </>
+                <Tab.Screen
+                    name="Drives"
+                    component={DrivesStack}
+                    options={{ title: t('tabs.drives'), headerShown: false }}
+                />
+            )}
+
+            <Tab.Screen
+                name="News"
+                component={NewsStack}
+                options={{ title: t('tabs.news'), headerShown: false }}
+            />
+
+            {hasAdminAccess && (
+                <Tab.Screen
+                    name="Transactions"
+                    component={TransactionsStack}
+                    options={{ title: t('tabs.transactions'), headerShown: false }}
+                />
             )}
 
             <Tab.Screen
@@ -383,11 +405,7 @@ function MainTabs() {
                 component={GalleryStack}
                 options={{ title: 'Gallery', headerShown: false }}
             />
-            <Tab.Screen
-                name="News"
-                component={NewsStack}
-                options={{ title: t('tabs.news'), headerShown: false }}
-            />
+
             <Tab.Screen
                 name="Profile"
                 component={ProfileStack}
