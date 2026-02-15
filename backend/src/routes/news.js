@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all news (with reactions count)
 router.get('/', auth, async (req, res) => {
     try {
-        const { limit = 20, offset = 0, category, scope, sortBy = 'latest', status = 'active' } = req.query;
+        const { limit = 20, offset = 0, category, scope, sortBy = 'latest', status = 'active', search } = req.query;
 
         let whereClause = 'n.status = ?';
         const params = [status];
@@ -20,6 +20,11 @@ router.get('/', auth, async (req, res) => {
         if (scope && scope !== 'all') {
             whereClause += ' AND n.scope = ?';
             params.push(scope);
+        }
+        if (search && search.trim()) {
+            whereClause += ' AND (n.title LIKE ? OR n.content LIKE ?)';
+            const searchTerm = `%${search.trim()}%`;
+            params.push(searchTerm, searchTerm);
         }
 
         // Determine order by clause based on sortBy

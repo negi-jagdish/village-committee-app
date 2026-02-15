@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,9 +8,10 @@ import {
     TouchableOpacity,
     Image,
     Linking,
-    Modal,
     Alert,
     Dimensions,
+    TextInput,
+    ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -20,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import FilterDropdown from '../components/FilterDropdown';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const PAGE_SIZE = 10;
 
 interface NewsItem {
     id: number;
@@ -72,6 +74,11 @@ const SORT_OPTIONS = [
     { id: 'views', label: 'Most Viewed' },
 ];
 
+const STATUS_OPTIONS = [
+    { id: 'active', label: '📰 Active News' },
+    { id: 'archived', label: '📥 Archived' },
+];
+
 // Extract YouTube video ID from URL
 const getYouTubeVideoId = (url: string): string | null => {
     if (!url) return null;
@@ -93,55 +100,107 @@ export default function NewsScreen({ navigation }: any) {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [scopeFilter, setScopeFilter] = useState('all');
     const [sortBy, setSortBy] = useState('latest');
-    const [showArchived, setShowArchived] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('active');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    // Search debounce
+    const searchTimerRef = useRef<any>(null);
 
     const canPostNews = ['reporter', 'cashier', 'secretary', 'president'].includes(user?.role || '');
     const isPresident = user?.role === 'president';
     const canCreatePoll = user?.role === 'president' || user?.role === 'secretary';
 
-    const fetchData = async () => {
+    const fetchNews = async (pageNum: number, append: boolean = false) => {
         try {
-            const params: any = { limit: 50, sortBy, status: showArchived ? 'archived' : 'active' };
+            if (pageNum === 0) setLoading(true);
+            else setLoadingMore(true);
+
+            const params: any = {
+                limit: PAGE_SIZE,
+                offset: pageNum * PAGE_SIZE,
+                sortBy,
+                status: statusFilter,
+            };
             if (categoryFilter !== 'all') params.category = categoryFilter;
             if (scopeFilter !== 'all') params.scope = scopeFilter;
+            if (searchQuery.trim()) params.search = searchQuery.trim();
 
-            const [newsRes, pollsRes] = await Promise.all([
-                newsAPI.getAll(params),
-                pollsAPI.getActive()
-            ]);
+            const res = await newsAPI.getAll(params);
+            const newItems = res.data;
 
-            setNews(newsRes.data);
+            if (append) {
+                setNews(prev => [...prev, ...newItems]);
+            } else {
+                setNews(newItems);
+            }
+            setHasMore(newItems.length === PAGE_SIZE);
 
-            // Filter polls: Members see only unvoted polls. Admins see all.
-            const visiblePolls = pollsRes.data.filter((p: any) => canCreatePoll || !p.has_voted);
-            setPolls(visiblePolls);
-
-            await AsyncStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsRes.data));
+            if (pageNum === 0 && statusFilter === 'active') {
+                await AsyncStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newItems));
+            }
         } catch (error) {
-            console.error('Fetch error:', error);
-            const cached = await AsyncStorage.getItem(NEWS_CACHE_KEY);
-            if (cached) {
-                setNews(JSON.parse(cached));
+            console.error('Fetch news error:', error);
+            if (page === 0) {
+                const cached = await AsyncStorage.getItem(NEWS_CACHE_KEY);
+                if (cached) setNews(JSON.parse(cached));
             }
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
+    const fetchPolls = async () => {
+        try {
+            const pollsRes = await pollsAPI.getActive();
+            const visiblePolls = pollsRes.data.filter((p: any) => canCreatePoll || !p.has_voted);
+            setPolls(visiblePolls);
+        } catch (error) {
+            console.error('Fetch polls error:', error);
+        }
+    };
+
+    // Initial load + filter changes => reset to page 0
     useEffect(() => {
-        fetchData();
-    }, [categoryFilter, scopeFilter, sortBy, showArchived]);
+        setPage(0);
+        setHasMore(true);
+        fetchNews(0, false);
+    }, [categoryFilter, scopeFilter, sortBy, statusFilter, searchQuery]);
+
+    useEffect(() => {
+        fetchPolls();
+    }, []);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchData();
+        setPage(0);
+        setHasMore(true);
+        await Promise.all([fetchNews(0, false), fetchPolls()]);
         setRefreshing(false);
+    };
+
+    const loadMore = () => {
+        if (!hasMore || loadingMore || loading) return;
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchNews(nextPage, true);
+    };
+
+    // Debounced search
+    const handleSearchChange = (text: string) => {
+        setSearchQuery(text);
     };
 
     const handleReaction = async (newsId: number, reaction: 'like' | 'love' | 'celebrate') => {
         try {
             await newsAPI.react(newsId, reaction);
-            fetchData();
+            // Re-fetch current page
+            fetchNews(0, false);
         } catch (error) {
             console.error('Reaction error:', error);
         }
@@ -162,7 +221,7 @@ export default function NewsScreen({ navigation }: any) {
                     onPress: async () => {
                         try {
                             await newsAPI.delete(item.id);
-                            fetchData();
+                            fetchNews(0, false);
                             Alert.alert('Success', 'News deleted successfully');
                         } catch (error) {
                             Alert.alert('Error', 'Failed to delete news');
@@ -179,7 +238,7 @@ export default function NewsScreen({ navigation }: any) {
             isArchived ? 'Restore News' : 'Archive News',
             isArchived
                 ? 'This news will be visible in the feed again.'
-                : 'This news will be hidden from the feed but can be found in Archived.',
+                : 'This news will be hidden from the feed.',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -187,7 +246,7 @@ export default function NewsScreen({ navigation }: any) {
                     onPress: async () => {
                         try {
                             await newsAPI.archive(item.id);
-                            fetchData();
+                            fetchNews(0, false);
                             Alert.alert('Success', `News ${isArchived ? 'restored' : 'archived'} successfully`);
                         } catch (error) {
                             Alert.alert('Error', 'Failed to update news status');
@@ -201,10 +260,6 @@ export default function NewsScreen({ navigation }: any) {
     const handleEdit = (item: NewsItem) => {
         if (item.posted_by !== user?.id) return;
         navigation.navigate('PostNews', { editMode: true, newsItem: item });
-    };
-
-    const openYouTube = (url: string) => {
-        Linking.openURL(url);
     };
 
     const formatDate = (dateStr: string) => {
@@ -224,10 +279,6 @@ export default function NewsScreen({ navigation }: any) {
         return CATEGORIES.find(c => c.id === cat)?.label || cat;
     };
 
-    const getScopeLabel = (scope: string) => {
-        return SCOPES.find(s => s.id === scope)?.label || scope;
-    };
-
     const renderPollItem = ({ item }: { item: any }) => (
         <TouchableOpacity
             style={styles.pollCard}
@@ -236,56 +287,48 @@ export default function NewsScreen({ navigation }: any) {
             {item.image_url ? (
                 <Image source={{ uri: item.image_url }} style={styles.pollImage} resizeMode="cover" />
             ) : (
-                <View style={[styles.pollImage, { backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={{ fontSize: 40 }}>📊</Text>
+                <View style={[styles.pollImage, { backgroundColor: '#252525', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 32 }}>📊</Text>
                 </View>
             )}
             <View style={styles.pollContent}>
-                <View style={styles.pollBadge}>
-                    <Text style={styles.pollBadgeText}>Active Poll</Text>
-                </View>
-                {item.has_voted && (
-                    <View style={[styles.pollBadge, { backgroundColor: '#e8f5e9', marginLeft: 8 }]}>
-                        <Text style={[styles.pollBadgeText, { color: '#1a5f2a' }]}>✓ Voted</Text>
-                    </View>
-                )}
                 <Text style={styles.pollTitle} numberOfLines={2}>{item.title}</Text>
                 <Text style={styles.pollMeta}>Ends: {new Date(item.end_at).toLocaleDateString()}</Text>
             </View>
         </TouchableOpacity>
     );
 
-    const renderHeader = () => {
-        if (polls.length === 0 && !canCreatePoll) return null;
-
-        return (
-            <View style={styles.carouselContainer}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 16 }}>
-                    <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>📢 Active Polls</Text>
-                    {canCreatePoll && (
-                        <TouchableOpacity onPress={() => navigation.navigate('CreatePoll')}>
-                            <Text style={{ color: '#4caf50', fontWeight: 'bold' }}>+ Create Poll</Text>
-                        </TouchableOpacity>
+    const renderListHeader = () => (
+        <View>
+            {/* Polls Section */}
+            {(polls.length > 0 || canCreatePoll) && (
+                <View style={styles.pollsSection}>
+                    <View style={styles.pollsHeader}>
+                        <Text style={styles.sectionTitle}>📢 Active Polls</Text>
+                        {canCreatePoll && (
+                            <TouchableOpacity onPress={() => navigation.navigate('CreatePoll')}>
+                                <Text style={styles.createPollBtn}>+ Create</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    {polls.length > 0 ? (
+                        <FlatList
+                            data={polls}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={renderPollItem}
+                            keyExtractor={item => item.id.toString()}
+                            contentContainerStyle={{ paddingHorizontal: 12 }}
+                        />
+                    ) : (
+                        <View style={styles.noPollsBox}>
+                            <Text style={{ color: '#888', fontSize: 13 }}>No active polls</Text>
+                        </View>
                     )}
                 </View>
-
-                {polls.length > 0 ? (
-                    <FlatList
-                        data={polls}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={renderPollItem}
-                        keyExtractor={item => item.id.toString()}
-                        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-                    />
-                ) : (
-                    <View style={{ padding: 16, alignItems: 'center', backgroundColor: '#252525', marginHorizontal: 16, borderRadius: 8 }}>
-                        <Text style={{ color: '#888' }}>No active polls.</Text>
-                    </View>
-                )}
-            </View>
-        );
-    };
+            )}
+        </View>
+    );
 
     const renderNewsItem = ({ item }: { item: NewsItem }) => {
         const youtubeId = getYouTubeVideoId(item.youtube_url || '');
@@ -394,114 +437,180 @@ export default function NewsScreen({ navigation }: any) {
         );
     };
 
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color="#4caf50" />
+                <Text style={styles.loadingMoreText}>Loading more...</Text>
+            </View>
+        );
+    };
+
     return (
         <View style={styles.container}>
-            <FlatList
-                ListHeaderComponent={renderHeader}
-                data={news}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderNewsItem}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    !loading ? (
-                        <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyEmoji}>📰</Text>
-                            <Text style={styles.emptyText}>No news found</Text>
-                            <Text style={styles.emptySubtext}>Try changing your filters</Text>
-                        </View>
-                    ) : null
-                }
-            />
+            {/* Top Bar: Search + Filters */}
+            <View style={styles.topBar}>
+                {/* Search Input */}
+                <View style={styles.searchRow}>
+                    <View style={styles.searchBox}>
+                        <Text style={styles.searchIcon}>🔍</Text>
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Search news..."
+                            placeholderTextColor="#666"
+                            value={searchQuery}
+                            onChangeText={handleSearchChange}
+                            returnKeyType="search"
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')}>
+                                <Text style={styles.clearBtn}>✕</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
 
-            {/* Bottom Filter Bar */}
-            <View style={styles.bottomSection}>
-                {/* Filters Row */}
-                <View style={styles.filterBar}>
-                    <View style={styles.filterItem}>
+                {/* Compact Filter Row */}
+                <View style={styles.filterRow}>
+                    <View style={styles.filterChip}>
                         <FilterDropdown
                             options={CATEGORIES}
                             selectedValue={categoryFilter}
                             onValueChange={setCategoryFilter}
                         />
                     </View>
-
-                    <View style={styles.filterItem}>
+                    <View style={styles.filterChip}>
                         <FilterDropdown
                             options={SCOPES}
                             selectedValue={scopeFilter}
                             onValueChange={setScopeFilter}
                         />
                     </View>
-
-                    <View style={styles.filterItem}>
+                    <View style={styles.filterChip}>
                         <FilterDropdown
                             options={SORT_OPTIONS}
                             selectedValue={sortBy}
                             onValueChange={setSortBy}
                         />
                     </View>
+                    {canPostNews && (
+                        <View style={styles.filterChipSmall}>
+                            <FilterDropdown
+                                options={STATUS_OPTIONS}
+                                selectedValue={statusFilter}
+                                onValueChange={setStatusFilter}
+                            />
+                        </View>
+                    )}
                 </View>
-
-                {/* Archive Toggle */}
-                {canPostNews && (
-                    <TouchableOpacity
-                        style={[styles.archiveToggle, showArchived && styles.archiveToggleActive]}
-                        onPress={() => setShowArchived(!showArchived)}
-                    >
-                        <Text style={[styles.archiveToggleText, showArchived && styles.archiveToggleTextActive]}>
-                            {showArchived ? '📤 Show Active' : '📥 Archived'}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-
-                {/* Post News Button */}
-                {canPostNews && (
-                    <TouchableOpacity
-                        style={styles.postButton}
-                        onPress={() => navigation.navigate('PostNews')}
-                    >
-                        <Text style={styles.postButtonText}>+ Post News</Text>
-                    </TouchableOpacity>
-                )}
             </View>
+
+            {/* News List */}
+            <FlatList
+                ListHeaderComponent={renderListHeader}
+                data={news}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderNewsItem}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4caf50" />
+                }
+                contentContainerStyle={styles.listContent}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={renderFooter}
+                ListEmptyComponent={
+                    !loading ? (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyEmoji}>📰</Text>
+                            <Text style={styles.emptyText}>No news found</Text>
+                            <Text style={styles.emptySubtext}>
+                                {searchQuery ? 'Try a different search term' : 'Try changing your filters'}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <ActivityIndicator size="large" color="#4caf50" />
+                        </View>
+                    )
+                }
+            />
+
+            {/* FAB - Post News */}
+            {canPostNews && (
+                <TouchableOpacity
+                    style={styles.fab}
+                    onPress={() => navigation.navigate('PostNews')}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.fabText}>+</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 }
 
-const THUMB_SIZE = Math.round(SCREEN_WIDTH * 0.35);
+const THUMB_SIZE = Math.round(SCREEN_WIDTH * 0.32);
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
     },
-    bottomSection: {
+    // Top bar
+    topBar: {
         backgroundColor: '#1a1a1a',
-        borderTopWidth: 1,
-        borderTopColor: '#333',
-        paddingBottom: 8,
+        paddingTop: 4,
+        paddingBottom: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2a2a2a',
     },
-    filterBar: {
+    searchRow: {
+        paddingHorizontal: 12,
+        marginBottom: 6,
+    },
+    searchBox: {
         flexDirection: 'row',
-        backgroundColor: '#1a1a1a',
-        paddingVertical: 8,
-        paddingHorizontal: 8,
-        gap: 8,
+        alignItems: 'center',
+        backgroundColor: '#2a2a2a',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        height: 38,
     },
-    filterItem: {
+    searchIcon: {
+        fontSize: 14,
+        marginRight: 6,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 14,
+        color: '#eee',
+        padding: 0,
+    },
+    clearBtn: {
+        color: '#888',
+        fontSize: 16,
+        paddingHorizontal: 4,
+    },
+    filterRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 8,
+        gap: 6,
+    },
+    filterChip: {
+        flex: 1,
+    },
+    filterChipSmall: {
         flex: 1,
     },
     listContent: {
-        paddingBottom: 20,
+        paddingBottom: 80,
     },
     // News card
     newsCard: {
         backgroundColor: '#1c1c1e',
         marginHorizontal: 12,
-        marginTop: 12,
+        marginTop: 10,
         borderRadius: 12,
         overflow: 'hidden',
     },
@@ -625,6 +734,18 @@ const styles = StyleSheet.create({
     actBtnText: {
         fontSize: 11,
     },
+    // Loading more
+    loadingMore: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 16,
+        gap: 8,
+    },
+    loadingMoreText: {
+        color: '#888',
+        fontSize: 13,
+    },
     // Empty
     emptyContainer: {
         alignItems: 'center',
@@ -644,92 +765,81 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
-    // Post button
-    postButton: {
-        marginHorizontal: 12,
-        marginTop: 4,
-        marginBottom: 8,
+    // FAB
+    fab: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: '#1a5f2a',
-        borderRadius: 12,
-        padding: 14,
+        justifyContent: 'center',
         alignItems: 'center',
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
     },
-    postButtonText: {
+    fabText: {
         color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '300',
+        lineHeight: 30,
     },
-    // Polls
-    carouselContainer: {
-        marginBottom: 4,
+    // Polls section
+    pollsSection: {
         backgroundColor: '#1a1a1a',
-        paddingVertical: 12,
+        paddingVertical: 10,
+        marginBottom: 4,
+    },
+    pollsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginBottom: 8,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
         color: '#4caf50',
-        marginLeft: 16,
-        marginBottom: 12,
-        marginTop: 8,
+    },
+    createPollBtn: {
+        color: '#4caf50',
+        fontWeight: 'bold',
+        fontSize: 13,
+    },
+    noPollsBox: {
+        padding: 12,
+        alignItems: 'center',
+        backgroundColor: '#252525',
+        marginHorizontal: 16,
+        borderRadius: 8,
     },
     pollCard: {
-        width: 240,
+        width: 220,
         backgroundColor: '#252525',
-        borderRadius: 12,
-        marginRight: 12,
+        borderRadius: 10,
+        marginRight: 10,
         overflow: 'hidden',
     },
     pollImage: {
         width: '100%',
-        height: 100,
+        height: 90,
     },
     pollContent: {
-        padding: 12,
-    },
-    pollBadge: {
-        position: 'absolute',
-        top: -90,
-        right: 10,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    pollBadgeText: {
-        color: '#1a5f2a',
-        fontSize: 10,
-        fontWeight: 'bold',
+        padding: 10,
     },
     pollTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: '#eee',
         marginBottom: 4,
-        height: 38,
     },
     pollMeta: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#888',
-    },
-    // Archive toggle
-    archiveToggle: {
-        alignSelf: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: '#2a2a2a',
-        marginTop: 6,
-    },
-    archiveToggleActive: {
-        backgroundColor: '#3a2a0a',
-    },
-    archiveToggleText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#888',
-    },
-    archiveToggleTextActive: {
-        color: '#ffb74d',
     },
 });
