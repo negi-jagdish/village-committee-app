@@ -13,7 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { newsAPI } from '../api/client';
+import { newsAPI, API_BASE_URL } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
@@ -96,7 +96,9 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
 
     const hasMedia = newsItem.media && newsItem.media.length > 0;
     const heroImage = hasMedia
-        ? `http://10.0.2.2:3000${newsItem.media[0].media_url}`
+        ? (newsItem.media[0].media_url.startsWith('http')
+            ? newsItem.media[0].media_url
+            : `${API_BASE_URL.replace('/api', '')}${newsItem.media[0].media_url}`)
         : null;
 
     const displayTitle = language === 'hi' && newsItem.title_hi ? newsItem.title_hi : newsItem.title;

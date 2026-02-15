@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { newsAPI, pollsAPI } from '../api/client';
+import { newsAPI, pollsAPI, API_BASE_URL } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FilterDropdown from '../components/FilterDropdown';
 
@@ -265,7 +265,9 @@ export default function NewsScreen({ navigation }: any) {
         const thumbnailUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null;
         const hasMedia = item.media && item.media.length > 0;
         const heroImage = hasMedia
-            ? `http://10.0.2.2:3000${item.media[0].media_url}`
+            ? (item.media[0].media_url.startsWith('http')
+                ? item.media[0].media_url
+                : `${API_BASE_URL.replace('/api', '')}${item.media[0].media_url}`)
             : thumbnailUrl;
 
         const canEdit = item.posted_by === user?.id;
