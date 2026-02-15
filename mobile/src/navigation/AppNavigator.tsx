@@ -37,19 +37,26 @@ import PollVotesScreen from '../screens/PollVotesScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// ... existing imports ...
+
 // Tab Icon Component
-const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
-    const icons: Record<string, string> = {
-        Home: '🏠',
-        Drives: '💰',
-        Transactions: '📊',
-        News: '📰',
-        Profile: '👤',
-        Gallery: '🖼️',
-    };
+const TabIcon = ({ name, focused, color, size }: { name: string; focused: boolean; color: string; size: number }) => {
+    let iconName = 'help-outline';
+
+    switch (name) {
+        case 'Home': iconName = 'account-balance'; break; // Financials
+        case 'Drives': iconName = 'monetization-on'; break;
+        case 'Transactions': iconName = 'receipt-long'; break;
+        case 'News': iconName = 'article'; break;
+        case 'Gallery': iconName = 'photo-library'; break;
+        case 'Profile': iconName = 'person'; break;
+    }
+
     return (
         <View style={{ alignItems: 'center' }}>
-            <Text style={{ fontSize: 20 }}>{icons[name]}</Text>
+            <Icon name={iconName} size={26} color={color} />
         </View>
     );
 };
@@ -340,7 +347,7 @@ function MainTabs() {
         <Tab.Navigator
             initialRouteName="News"
             screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
+                tabBarIcon: ({ focused, color, size }) => <TabIcon name={route.name} focused={focused} color={color} size={size} />,
                 tabBarActiveTintColor: '#1a5f2a',
                 tabBarInactiveTintColor: '#999',
                 tabBarStyle: {
