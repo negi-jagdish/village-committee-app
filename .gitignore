@@ -39,3 +39,11 @@ mobile/android/app/src/main/res/drawable-xhdpi/
 mobile/android/app/src/main/res/drawable-xxhdpi/
 mobile/android/app/src/main/res/drawable-xxxhdpi/
 mobile/android/app/src/main/res/raw/
+
+# Debug scripts
+backend/check_structure.js
+backend/check_users.js
+backend/reproduce_500.js
+backend/reset_admin_password.js
+backend/test.jpg
+backend/uploads/

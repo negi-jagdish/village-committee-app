@@ -11,9 +11,7 @@ const API_BASE_URL = 'https://village-committee-api.onrender.com/api';
 //     ? 'http://10.0.2.2:3000/api'
 //     : 'http://localhost:3000/api';
 
-// Updated API_BASE_URL for local development
-// export const API_BASE_URL = 'http://192.168.29.183:3000/api'; // Local Development (Use your machine IP)
-export { API_BASE_URL }; // Exporting the production URL
+export { API_BASE_URL };
 
 const api = axios.create({
     baseURL: API_BASE_URL,
