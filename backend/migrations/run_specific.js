@@ -15,7 +15,8 @@ const runSpecificMigration = async (filename) => {
         password: process.env.DB_PASSWORD,
         port: process.env.DB_PORT,
         database: process.env.DB_NAME,
-        multipleStatements: true
+        multipleStatements: true,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : (process.env.DB_SSL ? JSON.parse(process.env.DB_SSL) : undefined)
     });
 
     console.log('Connected to database...');
