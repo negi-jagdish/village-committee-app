@@ -264,7 +264,7 @@ export default function NewsScreen({ navigation }: any) {
                     <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>📢 Active Polls</Text>
                     {canCreatePoll && (
                         <TouchableOpacity onPress={() => navigation.navigate('CreatePoll')}>
-                            <Text style={{ color: '#1a5f2a', fontWeight: 'bold' }}>+ Create Poll</Text>
+                            <Text style={{ color: '#4caf50', fontWeight: 'bold' }}>+ Create Poll</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -279,8 +279,8 @@ export default function NewsScreen({ navigation }: any) {
                         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
                     />
                 ) : (
-                    <View style={{ padding: 16, alignItems: 'center', backgroundColor: '#e8f5e9', marginHorizontal: 16, borderRadius: 8 }}>
-                        <Text style={{ color: '#666' }}>No active polls.</Text>
+                    <View style={{ padding: 16, alignItems: 'center', backgroundColor: '#252525', marginHorizontal: 16, borderRadius: 8 }}>
+                        <Text style={{ color: '#888' }}>No active polls.</Text>
                     </View>
                 )}
             </View>
@@ -299,144 +299,103 @@ export default function NewsScreen({ navigation }: any) {
 
         const canEdit = item.posted_by === user?.id;
         const canDelete = item.posted_by === user?.id || isPresident;
+        const displayTitle = language === 'hi' && item.title_hi ? item.title_hi : item.title;
 
         return (
             <TouchableOpacity
                 style={styles.newsCard}
                 onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
-                activeOpacity={0.9}
+                activeOpacity={0.85}
             >
-                {/* Hero Image */}
-                {heroImage && (
-                    <View style={styles.heroContainer}>
-                        <Image
-                            source={{ uri: heroImage }}
-                            style={styles.heroImage}
-                            resizeMode="cover"
-                        />
-                        {thumbnailUrl && !hasMedia && (
-                            <View style={styles.playOverlay}>
-                                <Text style={styles.playIcon}>▶</Text>
+                {/* Horizontal Layout: Image Left + Title Right */}
+                <View style={styles.cardRow}>
+                    {/* Thumbnail */}
+                    <View style={styles.thumbnailContainer}>
+                        {heroImage ? (
+                            <Image source={{ uri: heroImage }} style={styles.thumbnail} resizeMode="cover" />
+                        ) : (
+                            <View style={styles.thumbnailPlaceholder}>
+                                <Text style={{ fontSize: 32, color: '#555' }}>📰</Text>
                             </View>
                         )}
-                        {/* Category Badge on Image */}
-                        <View style={styles.categoryBadgeOnImage}>
-                            <Text style={styles.categoryBadgeText}>
+                        {/* Play button overlay for YouTube */}
+                        {youtubeId && (
+                            <View style={styles.playOverlay}>
+                                <View style={styles.playButton}>
+                                    <Text style={styles.playIcon}>▶</Text>
+                                </View>
+                            </View>
+                        )}
+                        {/* Category chip on image */}
+                        <View style={styles.categoryChip}>
+                            <Text style={styles.categoryChipText}>
                                 {getCategoryLabel(item.category)}
                             </Text>
                         </View>
                     </View>
-                )}
 
-                {/* Content */}
-                <View style={styles.cardContent}>
-                    {/* Badges Row */}
-                    <View style={styles.badgesRow}>
-                        {!heroImage && (
-                            <View style={[styles.badge, styles.categoryBadge]}>
-                                <Text style={styles.badgeText}>{getCategoryLabel(item.category)}</Text>
-                            </View>
-                        )}
-                        <View style={[styles.badge, styles.scopeBadge]}>
-                            <Text style={styles.badgeText}>{getScopeLabel(item.scope)}</Text>
+                    {/* Right side: Title + Meta */}
+                    <View style={styles.cardTextContent}>
+                        <Text style={styles.newsTitle} numberOfLines={4}>
+                            {displayTitle}
+                        </Text>
+                        <View style={styles.metaRow}>
+                            <Text style={styles.metaText}>{item.posted_by_name}</Text>
+                            <Text style={styles.metaDot}>•</Text>
+                            <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
                         </View>
-                        <Text style={styles.timeText}>{formatDate(item.created_at)}</Text>
                     </View>
+                </View>
 
-                    {/* Title */}
-                    <Text style={styles.newsTitle}>
-                        {language === 'hi' && item.title_hi ? item.title_hi : item.title}
-                    </Text>
-
-                    {/* Content Preview */}
-                    <Text style={styles.newsContent} numberOfLines={3}>
-                        {language === 'hi' && item.content_hi ? item.content_hi : item.content}
-                    </Text>
-
-                    {/* Author + Actions Row */}
-                    <View style={styles.authorActionsRow}>
-                        <View style={styles.authorRow}>
-                            <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>
-                                    {item.posted_by_name?.charAt(0).toUpperCase()}
-                                </Text>
-                            </View>
-                            <Text style={styles.authorName}>{item.posted_by_name}</Text>
-                        </View>
-
-                        {/* Edit/Delete/Archive Actions */}
-                        {(canEdit || canDelete) && (
-                            <View style={styles.actionButtons}>
-                                {canEdit && (
-                                    <TouchableOpacity
-                                        style={styles.actionBtn}
-                                        onPress={(e) => {
-                                            e.stopPropagation();
-                                            handleEdit(item);
-                                        }}
-                                    >
-                                        <Text style={styles.editBtnText}>✏️</Text>
-                                    </TouchableOpacity>
-                                )}
-                                {canDelete && (
-                                    <TouchableOpacity
-                                        style={styles.actionBtn}
-                                        onPress={(e) => {
-                                            e.stopPropagation();
-                                            handleArchive(item);
-                                        }}
-                                    >
-                                        <Text style={styles.editBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
-                                    </TouchableOpacity>
-                                )}
-                                {canDelete && (
-                                    <TouchableOpacity
-                                        style={[styles.actionBtn, styles.deleteBtn]}
-                                        onPress={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(item);
-                                        }}
-                                    >
-                                        <Text style={styles.deleteBtnText}>🗑️</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        )}
-                    </View>
-
-                    {/* Reactions */}
+                {/* Bottom bar: Reactions + Actions */}
+                <View style={styles.cardBottomBar}>
                     <View style={styles.reactionsRow}>
                         <TouchableOpacity
                             style={[styles.reactionButton, item.user_reaction === 'like' && styles.activeReaction]}
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleReaction(item.id, 'like');
-                            }}
+                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'like'); }}
                         >
                             <Text style={styles.reactionEmoji}>👍</Text>
-                            <Text style={styles.reactionCount}>{item.likes}</Text>
+                            <Text style={styles.reactionCount}>{item.likes || 0}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.reactionButton, item.user_reaction === 'love' && styles.activeReaction]}
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleReaction(item.id, 'love');
-                            }}
+                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'love'); }}
                         >
                             <Text style={styles.reactionEmoji}>❤️</Text>
-                            <Text style={styles.reactionCount}>{item.loves}</Text>
+                            <Text style={styles.reactionCount}>{item.loves || 0}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.reactionButton, item.user_reaction === 'celebrate' && styles.activeReaction]}
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleReaction(item.id, 'celebrate');
-                            }}
+                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'celebrate'); }}
                         >
                             <Text style={styles.reactionEmoji}>🎉</Text>
-                            <Text style={styles.reactionCount}>{item.celebrates}</Text>
+                            <Text style={styles.reactionCount}>{item.celebrates || 0}</Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Actions */}
+                    {(canEdit || canDelete) && (
+                        <View style={styles.actionButtons}>
+                            {canEdit && (
+                                <TouchableOpacity style={styles.actionBtn}
+                                    onPress={(e) => { e.stopPropagation(); handleEdit(item); }}>
+                                    <Text style={styles.actionBtnText}>✏️</Text>
+                                </TouchableOpacity>
+                            )}
+                            {canDelete && (
+                                <TouchableOpacity style={styles.actionBtn}
+                                    onPress={(e) => { e.stopPropagation(); handleArchive(item); }}>
+                                    <Text style={styles.actionBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
+                                </TouchableOpacity>
+                            )}
+                            {canDelete && (
+                                <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]}
+                                    onPress={(e) => { e.stopPropagation(); handleDelete(item); }}>
+                                    <Text style={styles.actionBtnText}>🗑️</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
                 </View>
             </TouchableOpacity>
         );
@@ -522,17 +481,17 @@ export default function NewsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#111',
     },
     bottomSection: {
-        backgroundColor: '#fff',
+        backgroundColor: '#1a1a1a',
         borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
+        borderTopColor: '#333',
         paddingBottom: 8,
     },
     filterBar: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
+        backgroundColor: '#1a1a1a',
         paddingVertical: 8,
         paddingHorizontal: 8,
         gap: 8,
@@ -541,175 +500,147 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     listContent: {
-        padding: 12,
+        paddingHorizontal: 0,
         paddingBottom: 20,
     },
+    // === Horizontal Card Layout ===
     newsCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        marginBottom: 16,
+        backgroundColor: '#1e1e1e',
+        marginBottom: 2,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
     },
-    heroContainer: {
+    cardRow: {
+        flexDirection: 'row',
+        minHeight: 130,
+    },
+    thumbnailContainer: {
+        width: '40%',
         position: 'relative',
     },
-    heroImage: {
+    thumbnail: {
         width: '100%',
-        height: 200,
+        height: '100%',
+        minHeight: 130,
+    },
+    thumbnailPlaceholder: {
+        width: '100%',
+        height: '100%',
+        minHeight: 130,
+        backgroundColor: '#2a2a2a',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     playOverlay: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        bottom: 10,
+        left: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    playButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255,255,255,0.9)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     playIcon: {
-        fontSize: 48,
-        color: '#fff',
+        fontSize: 14,
+        color: '#111',
+        marginLeft: 2,
     },
-    categoryBadgeOnImage: {
+    categoryChip: {
         position: 'absolute',
-        top: 12,
-        left: 12,
-        backgroundColor: 'rgba(26, 95, 42, 0.9)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
+        bottom: 10,
+        left: 50,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 4,
     },
-    categoryBadgeText: {
+    categoryChipText: {
         color: '#fff',
-        fontSize: 11,
-        fontWeight: '600',
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
-    cardContent: {
-        padding: 16,
-    },
-    badgesRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    badge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    categoryBadge: {
-        backgroundColor: '#e8f5e9',
-    },
-    scopeBadge: {
-        backgroundColor: '#e3f2fd',
-    },
-    badgeText: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#333',
-    },
-    timeText: {
-        fontSize: 12,
-        color: '#999',
-        marginLeft: 'auto',
+    cardTextContent: {
+        flex: 1,
+        padding: 14,
+        justifyContent: 'center',
     },
     newsTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        marginBottom: 8,
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#fff',
         lineHeight: 24,
+        marginBottom: 8,
     },
-    newsContent: {
-        fontSize: 14,
-        color: '#666',
-        lineHeight: 21,
-        marginBottom: 12,
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    authorActionsRow: {
+    metaText: {
+        fontSize: 11,
+        color: '#888',
+    },
+    metaDot: {
+        fontSize: 11,
+        color: '#555',
+        marginHorizontal: 6,
+    },
+    // === Bottom bar: reactions + actions ===
+    cardBottomBar: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 12,
-        paddingTop: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
-    },
-    authorRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    avatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#1a5f2a',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    avatarText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    authorName: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#333',
-    },
-    actionButtons: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    actionBtn: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
-        backgroundColor: '#f0f0f0',
-    },
-    deleteBtn: {
-        backgroundColor: '#ffebee',
-    },
-    editBtnText: {
-        fontSize: 12,
-        color: '#1976d2',
-    },
-    deleteBtnText: {
-        fontSize: 12,
+        borderTopColor: '#2a2a2a',
     },
     reactionsRow: {
         flexDirection: 'row',
-        gap: 16,
+        gap: 6,
     },
     reactionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 20,
-        backgroundColor: '#f5f5f5',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 14,
+        backgroundColor: '#2a2a2a',
     },
     activeReaction: {
-        backgroundColor: '#e8f5e9',
+        backgroundColor: '#1a3a1e',
     },
     reactionEmoji: {
-        fontSize: 16,
-        marginRight: 4,
+        fontSize: 13,
+        marginRight: 3,
     },
     reactionCount: {
-        fontSize: 13,
-        color: '#666',
+        fontSize: 11,
+        color: '#aaa',
         fontWeight: '500',
     },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    actionBtn: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+        backgroundColor: '#2a2a2a',
+    },
+    deleteBtn: {
+        backgroundColor: '#3a1a1a',
+    },
+    actionBtnText: {
+        fontSize: 12,
+    },
+    // === Empty state ===
     emptyContainer: {
         alignItems: 'center',
         paddingVertical: 60,
@@ -721,13 +652,14 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#333',
+        color: '#ccc',
     },
     emptySubtext: {
         fontSize: 14,
-        color: '#999',
+        color: '#666',
         marginTop: 4,
     },
+    // === Post button ===
     postButton: {
         marginHorizontal: 12,
         marginTop: 4,
@@ -747,39 +679,37 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    // === Polls section ===
     carouselContainer: {
-        marginBottom: 16,
+        marginBottom: 8,
+        backgroundColor: '#1a1a1a',
+        paddingVertical: 12,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '700',
         color: '#1a5f2a',
         marginLeft: 16,
         marginBottom: 12,
-        marginTop: 16,
+        marginTop: 8,
     },
     pollCard: {
-        width: 280,
-        backgroundColor: '#fff',
+        width: 260,
+        backgroundColor: '#252525',
         borderRadius: 12,
         marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
         overflow: 'hidden',
     },
     pollImage: {
         width: '100%',
-        height: 120,
+        height: 110,
     },
     pollContent: {
         padding: 12,
     },
     pollBadge: {
         position: 'absolute',
-        top: -110,
+        top: -100,
         right: 10,
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         paddingHorizontal: 8,
@@ -792,33 +722,34 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     pollTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
-        color: '#333',
+        color: '#eee',
         marginBottom: 4,
         height: 40,
     },
     pollMeta: {
         fontSize: 12,
-        color: '#757575',
+        color: '#888',
     },
+    // === Archive toggle ===
     archiveToggle: {
         alignSelf: 'center',
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderRadius: 16,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#2a2a2a',
         marginTop: 6,
     },
     archiveToggleActive: {
-        backgroundColor: '#fff3e0',
+        backgroundColor: '#3a2a0a',
     },
     archiveToggleText: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#666',
+        color: '#888',
     },
     archiveToggleTextActive: {
-        color: '#e65100',
+        color: '#ffb74d',
     },
 });
