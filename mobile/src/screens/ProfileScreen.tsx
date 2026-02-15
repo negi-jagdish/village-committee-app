@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -14,6 +14,7 @@ import {
     ImageBackground,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser } from '../store';
 import { membersAPI } from '../api/client';
@@ -66,9 +67,11 @@ export default function ProfileScreen({ navigation }: any) {
         }
     };
 
-    useEffect(() => {
-        fetchContributions();
-    }, [user]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchContributions();
+        }, [user])
+    );
 
     const handleLogout = () => {
         Alert.alert(
