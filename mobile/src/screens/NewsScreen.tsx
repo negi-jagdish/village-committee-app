@@ -307,91 +307,84 @@ export default function NewsScreen({ navigation }: any) {
                 onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
                 activeOpacity={0.85}
             >
-                {/* Horizontal Layout: Image Left + Title Right */}
                 <View style={styles.cardRow}>
-                    {/* Thumbnail */}
-                    <View style={styles.thumbnailContainer}>
+                    {/* Left: Thumbnail */}
+                    <View style={styles.thumbnailWrap}>
                         {heroImage ? (
                             <Image source={{ uri: heroImage }} style={styles.thumbnail} resizeMode="cover" />
                         ) : (
-                            <View style={styles.thumbnailPlaceholder}>
-                                <Text style={{ fontSize: 32, color: '#555' }}>📰</Text>
+                            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
+                                <Text style={{ fontSize: 28 }}>📰</Text>
                             </View>
                         )}
-                        {/* Play button overlay for YouTube */}
                         {youtubeId && (
-                            <View style={styles.playOverlay}>
-                                <View style={styles.playButton}>
-                                    <Text style={styles.playIcon}>▶</Text>
+                            <View style={styles.playBtnWrap}>
+                                <View style={styles.playBtn}>
+                                    <Text style={{ fontSize: 12, color: '#000', marginLeft: 1 }}>▶</Text>
                                 </View>
                             </View>
                         )}
-                        {/* Category chip on image */}
-                        <View style={styles.categoryChip}>
-                            <Text style={styles.categoryChipText}>
-                                {getCategoryLabel(item.category)}
-                            </Text>
-                        </View>
                     </View>
 
-                    {/* Right side: Title + Meta */}
-                    <View style={styles.cardTextContent}>
-                        <Text style={styles.newsTitle} numberOfLines={4}>
+                    {/* Right: Title + Meta */}
+                    <View style={styles.cardTextArea}>
+                        <Text style={styles.newsTitle} numberOfLines={3}>
                             {displayTitle}
                         </Text>
                         <View style={styles.metaRow}>
-                            <Text style={styles.metaText}>{item.posted_by_name}</Text>
+                            <View style={styles.categoryPill}>
+                                <Text style={styles.categoryPillText}>{getCategoryLabel(item.category)}</Text>
+                            </View>
                             <Text style={styles.metaDot}>•</Text>
                             <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
                         </View>
+                        <Text style={styles.authorText}>{item.posted_by_name}</Text>
                     </View>
                 </View>
 
-                {/* Bottom bar: Reactions + Actions */}
-                <View style={styles.cardBottomBar}>
+                {/* Bottom: Reactions + Actions */}
+                <View style={styles.cardBottom}>
                     <View style={styles.reactionsRow}>
                         <TouchableOpacity
-                            style={[styles.reactionButton, item.user_reaction === 'like' && styles.activeReaction]}
+                            style={[styles.rxnBtn, item.user_reaction === 'like' && styles.rxnActive]}
                             onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'like'); }}
                         >
-                            <Text style={styles.reactionEmoji}>👍</Text>
-                            <Text style={styles.reactionCount}>{item.likes || 0}</Text>
+                            <Text style={styles.rxnEmoji}>👍</Text>
+                            <Text style={styles.rxnCount}>{item.likes || 0}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.reactionButton, item.user_reaction === 'love' && styles.activeReaction]}
+                            style={[styles.rxnBtn, item.user_reaction === 'love' && styles.rxnActive]}
                             onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'love'); }}
                         >
-                            <Text style={styles.reactionEmoji}>❤️</Text>
-                            <Text style={styles.reactionCount}>{item.loves || 0}</Text>
+                            <Text style={styles.rxnEmoji}>❤️</Text>
+                            <Text style={styles.rxnCount}>{item.loves || 0}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.reactionButton, item.user_reaction === 'celebrate' && styles.activeReaction]}
+                            style={[styles.rxnBtn, item.user_reaction === 'celebrate' && styles.rxnActive]}
                             onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'celebrate'); }}
                         >
-                            <Text style={styles.reactionEmoji}>🎉</Text>
-                            <Text style={styles.reactionCount}>{item.celebrates || 0}</Text>
+                            <Text style={styles.rxnEmoji}>🎉</Text>
+                            <Text style={styles.rxnCount}>{item.celebrates || 0}</Text>
                         </TouchableOpacity>
                     </View>
-
-                    {/* Actions */}
                     {(canEdit || canDelete) && (
-                        <View style={styles.actionButtons}>
+                        <View style={styles.actionBtns}>
                             {canEdit && (
-                                <TouchableOpacity style={styles.actionBtn}
+                                <TouchableOpacity style={styles.actBtn}
                                     onPress={(e) => { e.stopPropagation(); handleEdit(item); }}>
-                                    <Text style={styles.actionBtnText}>✏️</Text>
+                                    <Text style={styles.actBtnText}>✏️</Text>
                                 </TouchableOpacity>
                             )}
                             {canDelete && (
-                                <TouchableOpacity style={styles.actionBtn}
+                                <TouchableOpacity style={styles.actBtn}
                                     onPress={(e) => { e.stopPropagation(); handleArchive(item); }}>
-                                    <Text style={styles.actionBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
+                                    <Text style={styles.actBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
                                 </TouchableOpacity>
                             )}
                             {canDelete && (
-                                <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]}
+                                <TouchableOpacity style={[styles.actBtn, { backgroundColor: '#3a1a1a' }]}
                                     onPress={(e) => { e.stopPropagation(); handleDelete(item); }}>
-                                    <Text style={styles.actionBtnText}>🗑️</Text>
+                                    <Text style={styles.actBtnText}>🗑️</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -478,10 +471,12 @@ export default function NewsScreen({ navigation }: any) {
     );
 }
 
+const THUMB_SIZE = Math.round(SCREEN_WIDTH * 0.35);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#111',
+        backgroundColor: '#121212',
     },
     bottomSection: {
         backgroundColor: '#1a1a1a',
@@ -500,147 +495,137 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     listContent: {
-        paddingHorizontal: 0,
         paddingBottom: 20,
     },
-    // === Horizontal Card Layout ===
+    // News card
     newsCard: {
-        backgroundColor: '#1e1e1e',
-        marginBottom: 2,
+        backgroundColor: '#1c1c1e',
+        marginHorizontal: 12,
+        marginTop: 12,
+        borderRadius: 12,
         overflow: 'hidden',
     },
     cardRow: {
         flexDirection: 'row',
-        minHeight: 130,
+        height: THUMB_SIZE,
     },
-    thumbnailContainer: {
-        width: '40%',
-        position: 'relative',
+    thumbnailWrap: {
+        width: THUMB_SIZE,
+        height: THUMB_SIZE,
     },
     thumbnail: {
-        width: '100%',
-        height: '100%',
-        minHeight: 130,
+        width: THUMB_SIZE,
+        height: THUMB_SIZE,
+        borderTopLeftRadius: 12,
     },
     thumbnailPlaceholder: {
-        width: '100%',
-        height: '100%',
-        minHeight: 130,
-        backgroundColor: '#2a2a2a',
+        backgroundColor: '#2c2c2e',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    playOverlay: {
+    playBtnWrap: {
         position: 'absolute',
-        bottom: 10,
-        left: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
+        bottom: 8,
+        left: 8,
     },
-    playButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+    playBtn: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: 'rgba(255,255,255,0.9)',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    playIcon: {
-        fontSize: 14,
-        color: '#111',
-        marginLeft: 2,
-    },
-    categoryChip: {
-        position: 'absolute',
-        bottom: 10,
-        left: 50,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 4,
-    },
-    categoryChipText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-    },
-    cardTextContent: {
+    cardTextArea: {
         flex: 1,
-        padding: 14,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
         justifyContent: 'center',
     },
     newsTitle: {
-        fontSize: 17,
+        fontSize: 15,
         fontWeight: '700',
-        color: '#fff',
-        lineHeight: 24,
-        marginBottom: 8,
+        color: '#f5f5f5',
+        lineHeight: 21,
+        marginBottom: 6,
     },
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 4,
+    },
+    categoryPill: {
+        backgroundColor: '#2a5a32',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    categoryPillText: {
+        color: '#a5d6a7',
+        fontSize: 10,
+        fontWeight: '600',
     },
     metaText: {
         fontSize: 11,
         color: '#888',
     },
     metaDot: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#555',
-        marginHorizontal: 6,
+        marginHorizontal: 5,
     },
-    // === Bottom bar: reactions + actions ===
-    cardBottomBar: {
+    authorText: {
+        fontSize: 11,
+        color: '#666',
+    },
+    // Bottom bar
+    cardBottom: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderTopWidth: 1,
         borderTopColor: '#2a2a2a',
     },
     reactionsRow: {
         flexDirection: 'row',
-        gap: 6,
+        gap: 4,
     },
-    reactionButton: {
+    rxnBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 14,
+        paddingVertical: 3,
+        paddingHorizontal: 7,
+        borderRadius: 12,
         backgroundColor: '#2a2a2a',
     },
-    activeReaction: {
-        backgroundColor: '#1a3a1e',
+    rxnActive: {
+        backgroundColor: '#1b3a20',
     },
-    reactionEmoji: {
-        fontSize: 13,
-        marginRight: 3,
+    rxnEmoji: {
+        fontSize: 12,
+        marginRight: 2,
     },
-    reactionCount: {
-        fontSize: 11,
-        color: '#aaa',
+    rxnCount: {
+        fontSize: 10,
+        color: '#999',
         fontWeight: '500',
     },
-    actionButtons: {
+    actionBtns: {
         flexDirection: 'row',
-        gap: 6,
+        gap: 4,
     },
-    actionBtn: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 10,
+    actBtn: {
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        borderRadius: 8,
         backgroundColor: '#2a2a2a',
     },
-    deleteBtn: {
-        backgroundColor: '#3a1a1a',
+    actBtnText: {
+        fontSize: 11,
     },
-    actionBtnText: {
-        fontSize: 12,
-    },
-    // === Empty state ===
+    // Empty
     emptyContainer: {
         alignItems: 'center',
         paddingVertical: 60,
@@ -659,7 +644,7 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
-    // === Post button ===
+    // Post button
     postButton: {
         marginHorizontal: 12,
         marginTop: 4,
@@ -668,33 +653,28 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 14,
         alignItems: 'center',
-        shadowColor: '#1a5f2a',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
     },
     postButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
-    // === Polls section ===
+    // Polls
     carouselContainer: {
-        marginBottom: 8,
+        marginBottom: 4,
         backgroundColor: '#1a1a1a',
         paddingVertical: 12,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#1a5f2a',
+        color: '#4caf50',
         marginLeft: 16,
         marginBottom: 12,
         marginTop: 8,
     },
     pollCard: {
-        width: 260,
+        width: 240,
         backgroundColor: '#252525',
         borderRadius: 12,
         marginRight: 12,
@@ -702,16 +682,16 @@ const styles = StyleSheet.create({
     },
     pollImage: {
         width: '100%',
-        height: 110,
+        height: 100,
     },
     pollContent: {
         padding: 12,
     },
     pollBadge: {
         position: 'absolute',
-        top: -100,
+        top: -90,
         right: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255,255,255,0.9)',
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 12,
@@ -722,17 +702,17 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     pollTitle: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '600',
         color: '#eee',
         marginBottom: 4,
-        height: 40,
+        height: 38,
     },
     pollMeta: {
         fontSize: 12,
         color: '#888',
     },
-    // === Archive toggle ===
+    // Archive toggle
     archiveToggle: {
         alignSelf: 'center',
         paddingHorizontal: 16,
