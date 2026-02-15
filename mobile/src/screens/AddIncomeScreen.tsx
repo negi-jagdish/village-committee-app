@@ -232,36 +232,39 @@ export default function AddIncomeScreen({ navigation }: any) {
                 if (selectedDrives.length === 1) {
                     // Single drive - use regular income endpoint
                     const drive = selectedDrives[0];
-                    const formData = new FormData();
-                    formData.append('member_id', selectedMember.toString());
+                    const jsonData: any = {
+                        member_id: selectedMember,
+                        amount: parseFloat(drive.customAmount || '0'),
+                        payment_method: paymentMethod,
+                        payment_date: paymentDate,
+                    };
 
                     // Handle Legacy Due (ID 0)
                     if (drive.id !== 0) {
-                        formData.append('drive_id', drive.id.toString());
-                    } // Else: don't append drive_id, it will represent NULL/legacy
+                        jsonData.drive_id = drive.id;
+                    }
 
-                    formData.append('amount', drive.customAmount || '0');
-                    formData.append('payment_method', paymentMethod);
-                    formData.append('payment_date', paymentDate);
-                    if (referenceId) formData.append('reference_id', referenceId);
-                    if (description) formData.append('description', description);
+                    if (referenceId) jsonData.reference_id = referenceId;
+                    if (description) jsonData.description = description;
 
-                    await transactionsAPI.createIncome(formData);
+                    await transactionsAPI.createIncome(jsonData);
                 } else {
                     // Multi-drive - use bulk income endpoint
                     const allocations = selectedDrives.map(d => ({
-                        drive_id: d.id === 0 ? null : d.id, // Handle Legacy Due
+                        drive_id: d.id === 0 ? null : d.id,
                         amount: parseFloat(d.customAmount || '0'),
                     }));
 
-                    const formData = new FormData();
-                    formData.append('member_id', selectedMember.toString());
-                    formData.append('total_amount', totalAmount.toString());
-                    formData.append('payment_method', paymentMethod);
-                    formData.append('allocations', JSON.stringify(allocations));
-                    if (description) formData.append('remarks', description);
+                    const jsonData = {
+                        member_id: selectedMember,
+                        total_amount: totalAmount,
+                        payment_method: paymentMethod,
+                        payment_date: paymentDate,
+                        allocations,
+                        remarks: description || undefined,
+                    };
 
-                    await transactionsAPI.createBulkIncome(formData);
+                    await transactionsAPI.createBulkIncome(jsonData as any);
                 }
 
                 Alert.alert('Success', 'Income entry recorded successfully!', [

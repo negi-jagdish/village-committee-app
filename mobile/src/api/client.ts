@@ -98,14 +98,18 @@ export const transactionsAPI = {
             headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' },
         });
     },
-    createBulkIncome: (data: FormData) =>
-        api.post('/transactions/bulk-income', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }),
-    createExpense: (data: FormData) =>
-        api.post('/transactions/expense', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }),
+    createBulkIncome: (data: FormData | any) => {
+        const isFormData = data instanceof FormData;
+        return api.post('/transactions/bulk-income', data, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' },
+        });
+    },
+    createExpense: (data: FormData | any) => {
+        const isFormData = data instanceof FormData;
+        return api.post('/transactions/expense', data, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' },
+        });
+    },
     approve: (id: number, status: 'approved' | 'rejected') =>
         api.patch(`/transactions/${id}/approve`, { status }),
     allowEdit: (id: number) => api.patch(`/transactions/${id}/allow-edit`),

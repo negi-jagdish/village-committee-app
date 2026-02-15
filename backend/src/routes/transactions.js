@@ -5,6 +5,16 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
+// Conditional upload middleware: only use multer for multipart/form-data requests
+const optionalUpload = (fieldName) => (req, res, next) => {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('multipart/form-data')) {
+        return upload.single(fieldName)(req, res, next);
+    }
+    // For JSON requests, skip multer entirely
+    next();
+};
+
 // Get all transactions (transparent view for all members)
 router.get('/', auth, async (req, res) => {
     try {
@@ -149,10 +159,10 @@ router.get('/:id', auth, async (req, res) => {
 
 // Create income entry (cashier/president)
 // For "Opening Balance", member_id can be null or skipped.
-router.post('/income', auth, upload.single('screenshot'), async (req, res) => {
+router.post('/income', auth, optionalUpload('screenshot'), async (req, res) => {
     try {
         const { member_id, drive_id, amount, description, description_hi, payment_method, payment_date, reference_id } = req.body;
-        const screenshot_url = req.file ? `/uploads/${req.file.filename}` : null;
+        const screenshot_url = req.file ? req.file.path : null;
 
         const isOpeningBalance = description === 'Opening Balance';
 
@@ -205,21 +215,15 @@ router.post('/income', auth, upload.single('screenshot'), async (req, res) => {
         res.status(201).json({ id: result.insertId, message: 'Income entry created successfully' });
     } catch (error) {
         console.error('Create income error:', error);
-        const debugInfo = {
-            message: error.message,
-            sqlMessage: error.sqlMessage,
-            body: req.body,
-            user: req.user.id
-        };
-        res.status(500).json({ error: JSON.stringify(debugInfo) });
+        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create income entry' });
     }
 });
 
 // Create bulk payment (cashier only) - single payment for multiple drives
-router.post('/bulk-income', auth, isCashier, upload.single('screenshot'), async (req, res) => {
+router.post('/bulk-income', auth, isCashier, optionalUpload('screenshot'), async (req, res) => {
     try {
         const { member_id, total_amount, payment_method, remarks, allocations, payment_date, reference_id } = req.body;
-        const screenshot_url = req.file ? `/uploads/${req.file.filename}` : null;
+        const screenshot_url = req.file ? req.file.path : null;
 
         // allocations is array of { drive_id, amount }
         const allocationsParsed = typeof allocations === 'string' ? JSON.parse(allocations) : allocations;
@@ -257,15 +261,15 @@ router.post('/bulk-income', auth, isCashier, upload.single('screenshot'), async 
         res.status(201).json({ payment_id: paymentId, message: 'Bulk payment recorded successfully' });
     } catch (error) {
         console.error('Create bulk income error:', error);
-        res.status(500).json({ error: JSON.stringify({ msg: error.message, sql: error.sqlMessage, body: req.body }) });
+        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create bulk payment' });
     }
 });
 
 // Create expense entry (cashier only) - needs approval
-router.post('/expense', auth, isCashier, upload.single('screenshot'), async (req, res) => {
+router.post('/expense', auth, isCashier, optionalUpload('screenshot'), async (req, res) => {
     try {
         const { amount, description, description_hi, payment_method, payment_date, reference_id } = req.body;
-        const screenshot_url = req.file ? `/uploads/${req.file.filename}` : null;
+        const screenshot_url = req.file ? req.file.path : null;
 
         if (!amount || !description || !payment_method) {
             return res.status(400).json({ error: 'Amount, description, and payment method are required' });
@@ -292,7 +296,7 @@ router.post('/expense', auth, isCashier, upload.single('screenshot'), async (req
         res.status(201).json({ id: result.insertId, message: 'Expense entry created. Pending president approval.' });
     } catch (error) {
         console.error('Create expense error:', error);
-        res.status(500).json({ error: JSON.stringify({ msg: error.message, sql: error.sqlMessage, body: req.body }) });
+        res.status(500).json({ error: error.sqlMessage || error.message || 'Failed to create expense entry' });
     }
 });
 
@@ -358,7 +362,7 @@ router.patch('/:id/allow-edit', auth, isPresident, async (req, res) => {
 });
 
 // Update transaction (cashier only, if edit_allowed)
-router.put('/:id', auth, isCashier, upload.single('screenshot'), async (req, res) => {
+router.put('/:id', auth, isCashier, optionalUpload('screenshot'), async (req, res) => {
     try {
         const [transaction] = await db.query('SELECT * FROM transactions WHERE id = ?', [req.params.id]);
 
@@ -371,7 +375,7 @@ router.put('/:id', auth, isCashier, upload.single('screenshot'), async (req, res
         }
 
         const { amount, description, description_hi, payment_method, payment_date, reference_id } = req.body;
-        const screenshot_url = req.file ? `/uploads/${req.file.filename}` : transaction[0].screenshot_url;
+        const screenshot_url = req.file ? req.file.path : transaction[0].screenshot_url;
 
         // If this is part of a bulk payment, we should probably warn or block? 
         // For now, let's assume single row edits only happen on single rows. 
@@ -394,7 +398,7 @@ router.put('/:id', auth, isCashier, upload.single('screenshot'), async (req, res
 });
 
 // Update BULK income (cashier only)
-router.put('/bulk-income/:paymentId', auth, isCashier, upload.single('screenshot'), async (req, res) => {
+router.put('/bulk-income/:paymentId', auth, isCashier, optionalUpload('screenshot'), async (req, res) => {
     try {
         const { member_id, total_amount, payment_method, remarks, allocations } = req.body;
         // allocations is array of { drive_id, amount }
@@ -431,7 +435,7 @@ router.put('/bulk-income/:paymentId', auth, isCashier, upload.single('screenshot
         await db.query('DELETE FROM transactions WHERE payment_id = ?', [paymentId]);
 
         // 4. Update Payment Record
-        const screenshot_url = req.file ? `/uploads/${req.file.filename}` : payment[0].screenshot_url;
+        const screenshot_url = req.file ? req.file.path : payment[0].screenshot_url;
         await db.query(
             'UPDATE payments SET total_amount = ?, payment_method = ?, remarks = ?, screenshot_url = ? WHERE id = ?',
             [total_amount, payment_method, remarks, screenshot_url, paymentId]
