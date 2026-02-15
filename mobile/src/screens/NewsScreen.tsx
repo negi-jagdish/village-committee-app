@@ -272,7 +272,6 @@ export default function NewsScreen({ navigation }: any) {
         const canDelete = item.posted_by === user?.id || isPresident;
 
         return (
-        return (
             <TouchableOpacity
                 style={styles.newsCard}
                 onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
@@ -401,72 +400,71 @@ export default function NewsScreen({ navigation }: any) {
                 </View>
             </TouchableOpacity>
         );
-        );
-};
+    };
 
-return (
-    <View style={styles.container}>
-        <FlatList
-            ListHeaderComponent={renderHeader}
-            data={news}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderNewsItem}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-                !loading ? (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyEmoji}>📰</Text>
-                        <Text style={styles.emptyText}>No news found</Text>
-                        <Text style={styles.emptySubtext}>Try changing your filters</Text>
+    return (
+        <View style={styles.container}>
+            <FlatList
+                ListHeaderComponent={renderHeader}
+                data={news}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderNewsItem}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                    !loading ? (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyEmoji}>📰</Text>
+                            <Text style={styles.emptyText}>No news found</Text>
+                            <Text style={styles.emptySubtext}>Try changing your filters</Text>
+                        </View>
+                    ) : null
+                }
+            />
+
+            {/* Bottom Filter Bar */}
+            <View style={styles.bottomSection}>
+                {/* Filters Row */}
+                <View style={styles.filterBar}>
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={CATEGORIES}
+                            selectedValue={categoryFilter}
+                            onValueChange={setCategoryFilter}
+                        />
                     </View>
-                ) : null
-            }
-        />
 
-        {/* Bottom Filter Bar */}
-        <View style={styles.bottomSection}>
-            {/* Filters Row */}
-            <View style={styles.filterBar}>
-                <View style={styles.filterItem}>
-                    <FilterDropdown
-                        options={CATEGORIES}
-                        selectedValue={categoryFilter}
-                        onValueChange={setCategoryFilter}
-                    />
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={SCOPES}
+                            selectedValue={scopeFilter}
+                            onValueChange={setScopeFilter}
+                        />
+                    </View>
+
+                    <View style={styles.filterItem}>
+                        <FilterDropdown
+                            options={SORT_OPTIONS}
+                            selectedValue={sortBy}
+                            onValueChange={setSortBy}
+                        />
+                    </View>
                 </View>
 
-                <View style={styles.filterItem}>
-                    <FilterDropdown
-                        options={SCOPES}
-                        selectedValue={scopeFilter}
-                        onValueChange={setScopeFilter}
-                    />
-                </View>
-
-                <View style={styles.filterItem}>
-                    <FilterDropdown
-                        options={SORT_OPTIONS}
-                        selectedValue={sortBy}
-                        onValueChange={setSortBy}
-                    />
-                </View>
+                {/* Post News Button */}
+                {canPostNews && (
+                    <TouchableOpacity
+                        style={styles.postButton}
+                        onPress={() => navigation.navigate('PostNews')}
+                    >
+                        <Text style={styles.postButtonText}>+ Post News</Text>
+                    </TouchableOpacity>
+                )}
             </View>
-
-            {/* Post News Button */}
-            {canPostNews && (
-                <TouchableOpacity
-                    style={styles.postButton}
-                    onPress={() => navigation.navigate('PostNews')}
-                >
-                    <Text style={styles.postButtonText}>+ Post News</Text>
-                </TouchableOpacity>
-            )}
         </View>
-    </View>
-);
+    );
 }
 
 const styles = StyleSheet.create({
