@@ -12,6 +12,7 @@ import {
     Platform,
     Dimensions,
     ImageBackground,
+    Animated,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,7 +24,7 @@ import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-pick
 import ImageResizer from 'react-native-image-resizer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HEADER_HEIGHT = 200;
+const HEADER_HEIGHT = 180;
 
 interface Contribution {
     id: number;
@@ -43,6 +44,16 @@ interface PendingDue {
     amount_pending: number;
 }
 
+type TabKey = 'overview' | 'history' | 'settings';
+
+const ROLE_COLORS: Record<string, { bg: string; text: string; label: string }> = {
+    president: { bg: '#FFF3E0', text: '#E65100', label: '🏛️ President' },
+    secretary: { bg: '#E3F2FD', text: '#1565C0', label: '📋 Secretary' },
+    cashier: { bg: '#E8F5E9', text: '#2E7D32', label: '💰 Cashier' },
+    reporter: { bg: '#F3E5F5', text: '#7B1FA2', label: '📰 Reporter' },
+    member: { bg: '#ECEFF1', text: '#455A64', label: '👤 Member' },
+};
+
 export default function ProfileScreen({ navigation }: any) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
@@ -51,8 +62,10 @@ export default function ProfileScreen({ navigation }: any) {
     const [contributions, setContributions] = useState<Contribution[]>([]);
     const [pendingDues, setPendingDues] = useState<PendingDue[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TabKey>('overview');
     const [uploadingProfile, setUploadingProfile] = useState(false);
     const [uploadingBackground, setUploadingBackground] = useState(false);
+    const [showAllDues, setShowAllDues] = useState(false);
 
     const fetchContributions = async () => {
         if (!user) return;
@@ -104,115 +117,69 @@ export default function ProfileScreen({ navigation }: any) {
 
     const compressImage = async (uri: string, maxSizeMB: number): Promise<string> => {
         try {
-            // Start with high quality and reduce if needed
             let quality = 90;
-            let width = maxSizeMB === 2 ? 800 : 1920; // Profile: 800px, Background: 1920px
+            let width = maxSizeMB === 2 ? 800 : 1920;
             let height = maxSizeMB === 2 ? 800 : 1080;
-
             const resized = await ImageResizer.createResizedImage(
-                uri,
-                width,
-                height,
-                'JPEG',
-                quality,
-                0,
-                undefined,
-                false,
+                uri, width, height, 'JPEG', quality, 0, undefined, false,
                 { mode: 'contain', onlyScaleDown: true }
             );
-
             return resized.uri;
         } catch (error) {
             console.error('Image compression error:', error);
-            return uri; // Return original if compression fails
+            return uri;
         }
     };
 
     const selectImage = (type: 'profile' | 'background') => {
-        const maxSize = type === 'profile' ? 2 : 5; // MB
-
+        const maxSize = type === 'profile' ? 2 : 5;
         Alert.alert(
             type === 'profile' ? 'Profile Picture' : 'Background Picture',
             'Choose an option',
             [
-                {
-                    text: '📷 Camera',
-                    onPress: () => captureFromCamera(type, maxSize),
-                },
-                {
-                    text: '🖼️ Gallery',
-                    onPress: () => pickFromGallery(type, maxSize),
-                },
+                { text: '📷 Camera', onPress: () => captureFromCamera(type, maxSize) },
+                { text: '🖼️ Gallery', onPress: () => pickFromGallery(type, maxSize) },
                 { text: 'Cancel', style: 'cancel' },
             ]
         );
     };
 
     const captureFromCamera = async (type: 'profile' | 'background', maxSizeMB: number) => {
-        const result = await launchCamera({
-            mediaType: 'photo',
-            quality: 0.8,
-        });
-
+        const result = await launchCamera({ mediaType: 'photo', quality: 0.8 });
         if (result.didCancel) return;
-        if (result.errorCode) {
-            Alert.alert('Error', result.errorMessage || 'Failed to capture image');
-            return;
-        }
-
-        if (result.assets && result.assets[0]) {
-            await uploadImage(result.assets[0], type, maxSizeMB);
-        }
+        if (result.errorCode) { Alert.alert('Error', result.errorMessage || 'Failed to capture image'); return; }
+        if (result.assets && result.assets[0]) await uploadImage(result.assets[0], type, maxSizeMB);
     };
 
     const pickFromGallery = async (type: 'profile' | 'background', maxSizeMB: number) => {
-        const result = await launchImageLibrary({
-            mediaType: 'photo',
-            quality: 0.8,
-        });
-
+        const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
         if (result.didCancel) return;
-        if (result.errorCode) {
-            Alert.alert('Error', result.errorMessage || 'Failed to pick image');
-            return;
-        }
-
-        if (result.assets && result.assets[0]) {
-            await uploadImage(result.assets[0], type, maxSizeMB);
-        }
+        if (result.errorCode) { Alert.alert('Error', result.errorMessage || 'Failed to pick image'); return; }
+        if (result.assets && result.assets[0]) await uploadImage(result.assets[0], type, maxSizeMB);
     };
 
     const uploadImage = async (asset: Asset, type: 'profile' | 'background', maxSizeMB: number) => {
         if (!user || !asset.uri) return;
-
         const setUploading = type === 'profile' ? setUploadingProfile : setUploadingBackground;
         setUploading(true);
-
         try {
-            // Compress image
             const compressedUri = await compressImage(asset.uri, maxSizeMB);
-
             const formData = new FormData();
             const file: any = {
                 uri: Platform.OS === 'ios' ? compressedUri.replace('file://', '') : compressedUri,
                 type: 'image/jpeg',
                 name: type === 'profile' ? 'profile.jpg' : 'background.jpg',
             };
-
             formData.append(type === 'profile' ? 'profile_picture' : 'background_picture', file);
-
             const response = type === 'profile'
                 ? await membersAPI.uploadProfilePicture(user.id, formData)
                 : await membersAPI.uploadBackgroundPicture(user.id, formData);
-
-            // Update user in store
             const updatedUser = {
                 ...user,
                 [type === 'profile' ? 'profile_picture' : 'background_picture']:
                     response.data[type === 'profile' ? 'profile_picture' : 'background_picture'],
             };
             dispatch(setUser(updatedUser));
-
             Alert.alert('Success', `${type === 'profile' ? 'Profile' : 'Background'} picture updated!`);
         } catch (error: any) {
             console.error('Upload error:', error);
@@ -222,11 +189,273 @@ export default function ProfileScreen({ navigation }: any) {
         }
     };
 
+    // Computed values
     const totalPending = pendingDues.reduce((sum, d) => sum + d.amount_pending, 0);
+    const totalPaid = contributions.reduce((sum, c) => sum + c.amount, 0);
+    const roleInfo = ROLE_COLORS[user?.role || 'member'] || ROLE_COLORS.member;
+    const visibleDues = showAllDues ? pendingDues : pendingDues.slice(0, 3);
+
+    // ─── Tab Content Renderers ───
+
+    const renderOverviewTab = () => (
+        <View style={styles.tabContent}>
+            {/* Stat Cards Row */}
+            <View style={styles.statsRow}>
+                <View style={[styles.statCard, { backgroundColor: '#E8F5E9' }]}>
+                    <Text style={[styles.statIcon]}>💰</Text>
+                    <Text style={[styles.statValue, { color: '#2E7D32' }]}>{formatCurrency(totalPaid)}</Text>
+                    <Text style={styles.statLabel}>{t('profile.totalPaid') || 'Total Paid'}</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: pendingDues.length > 0 ? '#FFF3E0' : '#E8F5E9' }]}>
+                    <Text style={[styles.statIcon]}>{pendingDues.length > 0 ? '⏳' : '✅'}</Text>
+                    <Text style={[styles.statValue, { color: pendingDues.length > 0 ? '#E65100' : '#2E7D32' }]}>
+                        {pendingDues.length > 0 ? formatCurrency(totalPending) : 'Clear!'}
+                    </Text>
+                    <Text style={styles.statLabel}>{t('profile.pendingDues') || 'Pending'}</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
+                    <Text style={[styles.statIcon]}>📊</Text>
+                    <Text style={[styles.statValue, { color: '#1565C0' }]}>{contributions.length}</Text>
+                    <Text style={styles.statLabel}>{t('profile.payments') || 'Payments'}</Text>
+                </View>
+            </View>
+
+            {/* Pending Dues with Progress Bars */}
+            {pendingDues.length > 0 && (
+                <View style={styles.duesCard}>
+                    <View style={styles.duesHeader}>
+                        <Text style={styles.duesTitle}>⚠️ {t('profile.pendingDues') || 'Pending Dues'}</Text>
+                        <View style={styles.duesTotalBadge}>
+                            <Text style={styles.duesTotalText}>{formatCurrency(totalPending)}</Text>
+                        </View>
+                    </View>
+                    {visibleDues.map((due) => {
+                        const progress = due.amount_required > 0 ? (due.amount_paid / due.amount_required) : 0;
+                        return (
+                            <View key={due.drive_id || 'legacy'} style={styles.dueItem}>
+                                <View style={styles.dueItemHeader}>
+                                    <Text style={styles.dueDriveTitle} numberOfLines={1}>
+                                        {language === 'hi' && due.drive_title_hi ? due.drive_title_hi : due.drive_title}
+                                    </Text>
+                                    <Text style={styles.dueAmountText}>
+                                        {formatCurrency(due.amount_paid)} / {formatCurrency(due.amount_required)}
+                                    </Text>
+                                </View>
+                                <View style={styles.progressBarBg}>
+                                    <View style={[styles.progressBarFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
+                                </View>
+                            </View>
+                        );
+                    })}
+                    {pendingDues.length > 3 && (
+                        <TouchableOpacity
+                            style={styles.showAllButton}
+                            onPress={() => setShowAllDues(!showAllDues)}
+                        >
+                            <Text style={styles.showAllText}>
+                                {showAllDues ? 'Show Less ▲' : `Show All (${pendingDues.length}) ▼`}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
+
+            {/* Quick Actions */}
+            <View style={styles.quickActionsCard}>
+                <Text style={styles.quickActionsTitle}>⚡ Quick Actions</Text>
+                <View style={styles.quickActionsGrid}>
+                    <TouchableOpacity
+                        style={styles.quickAction}
+                        onPress={() => navigation.navigate('AddMember', { member: user, isEdit: true })}
+                    >
+                        <View style={[styles.quickActionIcon, { backgroundColor: '#E3F2FD' }]}>
+                            <Text style={styles.quickActionEmoji}>✏️</Text>
+                        </View>
+                        <Text style={styles.quickActionLabel}>{t('profile.editProfile') || 'Edit Profile'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.quickAction}
+                        onPress={() => navigation.navigate('ChangePassword')}
+                    >
+                        <View style={[styles.quickActionIcon, { backgroundColor: '#FFF3E0' }]}>
+                            <Text style={styles.quickActionEmoji}>🔒</Text>
+                        </View>
+                        <Text style={styles.quickActionLabel}>{t('profile.changePassword') || 'Password'}</Text>
+                    </TouchableOpacity>
+                    {(user?.role === 'secretary' || user?.role === 'president') && (
+                        <TouchableOpacity
+                            style={styles.quickAction}
+                            onPress={() => navigation.navigate('MembersList')}
+                        >
+                            <View style={[styles.quickActionIcon, { backgroundColor: '#E8F5E9' }]}>
+                                <Text style={styles.quickActionEmoji}>👥</Text>
+                            </View>
+                            <Text style={styles.quickActionLabel}>{t('members.title') || 'Members'}</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+
+            {/* Recent Contributions (max 5) */}
+            {contributions.length > 0 && (
+                <View style={styles.recentCard}>
+                    <View style={styles.recentHeader}>
+                        <Text style={styles.recentTitle}>📋 Recent Payments</Text>
+                        <TouchableOpacity onPress={() => setActiveTab('history')}>
+                            <Text style={styles.viewAllText}>View All →</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {contributions.slice(0, 5).map((c) => (
+                        <View key={c.id} style={styles.recentItem}>
+                            <View style={styles.recentItemLeft}>
+                                <View style={styles.recentDot} />
+                                <View>
+                                    <Text style={styles.recentDrive} numberOfLines={1}>
+                                        {language === 'hi' && c.drive_title_hi ? c.drive_title_hi : c.drive_title || 'General'}
+                                    </Text>
+                                    <Text style={styles.recentDate}>
+                                        {new Date(c.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </Text>
+                                </View>
+                            </View>
+                            <Text style={styles.recentAmount}>{formatCurrency(c.amount)}</Text>
+                        </View>
+                    ))}
+                </View>
+            )}
+        </View>
+    );
+
+    const renderHistoryTab = () => (
+        <View style={styles.tabContent}>
+            {loading ? (
+                <ActivityIndicator size="large" color="#1a5f2a" style={{ marginTop: 40 }} />
+            ) : contributions.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={styles.emptyEmoji}>📭</Text>
+                    <Text style={styles.emptyTitle}>No Contributions Yet</Text>
+                    <Text style={styles.emptySubtitle}>Your payment history will appear here</Text>
+                </View>
+            ) : (
+                contributions.map((c, index) => (
+                    <View key={c.id} style={styles.historyItem}>
+                        <View style={styles.historyTimeline}>
+                            <View style={[styles.historyDot, index === 0 && styles.historyDotActive]} />
+                            {index < contributions.length - 1 && <View style={styles.historyLine} />}
+                        </View>
+                        <View style={styles.historyCard}>
+                            <View style={styles.historyCardHeader}>
+                                <Text style={styles.historyDrive} numberOfLines={1}>
+                                    {language === 'hi' && c.drive_title_hi ? c.drive_title_hi : c.drive_title || 'General'}
+                                </Text>
+                                <View style={[
+                                    styles.statusBadge,
+                                    c.status === 'approved' ? styles.statusApproved : styles.statusPending
+                                ]}>
+                                    <Text style={[
+                                        styles.statusText,
+                                        c.status === 'approved' ? styles.statusTextApproved : styles.statusTextPending
+                                    ]}>
+                                        {c.status === 'approved' ? '✓' : '⏳'} {c.status}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={styles.historyCardFooter}>
+                                <Text style={styles.historyDate}>
+                                    {new Date(c.created_at).toLocaleDateString('en-IN', {
+                                        day: '2-digit', month: 'short', year: 'numeric'
+                                    })}
+                                </Text>
+                                <Text style={styles.historyAmount}>{formatCurrency(c.amount)}</Text>
+                            </View>
+                        </View>
+                    </View>
+                ))
+            )}
+        </View>
+    );
+
+    const renderSettingsTab = () => (
+        <View style={styles.tabContent}>
+            {/* Language */}
+            <View style={styles.settingsSection}>
+                <Text style={styles.settingsSectionTitle}>🌐 {t('profile.language') || 'Language'}</Text>
+                <View style={styles.settingsCard}>
+                    <View style={styles.settingRow}>
+                        <Text style={styles.settingLabel}>English / हिंदी</Text>
+                        <View style={styles.languageToggle}>
+                            <Text style={[styles.langText, language === 'en' && styles.activeLang]}>EN</Text>
+                            <Switch
+                                value={language === 'hi'}
+                                onValueChange={toggleLanguage}
+                                trackColor={{ false: '#e0e0e0', true: '#bfe6c8' }}
+                                thumbColor={language === 'hi' ? '#1a5f2a' : '#999'}
+                            />
+                            <Text style={[styles.langText, language === 'hi' && styles.activeLang]}>हि</Text>
+                        </View>
+                    </View>
+                </View>
+            </View>
+
+            {/* Account */}
+            <View style={styles.settingsSection}>
+                <Text style={styles.settingsSectionTitle}>👤 Account</Text>
+                <View style={styles.settingsCard}>
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={() => navigation.navigate('AddMember', { member: user, isEdit: true })}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>✏️</Text>
+                            <Text style={styles.settingLabel}>{t('profile.editProfile') || 'Edit Profile'}</Text>
+                        </View>
+                        <Text style={styles.settingArrow}>›</Text>
+                    </TouchableOpacity>
+                    <View style={styles.settingDivider} />
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={() => navigation.navigate('ChangePassword')}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>🔒</Text>
+                            <Text style={styles.settingLabel}>{t('profile.changePassword') || 'Change Password'}</Text>
+                        </View>
+                        <Text style={styles.settingArrow}>›</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Management (role-based) */}
+            {(user?.role === 'secretary' || user?.role === 'president') && (
+                <View style={styles.settingsSection}>
+                    <Text style={styles.settingsSectionTitle}>🏛️ Management</Text>
+                    <View style={styles.settingsCard}>
+                        <TouchableOpacity
+                            style={styles.settingRow}
+                            onPress={() => navigation.navigate('MembersList')}
+                        >
+                            <View style={styles.settingRowLeft}>
+                                <Text style={styles.settingIcon}>👥</Text>
+                                <Text style={styles.settingLabel}>{t('members.title') || 'Manage Members'}</Text>
+                            </View>
+                            <Text style={styles.settingArrow}>›</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
+
+            {/* Logout */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <Text style={styles.logoutButtonText}>🚪 {t('auth.logout')}</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+        </View>
+    );
 
     return (
-        <ScrollView style={styles.container}>
-            {/* Profile Header with Background */}
+        <View style={styles.container}>
+            {/* Fixed Profile Header */}
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={() => selectImage('background')}
@@ -243,161 +472,93 @@ export default function ProfileScreen({ navigation }: any) {
                                 <ActivityIndicator size="small" color="#fff" />
                             </View>
                         )}
-                        <TouchableOpacity style={styles.editBackgroundHint}>
-                            <Text style={styles.editHintText}>📷 Tap to change background</Text>
-                        </TouchableOpacity>
+                        <View style={styles.headerContent}>
+                            {/* Avatar */}
+                            <TouchableOpacity
+                                style={styles.avatarContainer}
+                                onPress={() => selectImage('profile')}
+                                disabled={uploadingProfile}
+                            >
+                                {user?.profile_picture ? (
+                                    <Image source={{ uri: user.profile_picture }} style={styles.avatar} />
+                                ) : (
+                                    <View style={styles.avatarPlaceholder}>
+                                        <Text style={styles.avatarText}>
+                                            {user?.name?.charAt(0).toUpperCase()}
+                                        </Text>
+                                    </View>
+                                )}
+                                {uploadingProfile ? (
+                                    <View style={styles.avatarBadge}>
+                                        <ActivityIndicator size="small" color="#1a5f2a" />
+                                    </View>
+                                ) : (
+                                    <View style={styles.cameraBadge}>
+                                        <Text style={{ fontSize: 12 }}>📷</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                            {/* Info */}
+                            <View style={styles.headerInfo}>
+                                <Text style={styles.userName} numberOfLines={1}>{user?.name}</Text>
+                                <View style={[styles.roleBadge, { backgroundColor: roleInfo.bg }]}>
+                                    <Text style={[styles.roleBadgeText, { color: roleInfo.text }]}>
+                                        {roleInfo.label}
+                                    </Text>
+                                </View>
+                                <Text style={styles.userContact}>📞 {user?.contact}</Text>
+                            </View>
+                        </View>
                     </View>
                 </ImageBackground>
             </TouchableOpacity>
 
-            {/* Profile Picture */}
-            <View style={styles.profilePictureContainer}>
+            {/* Tab Bar */}
+            <View style={styles.tabBar}>
                 <TouchableOpacity
-                    style={styles.avatarContainer}
-                    onPress={() => selectImage('profile')}
-                    disabled={uploadingProfile}
+                    style={[styles.tab, activeTab === 'overview' && styles.tabActive]}
+                    onPress={() => setActiveTab('overview')}
                 >
-                    {user?.profile_picture ? (
-                        <Image source={{ uri: user.profile_picture }} style={styles.avatar} />
-                    ) : (
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.avatarText}>
-                                {user?.name?.charAt(0).toUpperCase()}
-                            </Text>
-                        </View>
-                    )}
-                    {uploadingProfile ? (
-                        <View style={styles.avatarLoading}>
-                            <ActivityIndicator size="small" color="#1a5f2a" />
-                        </View>
-                    ) : (
-                        <View style={styles.cameraIcon}>
-                            <Text style={styles.cameraIconText}>📷</Text>
-                        </View>
-                    )}
+                    <Text style={[styles.tabText, activeTab === 'overview' && styles.tabTextActive]}>
+                        📊 Overview
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'history' && styles.tabActive]}
+                    onPress={() => setActiveTab('history')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
+                        📋 History
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
+                    onPress={() => setActiveTab('settings')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>
+                        ⚙️ Settings
+                    </Text>
                 </TouchableOpacity>
             </View>
 
-            {/* User Info */}
-            <View style={styles.userInfo}>
-                <Text style={styles.userName}>{user?.name}</Text>
-                <Text style={styles.userRole}>
-                    {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
-                </Text>
-                <Text style={styles.userContact}>{user?.contact}</Text>
-                <Text style={styles.userContact}>
-                    {user?.sex ? user.sex.charAt(0).toUpperCase() + user.sex.slice(1) : 'Male'}
-                </Text>
-            </View>
-
-            {/* Pending Dues Summary */}
-            {pendingDues.length > 0 && (
-                <View style={styles.pendingCard}>
-                    <Text style={styles.pendingTitle}>{t('profile.pendingDues')}</Text>
-                    <Text style={styles.pendingAmount}>{formatCurrency(totalPending)}</Text>
-                    {pendingDues.map((due) => (
-                        <View key={due.drive_id || 'legacy'} style={styles.pendingItem}>
-                            <Text style={styles.pendingDriveTitle}>
-                                {language === 'hi' && due.drive_title_hi ? due.drive_title_hi : due.drive_title}
-                            </Text>
-                            <Text style={styles.pendingDriveAmount}>
-                                {formatCurrency(due.amount_pending)}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
-            )}
-
-            {/* Contributions List */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('profile.contributions')}</Text>
-                {contributions.length === 0 ? (
-                    <Text style={styles.emptyText}>No contributions yet</Text>
-                ) : (
-                    contributions.slice(0, 10).map((c) => (
-                        <View key={c.id} style={styles.contributionItem}>
-                            <View>
-                                <Text style={styles.contributionDrive}>
-                                    {language === 'hi' && c.drive_title_hi ? c.drive_title_hi : c.drive_title}
-                                </Text>
-                                <Text style={styles.contributionDate}>
-                                    {new Date(c.created_at).toLocaleDateString('en-IN')}
-                                </Text>
-                            </View>
-                            <Text style={styles.contributionAmount}>
-                                {formatCurrency(c.amount)}
-                            </Text>
-                        </View>
-                    ))
-                )}
-            </View>
-
-            {/* Settings */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
-
-                {/* Language Toggle */}
-                <View style={styles.settingItem}>
-                    <Text style={styles.settingLabel}>{t('profile.language')}</Text>
-                    <View style={styles.languageToggle}>
-                        <Text style={[styles.langText, language === 'en' && styles.activeLang]}>EN</Text>
-                        <Switch
-                            value={language === 'hi'}
-                            onValueChange={toggleLanguage}
-                            trackColor={{ false: '#e0e0e0', true: '#bfe6c8' }}
-                            thumbColor={language === 'hi' ? '#1a5f2a' : '#999'}
-                        />
-                        <Text style={[styles.langText, language === 'hi' && styles.activeLang]}>हि</Text>
-                    </View>
-                </View>
-
-                {/* Edit Profile */}
-                <TouchableOpacity
-                    style={styles.settingItem}
-                    onPress={() => navigation.navigate('AddMember', { member: user, isEdit: true })}
-                >
-                    <Text style={styles.settingLabel}>{t('profile.editProfile')}</Text>
-                    <Text style={styles.settingArrow}>→</Text>
-                </TouchableOpacity>
-
-                {/* Change Password */}
-                <TouchableOpacity
-                    style={styles.settingItem}
-                    onPress={() => navigation.navigate('ChangePassword')}
-                >
-                    <Text style={styles.settingLabel}>{t('profile.changePassword')}</Text>
-                    <Text style={styles.settingArrow}>→</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Role-based Actions */}
-            {(user?.role === 'secretary' || user?.role === 'president') && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Management</Text>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => navigation.navigate('MembersList')}
-                    >
-                        <Text style={styles.actionButtonText}>{t('members.title')}</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            {/* Logout Button */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.logoutButtonText}>{t('auth.logout')}</Text>
-            </TouchableOpacity>
-
-            <View style={{ height: 40 }} />
-        </ScrollView>
+            {/* Tab Content */}
+            <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+                {activeTab === 'overview' && renderOverviewTab()}
+                {activeTab === 'history' && renderHistoryTab()}
+                {activeTab === 'settings' && renderSettingsTab()}
+                <View style={{ height: 30 }} />
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F5F6FA',
     },
+
+    // ─── Header ───
     headerBackground: {
         width: SCREEN_WIDTH,
         height: HEADER_HEIGHT,
@@ -408,240 +569,418 @@ const styles = StyleSheet.create({
     },
     headerOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(26, 95, 42, 0.6)',
+        backgroundColor: 'rgba(20, 80, 35, 0.75)',
         justifyContent: 'flex-end',
-        alignItems: 'center',
-        paddingBottom: 10,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
     },
     uploadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center',
+    },
+    headerContent: {
+        flexDirection: 'row',
         alignItems: 'center',
-    },
-    editBackgroundHint: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    editHintText: {
-        color: '#fff',
-        fontSize: 12,
-    },
-    profilePictureContainer: {
-        alignItems: 'center',
-        marginTop: -50,
     },
     avatarContainer: {
         position: 'relative',
     },
     avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 4,
-        borderColor: '#fff',
+        width: 72, height: 72, borderRadius: 36,
+        borderWidth: 3, borderColor: '#fff',
     },
     avatarPlaceholder: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 72, height: 72, borderRadius: 36,
         backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 4,
-        borderColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 4,
+        justifyContent: 'center', alignItems: 'center',
+        borderWidth: 3, borderColor: '#fff',
     },
     avatarText: {
-        fontSize: 40,
-        fontWeight: 'bold',
-        color: '#1a5f2a',
+        fontSize: 28, fontWeight: 'bold', color: '#1a5f2a',
     },
-    avatarLoading: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-        elevation: 2,
+    avatarBadge: {
+        position: 'absolute', bottom: -2, right: -2,
+        width: 26, height: 26, borderRadius: 13,
+        backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 2, borderColor: '#fff',
     },
-    cameraIcon: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#1a5f2a',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
+    cameraBadge: {
+        position: 'absolute', bottom: -2, right: -2,
+        width: 26, height: 26, borderRadius: 13,
+        backgroundColor: '#1a5f2a', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 2, borderColor: '#fff',
     },
-    cameraIconText: {
-        fontSize: 14,
-    },
-    userInfo: {
-        alignItems: 'center',
-        paddingVertical: 16,
+    headerInfo: {
+        marginLeft: 14, flex: 1,
     },
     userName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: 20, fontWeight: 'bold', color: '#fff',
     },
-    userRole: {
-        fontSize: 14,
-        color: '#1a5f2a',
-        marginTop: 4,
-        fontWeight: '600',
+    roleBadge: {
+        alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3,
+        borderRadius: 12, marginTop: 4,
+    },
+    roleBadgeText: {
+        fontSize: 11, fontWeight: '700',
     },
     userContact: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 2,
+        fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4,
     },
-    pendingCard: {
-        backgroundColor: '#fff3e0',
-        margin: 16,
-        borderRadius: 12,
+
+    // ─── Tab Bar ───
+    tabBar: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        elevation: 2,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08, shadowRadius: 4,
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
+        marginHorizontal: 4,
+    },
+    tabActive: {
+        backgroundColor: '#E8F5E9',
+    },
+    tabText: {
+        fontSize: 13, fontWeight: '600', color: '#999',
+    },
+    tabTextActive: {
+        color: '#1a5f2a',
+    },
+    scrollArea: {
+        flex: 1,
+    },
+    tabContent: {
         padding: 16,
+    },
+
+    // ─── Stats Row ───
+    statsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 16,
+    },
+    statCard: {
+        flex: 1,
+        borderRadius: 14,
+        padding: 14,
+        alignItems: 'center',
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
+    },
+    statIcon: {
+        fontSize: 20,
+        marginBottom: 4,
+    },
+    statValue: {
+        fontSize: 16, fontWeight: 'bold',
+    },
+    statLabel: {
+        fontSize: 11, color: '#666', marginTop: 2,
+    },
+
+    // ─── Dues Card ───
+    duesCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 16,
         borderLeftWidth: 4,
-        borderLeftColor: '#ff9800',
+        borderLeftColor: '#FF9800',
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
     },
-    pendingTitle: {
-        fontSize: 14,
-        color: '#e65100',
-        fontWeight: '600',
-    },
-    pendingAmount: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#e65100',
-        marginVertical: 8,
-    },
-    pendingItem: {
+    duesHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 4,
+        alignItems: 'center',
+        marginBottom: 14,
     },
-    pendingDriveTitle: {
-        fontSize: 14,
-        color: '#666',
+    duesTitle: {
+        fontSize: 15, fontWeight: '700', color: '#333',
     },
-    pendingDriveAmount: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#e65100',
+    duesTotalBadge: {
+        backgroundColor: '#FFF3E0',
+        paddingHorizontal: 10, paddingVertical: 4,
+        borderRadius: 12,
     },
-    section: {
-        padding: 16,
+    duesTotalText: {
+        fontSize: 13, fontWeight: '700', color: '#E65100',
     },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+    dueItem: {
         marginBottom: 12,
     },
-    emptyText: {
-        color: '#999',
-        textAlign: 'center',
-        paddingVertical: 20,
-    },
-    contributionItem: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 8,
+    dueItemHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        marginBottom: 6,
     },
-    contributionDrive: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#333',
+    dueDriveTitle: {
+        fontSize: 13, color: '#555', flex: 1, marginRight: 8,
     },
-    contributionDate: {
-        fontSize: 12,
-        color: '#999',
+    dueAmountText: {
+        fontSize: 12, color: '#888',
     },
-    contributionAmount: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#2e7d32',
+    progressBarBg: {
+        height: 6, backgroundColor: '#EEEEEE', borderRadius: 3,
+        overflow: 'hidden',
     },
-    settingItem: {
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#4CAF50',
+        borderRadius: 3,
+    },
+    showAllButton: {
+        alignItems: 'center', paddingTop: 8,
+    },
+    showAllText: {
+        fontSize: 13, color: '#1a5f2a', fontWeight: '600',
+    },
+
+    // ─── Quick Actions ───
+    quickActionsCard: {
         backgroundColor: '#fff',
-        borderRadius: 8,
+        borderRadius: 14,
         padding: 16,
-        marginBottom: 8,
+        marginBottom: 16,
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
+    },
+    quickActionsTitle: {
+        fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 14,
+    },
+    quickActionsGrid: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    quickAction: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    quickActionIcon: {
+        width: 48, height: 48, borderRadius: 14,
+        justifyContent: 'center', alignItems: 'center',
+        marginBottom: 6,
+    },
+    quickActionEmoji: {
+        fontSize: 22,
+    },
+    quickActionLabel: {
+        fontSize: 12, color: '#555', textAlign: 'center',
+    },
+
+    // ─── Recent Payments ───
+    recentCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 16,
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
+    },
+    recentHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 12,
+    },
+    recentTitle: {
+        fontSize: 15, fontWeight: '700', color: '#333',
+    },
+    viewAllText: {
+        fontSize: 13, color: '#1a5f2a', fontWeight: '600',
+    },
+    recentItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F5F5F5',
+    },
+    recentItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    recentDot: {
+        width: 8, height: 8, borderRadius: 4,
+        backgroundColor: '#4CAF50',
+        marginRight: 10,
+    },
+    recentDrive: {
+        fontSize: 14, fontWeight: '500', color: '#333',
+    },
+    recentDate: {
+        fontSize: 11, color: '#999', marginTop: 2,
+    },
+    recentAmount: {
+        fontSize: 15, fontWeight: 'bold', color: '#2E7D32',
+    },
+
+    // ─── History Tab ───
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyEmoji: {
+        fontSize: 48, marginBottom: 12,
+    },
+    emptyTitle: {
+        fontSize: 18, fontWeight: '600', color: '#333',
+    },
+    emptySubtitle: {
+        fontSize: 14, color: '#999', marginTop: 4,
+    },
+    historyItem: {
+        flexDirection: 'row',
+        marginBottom: 2,
+    },
+    historyTimeline: {
+        width: 24,
+        alignItems: 'center',
+    },
+    historyDot: {
+        width: 10, height: 10, borderRadius: 5,
+        backgroundColor: '#C8E6C9',
+        marginTop: 14,
+    },
+    historyDotActive: {
+        backgroundColor: '#4CAF50',
+        width: 12, height: 12, borderRadius: 6,
+    },
+    historyLine: {
+        width: 2, flex: 1,
+        backgroundColor: '#E0E0E0',
+        marginTop: 4,
+    },
+    historyCard: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 14,
+        marginLeft: 8,
+        marginBottom: 8,
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
+    },
+    historyCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    historyDrive: {
+        fontSize: 14, fontWeight: '600', color: '#333', flex: 1, marginRight: 8,
+    },
+    statusBadge: {
+        paddingHorizontal: 8, paddingVertical: 3,
+        borderRadius: 10,
+    },
+    statusApproved: {
+        backgroundColor: '#E8F5E9',
+    },
+    statusPending: {
+        backgroundColor: '#FFF3E0',
+    },
+    statusText: {
+        fontSize: 11, fontWeight: '600', textTransform: 'capitalize',
+    },
+    statusTextApproved: {
+        color: '#2E7D32',
+    },
+    statusTextPending: {
+        color: '#E65100',
+    },
+    historyCardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 8,
+    },
+    historyDate: {
+        fontSize: 12, color: '#999',
+    },
+    historyAmount: {
+        fontSize: 16, fontWeight: 'bold', color: '#2E7D32',
+    },
+
+    // ─── Settings Tab ───
+    settingsSection: {
+        marginBottom: 20,
+    },
+    settingsSectionTitle: {
+        fontSize: 13, fontWeight: '700', color: '#888',
+        marginBottom: 8, marginLeft: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    settingsCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        overflow: 'hidden',
+        elevation: 1,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 3,
+    },
+    settingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+    },
+    settingRowLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    settingIcon: {
+        fontSize: 18,
+        marginRight: 12,
     },
     settingLabel: {
-        fontSize: 16,
-        color: '#333',
+        fontSize: 15, color: '#333',
     },
     settingArrow: {
-        fontSize: 20,
-        color: '#999',
+        fontSize: 22, color: '#CCC', fontWeight: '300',
+    },
+    settingDivider: {
+        height: 1,
+        backgroundColor: '#F0F0F0',
+        marginLeft: 46,
     },
     languageToggle: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     langText: {
-        fontSize: 14,
-        color: '#999',
-        marginHorizontal: 8,
+        fontSize: 14, color: '#999', marginHorizontal: 6,
     },
     activeLang: {
-        color: '#1a5f2a',
-        fontWeight: 'bold',
+        color: '#1a5f2a', fontWeight: 'bold',
     },
-    actionButton: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 16,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#1a5f2a',
-    },
-    actionButtonText: {
-        color: '#1a5f2a',
-        fontWeight: '600',
-        fontSize: 16,
-    },
+
+    // ─── Logout ───
     logoutButton: {
-        backgroundColor: '#d32f2f',
-        margin: 16,
-        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderRadius: 14,
         padding: 16,
         alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#EF5350',
+        marginTop: 8,
     },
     logoutButtonText: {
-        color: '#fff',
+        color: '#EF5350',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 15,
     },
 });
