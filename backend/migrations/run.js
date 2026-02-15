@@ -3,6 +3,15 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+// Strip SQL comments from a statement
+const stripComments = (sql) => {
+    return sql
+        .split('\n')
+        .filter(line => !line.trim().startsWith('--'))
+        .join('\n')
+        .trim();
+};
+
 const runMigrations = async () => {
     const connection = await mysql.createConnection({
         host: process.env.DB_HOST,
@@ -27,12 +36,10 @@ const runMigrations = async () => {
             const sql = fs.readFileSync(migrationFile, 'utf8');
 
             // Split SQL into individual statements for TiDB compatibility
-            // TiDB doesn't support multipleStatements well - it pre-validates all
-            // statements before executing, so CREATE TABLE + INSERT in same batch fails
             const statements = sql
                 .split(';')
-                .map(s => s.trim())
-                .filter(s => s.length > 0 && !s.startsWith('--'));
+                .map(s => stripComments(s))
+                .filter(s => s.length > 0);
 
             for (const statement of statements) {
                 try {
