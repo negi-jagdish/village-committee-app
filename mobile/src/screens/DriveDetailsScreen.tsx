@@ -125,34 +125,34 @@ export default function DriveDetailsScreen({ route }: any) {
     };
 
     const renderMember = ({ item }: { item: MemberStatus }) => (
-        <View style={styles.memberCard}>
+        <View style={[styles.memberCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
             <View style={styles.memberInfo}>
-                <Text style={styles.memberName}>{item.name}</Text>
-                <Text style={styles.memberFather}>S/o {item.father_name}</Text>
-                <Text style={styles.memberContact}>{item.contact_1}</Text>
+                <Text style={[styles.memberName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={[styles.memberFather, { color: colors.textSecondary }]}>S/o {item.father_name}</Text>
+                <Text style={[styles.memberContact, { color: colors.textTertiary }]}>{item.contact_1}</Text>
             </View>
             <View style={styles.paymentInfo}>
                 <View style={[
                     styles.statusBadge,
-                    item.status === 'paid' && styles.statusPaid,
-                    item.status === 'partial' && styles.statusPartial,
-                    item.status === 'pending' && styles.statusPending,
+                    item.status === 'paid' && { backgroundColor: colors.successBg },
+                    item.status === 'partial' && { backgroundColor: colors.warningBg },
+                    item.status === 'pending' && { backgroundColor: colors.errorBg },
                 ]}>
                     <Text style={[
                         styles.statusText,
-                        item.status === 'paid' && styles.statusTextPaid,
-                        item.status === 'partial' && styles.statusTextPartial,
-                        item.status === 'pending' && styles.statusTextPending,
+                        item.status === 'paid' && { color: colors.success },
+                        item.status === 'partial' && { color: colors.warning },
+                        item.status === 'pending' && { color: colors.error },
                     ]}>
                         {item.status === 'paid' ? '✓ Paid' :
                             item.status === 'partial' ? 'Partial' : 'Pending'}
                     </Text>
                 </View>
-                <Text style={styles.paidAmount}>
+                <Text style={[styles.paidAmount, { color: colors.textSecondary }]}>
                     {formatCurrency(item.paid_amount)} / {formatCurrency(item.amount_required)}
                 </Text>
                 {item.pending_amount > 0 && !item.is_waived && (
-                    <Text style={styles.pendingAmount}>
+                    <Text style={[styles.pendingAmount, { color: colors.error }]}>
                         Due: {formatCurrency(item.pending_amount)}
                     </Text>
                 )}
@@ -161,10 +161,10 @@ export default function DriveDetailsScreen({ route }: any) {
                 )}
                 {user?.role === 'president' && (item.status !== 'paid' || item.is_waived) && (
                     <TouchableOpacity
-                        style={styles.waiveButton}
+                        style={[styles.waiveButton, { backgroundColor: colors.border }]}
                         onPress={() => handleWaive(item.id, item.is_waived)}
                     >
-                        <Text style={styles.waiveButtonText}>
+                        <Text style={[styles.waiveButtonText, { color: colors.text }]}>
                             {item.is_waived ? 'Un-Waive' : 'Waive'}
                         </Text>
                     </TouchableOpacity>
@@ -191,30 +191,31 @@ export default function DriveDetailsScreen({ route }: any) {
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Drive Summary */}
+            {/* Drive Summary */}
             {drive && (
-                <View style={styles.summaryCard}>
-                    <Text style={styles.driveTitle}>
+                <View style={[styles.summaryCard, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+                    <Text style={[styles.driveTitle, { color: colors.text }]}>
                         {language === 'hi' && drive.title_hi ? drive.title_hi : drive.title}
                     </Text>
                     {drive.description && (
-                        <Text style={styles.driveDescription}>
+                        <Text style={[styles.driveDescription, { color: colors.textSecondary }]}>
                             {language === 'hi' && drive.description_hi ? drive.description_hi : drive.description}
                         </Text>
                     )}
                     <View style={styles.summaryRow}>
                         <View style={styles.summaryItem}>
-                            <Text style={styles.summaryLabel}>Target</Text>
-                            <Text style={styles.summaryValue}>{formatCurrency(totalTarget)}</Text>
+                            <Text style={[styles.summaryLabel, { color: colors.textTertiary }]}>Target</Text>
+                            <Text style={[styles.summaryValue, { color: colors.text }]}>{formatCurrency(totalTarget)}</Text>
                         </View>
                         <View style={styles.summaryItem}>
-                            <Text style={styles.summaryLabel}>Collected</Text>
-                            <Text style={[styles.summaryValue, { color: '#2e7d32' }]}>
+                            <Text style={[styles.summaryLabel, { color: colors.textTertiary }]}>Collected</Text>
+                            <Text style={[styles.summaryValue, { color: colors.success }]}>
                                 {formatCurrency(totalCollected)}
                             </Text>
                         </View>
                         <View style={styles.summaryItem}>
-                            <Text style={styles.summaryLabel}>Pending</Text>
-                            <Text style={[styles.summaryValue, { color: '#d32f2f' }]}>
+                            <Text style={[styles.summaryLabel, { color: colors.textTertiary }]}>Pending</Text>
+                            <Text style={[styles.summaryValue, { color: colors.error }]}>
                                 {formatCurrency(totalTarget - totalCollected)}
                             </Text>
                         </View>
@@ -223,19 +224,21 @@ export default function DriveDetailsScreen({ route }: any) {
             )}
 
             {/* Filter Tabs */}
-            <View style={styles.filterTabs}>
+            <View style={[styles.filterTabs, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 {(['all', 'paid', 'partial', 'pending'] as const).map((status) => (
                     <TouchableOpacity
                         key={status}
                         style={[
                             styles.filterTab,
-                            filter === status && styles.filterTabActive,
+                            { borderBottomColor: 'transparent' },
+                            filter === status && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
                         ]}
                         onPress={() => setFilter(status)}
                     >
                         <Text style={[
                             styles.filterTabText,
-                            filter === status && styles.filterTabTextActive,
+                            { color: colors.textSecondary },
+                            filter === status && { color: colors.primary, fontWeight: 'bold' },
                         ]}>
                             {status.charAt(0).toUpperCase() + status.slice(1)} ({statusCounts[status]})
                         </Text>
@@ -255,7 +258,7 @@ export default function DriveDetailsScreen({ route }: any) {
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <Text style={styles.emptyIcon}>📋</Text>
-                        <Text style={styles.emptyText}>No members in this category</Text>
+                        <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No members in this category</Text>
                     </View>
                 }
             />

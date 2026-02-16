@@ -6,6 +6,7 @@ import {
     StyleSheet,
     RefreshControl,
     TouchableOpacity,
+    Image,
     Modal,
     ScrollView,
     ActivityIndicator,
@@ -17,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 import { RootState } from '../store';
 import api, { transactionsAPI, drivesAPI } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
+import { getImageUrl } from '../utils/imageHelper';
 
 interface Transaction {
     id: number;
@@ -26,6 +28,7 @@ interface Transaction {
     description_hi: string;
     member_id: number;
     member_name: string;
+    profile_picture_url?: string;
     drive_id: number;
     drive_title: string;
     drive_title_hi: string;
@@ -41,6 +44,7 @@ interface GroupedTransaction {
     type: 'income' | 'expense';
     totalAmount: number;
     member_name: string;
+    profile_picture_url?: string;
     drives: { id: number; title: string; amount: number }[];
     payment_method: string;
     status: string;
@@ -66,8 +70,11 @@ const MONTHS = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function TransactionsScreen({ navigation }: any) {
     const { colors, isDark } = useTheme();
+    const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const language = useSelector((state: RootState) => state.app.language);
     const user = useSelector((state: RootState) => state.auth.user);
@@ -165,6 +172,7 @@ export default function TransactionsScreen({ navigation }: any) {
                     type: t.type,
                     totalAmount: parseFloat(String(t.amount)),
                     member_name: t.member_name,
+                    profile_picture_url: t.profile_picture_url,
                     drives: t.drive_title ? [{
                         id: t.drive_id,
                         title: language === 'hi' && t.drive_title_hi ? t.drive_title_hi : t.drive_title,
@@ -226,7 +234,7 @@ export default function TransactionsScreen({ navigation }: any) {
 
     const renderTransaction = ({ item }: { item: GroupedTransaction }) => (
         <TouchableOpacity
-            style={styles.transactionCard}
+            style={[styles.transactionCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
             onPress={() => {
                 navigation.navigate('TransactionDetails', {
                     transactionId: item.transactions[0].id,
@@ -236,48 +244,55 @@ export default function TransactionsScreen({ navigation }: any) {
                 });
             }}
         >
-            <View style={styles.transactionIcon}>
-                <Text style={styles.transactionIconText}>
-                    {item.type === 'income' ? '↓' : '↑'}
-                </Text>
+            <View style={[styles.transactionIcon, { backgroundColor: colors.inputBg }]}>
+                {item.type === 'income' && item.profile_picture_url ? (
+                    <Image
+                        source={{ uri: getImageUrl(item.profile_picture_url) }}
+                        style={styles.avatarImage}
+                    />
+                ) : (
+                    <Text style={[styles.transactionIconText, { color: colors.text }]}>
+                        {item.type === 'income' ? '↓' : '↑'}
+                    </Text>
+                )}
             </View>
 
             <View style={styles.transactionInfo}>
                 <View style={styles.transactionHeader}>
-                    <Text style={styles.transactionTitle}>
+                    <Text style={[styles.transactionTitle, { color: colors.text }]}>
                         {item.type === 'income'
                             ? item.member_name
                             : (item.transactions[0]?.description || 'Expense')}
                         {item.isBulk && (
-                            <Text style={styles.bulkBadge}> ({item.drives.length} drives)</Text>
+                            <Text style={[styles.bulkBadge, { color: colors.primary }]}> ({item.drives.length} drives)</Text>
                         )}
                     </Text>
                     <Text style={[
                         styles.transactionAmount,
-                        { color: item.type === 'income' ? '#2e7d32' : '#d32f2f' }
+                        { color: item.type === 'income' ? colors.success : colors.error }
                     ]}>
-                        {item.type === 'income' ? '+' : '-'}{formatCurrency(item.totalAmount)}
+                        {item.type === 'income' ? '+' : '-'} {formatCurrency(item.totalAmount)}
                     </Text>
                 </View>
 
                 {/* Show drives for income */}
                 {item.type === 'income' && item.drives.length > 0 && (
-                    <Text style={styles.transactionDrives} numberOfLines={2}>
+                    <Text style={[styles.transactionDrives, { color: colors.textSecondary }]} numberOfLines={2}>
                         {item.drives.map(d => d.title).join(', ')}
                     </Text>
                 )}
 
                 <View style={styles.transactionMeta}>
-                    <Text style={styles.transactionSubtitle}>
+                    <Text style={[styles.transactionSubtitle, { color: colors.textTertiary }]}>
                         {getPaymentMethodLabel(item.payment_method)} • {formatDate(item.created_at)}
                     </Text>
                     <View style={[
                         styles.statusBadge,
-                        { backgroundColor: item.status === 'approved' ? '#e8f5e9' : '#fff3e0' }
+                        { backgroundColor: item.status === 'approved' ? colors.successBg : colors.warningBg }
                     ]}>
                         <Text style={[
                             styles.statusText,
-                            { color: item.status === 'approved' ? '#2e7d32' : '#e65100' }
+                            { color: item.status === 'approved' ? colors.success : colors.warning }
                         ]}>
                             {item.status}
                         </Text>
@@ -295,31 +310,33 @@ export default function TransactionsScreen({ navigation }: any) {
             transparent
             onRequestClose={() => setShowFilters(false)}
         >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Filter Transactions</Text>
+            <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+                <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                    <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Filter Transactions</Text>
                         <TouchableOpacity onPress={() => setShowFilters(false)}>
-                            <Text style={styles.modalClose}>✕</Text>
+                            <Text style={[styles.modalClose, { color: colors.textTertiary }]}>✕</Text>
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={styles.modalBody}>
                         {/* Type Filter */}
-                        <Text style={styles.filterLabel}>Transaction Type</Text>
+                        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Transaction Type</Text>
                         <View style={styles.typeFilters}>
                             {(['all', 'income', 'expense'] as const).map((type) => (
                                 <TouchableOpacity
                                     key={type}
                                     style={[
                                         styles.typeButton,
-                                        typeFilter === type && styles.typeButtonActive,
+                                        { backgroundColor: colors.inputBg },
+                                        typeFilter === type && { backgroundColor: colors.primary },
                                     ]}
                                     onPress={() => setTypeFilter(type)}
                                 >
                                     <Text style={[
                                         styles.typeButtonText,
-                                        typeFilter === type && styles.typeButtonTextActive,
+                                        { color: colors.textSecondary },
+                                        typeFilter === type && { color: colors.primaryText, fontWeight: 'bold' },
                                     ]}>
                                         {type.charAt(0).toUpperCase() + type.slice(1)}
                                     </Text>
@@ -328,73 +345,77 @@ export default function TransactionsScreen({ navigation }: any) {
                         </View>
 
                         {/* Member Filter */}
-                        <Text style={styles.filterLabel}>Member</Text>
-                        <View style={styles.pickerContainer}>
+                        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Member</Text>
+                        <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                             <Picker
                                 selectedValue={memberFilter}
                                 onValueChange={setMemberFilter}
-                                style={styles.picker}
+                                style={[styles.picker, { color: colors.inputText }]}
+                                dropdownIconColor={colors.text}
                             >
-                                <Picker.Item label="All Members" value={undefined} />
+                                <Picker.Item label="All Members" value={undefined} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 {members.map(m => (
-                                    <Picker.Item key={m.id} label={m.name} value={m.id} />
+                                    <Picker.Item key={m.id} label={m.name} value={m.id} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 ))}
                             </Picker>
                         </View>
 
                         {/* Drive Filter */}
-                        <Text style={styles.filterLabel}>Contribution Drive</Text>
-                        <View style={styles.pickerContainer}>
+                        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Contribution Drive</Text>
+                        <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                             <Picker
                                 selectedValue={driveFilter}
                                 onValueChange={setDriveFilter}
-                                style={styles.picker}
+                                style={[styles.picker, { color: colors.inputText }]}
+                                dropdownIconColor={colors.text}
                             >
-                                <Picker.Item label="All Drives" value={undefined} />
+                                <Picker.Item label="All Drives" value={undefined} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 {drives.map(d => (
-                                    <Picker.Item key={d.id} label={d.title} value={d.id} />
+                                    <Picker.Item key={d.id} label={d.title} value={d.id} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 ))}
                             </Picker>
                         </View>
 
                         {/* Month/Year Filter */}
-                        <Text style={styles.filterLabel}>Month</Text>
-                        <View style={styles.pickerContainer}>
+                        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Month</Text>
+                        <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                             <Picker
                                 selectedValue={monthFilter}
                                 onValueChange={setMonthFilter}
-                                style={styles.picker}
+                                style={[styles.picker, { color: colors.inputText }]}
+                                dropdownIconColor={colors.text}
                             >
-                                <Picker.Item label="All Months" value={undefined} />
+                                <Picker.Item label="All Months" value={undefined} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 {MONTHS.map((month, index) => (
-                                    <Picker.Item key={index} label={month} value={index} />
+                                    <Picker.Item key={index} label={month} value={index} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 ))}
                             </Picker>
                         </View>
 
-                        <Text style={styles.filterLabel}>Year</Text>
-                        <View style={styles.pickerContainer}>
+                        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Year</Text>
+                        <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                             <Picker
                                 selectedValue={yearFilter}
                                 onValueChange={setYearFilter}
-                                style={styles.picker}
+                                style={[styles.picker, { color: colors.inputText }]}
+                                dropdownIconColor={colors.text}
                             >
                                 {[2024, 2025, 2026, 2027].map(year => (
-                                    <Picker.Item key={year} label={year.toString()} value={year} />
+                                    <Picker.Item key={year} label={year.toString()} value={year} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                                 ))}
                             </Picker>
                         </View>
                     </ScrollView>
 
-                    <View style={styles.modalFooter}>
-                        <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
-                            <Text style={styles.clearButtonText}>Clear All</Text>
+                    <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+                        <TouchableOpacity style={[styles.clearButton, { borderColor: colors.border }]} onPress={clearFilters}>
+                            <Text style={[styles.clearButtonText, { color: colors.textSecondary }]}>Clear All</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.applyButton}
+                            style={[styles.applyButton, { backgroundColor: colors.primary }]}
                             onPress={() => setShowFilters(false)}
                         >
-                            <Text style={styles.applyButtonText}>Apply Filters</Text>
+                            <Text style={[styles.applyButtonText, { color: colors.primaryText }]}>Apply Filters</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -403,21 +424,23 @@ export default function TransactionsScreen({ navigation }: any) {
     );
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
             {/* Transaction Type Tabs */}
-            <View style={styles.tabBar}>
+            <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 {(['all', 'income', 'expense'] as const).map((type) => (
                     <TouchableOpacity
                         key={type}
                         style={[
                             styles.tab,
-                            typeFilter === type && styles.tabActive,
+                            { borderBottomColor: 'transparent' },
+                            typeFilter === type && { borderBottomColor: colors.primary },
                         ]}
                         onPress={() => setTypeFilter(type)}
                     >
                         <Text style={[
                             styles.tabText,
-                            typeFilter === type && styles.tabTextActive,
+                            { color: colors.textSecondary },
+                            typeFilter === type && { color: colors.primary, fontWeight: 'bold' },
                         ]}>
                             {type === 'all' ? 'All' : type === 'income' ? '↓ Income' : '↑ Expenses'}
                         </Text>
@@ -426,19 +449,27 @@ export default function TransactionsScreen({ navigation }: any) {
             </View>
 
             {/* Filter Bar */}
-            <View style={styles.filterBar}>
+            <View style={[styles.filterBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
                 <TouchableOpacity
-                    style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+                    style={[
+                        styles.filterButton,
+                        { backgroundColor: colors.inputBg },
+                        hasActiveFilters && { backgroundColor: colors.primary }
+                    ]}
                     onPress={() => setShowFilters(true)}
                 >
-                    <Text style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}>
+                    <Text style={[
+                        styles.filterButtonText,
+                        { color: colors.textSecondary },
+                        hasActiveFilters && { color: colors.primaryText }
+                    ]}>
                         🔍 More Filters {hasActiveFilters && `(${[memberFilter, driveFilter, monthFilter !== undefined].filter(Boolean).length})`}
                     </Text>
                 </TouchableOpacity>
 
                 {hasActiveFilters && (
                     <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters}>
-                        <Text style={styles.clearFiltersText}>✕ Clear</Text>
+                        <Text style={[styles.clearFiltersText, { color: colors.error }]}>✕ Clear</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -459,7 +490,7 @@ export default function TransactionsScreen({ navigation }: any) {
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <Text style={styles.emptyIcon}>📊</Text>
-                            <Text style={styles.emptyText}>No transactions found</Text>
+                            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No transactions found</Text>
                         </View>
                     }
                 />
@@ -467,7 +498,7 @@ export default function TransactionsScreen({ navigation }: any) {
 
             {/* Cashier Action Buttons */}
             {isCashier && (
-                <View style={styles.actionButtons}>
+                <View style={[styles.actionButtons, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: '#2e7d32' }]}
                         onPress={() => navigation.navigate('AddIncome')}
@@ -497,6 +528,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    avatarImage: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
     },
     tabBar: {
         flexDirection: 'row',

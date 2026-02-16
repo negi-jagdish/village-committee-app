@@ -131,6 +131,26 @@ function HomeStack() {
                 component={PollVotesScreen}
                 options={{ title: 'Poll Votes' }}
             />
+            <Stack.Screen
+                name="TransactionDetails"
+                component={TransactionDetailsScreen}
+                options={{ title: 'Transaction Details' }}
+            />
+            <Stack.Screen
+                name="MembersList"
+                component={MembersScreen}
+                options={{ title: t('members.title') }}
+            />
+            <Stack.Screen
+                name="MemberDetails"
+                component={MemberDetailsScreen}
+                options={{ title: 'Member Details' }}
+            />
+            <Stack.Screen
+                name="AddMember"
+                component={AddMemberScreen}
+                options={{ title: t('members.addMember') }}
+            />
         </Stack.Navigator>
     );
 }

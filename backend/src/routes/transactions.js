@@ -23,6 +23,7 @@ router.get('/', auth, async (req, res) => {
         let query = `
       SELECT t.*, 
              m.name as member_name, 
+             m.profile_picture as profile_picture_url,
              d.title as drive_title, d.title_hi as drive_title_hi,
              c.name as created_by_name,
              a.name as approved_by_name
@@ -134,6 +135,7 @@ router.get('/:id', auth, async (req, res) => {
         const [transactions] = await db.query(
             `SELECT t.*, 
              m.name as member_name, 
+             m.profile_picture as profile_picture_url,
              d.title as drive_title, d.title_hi as drive_title_hi,
              c.name as created_by_name,
              a.name as approved_by_name

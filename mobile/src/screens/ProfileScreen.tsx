@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser, setThemeMode, persistTheme } from '../store';
-import { membersAPI } from '../api/client';
+import { membersAPI, reportsAPI } from '../api/client';
 import i18n from '../i18n';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
@@ -105,6 +105,31 @@ export default function ProfileScreen({ navigation }: any) {
                     onPress: async () => {
                         await clearAuth();
                         dispatch(logout());
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleRecalculateBalances = async () => {
+        Alert.alert(
+            'Recalculate Balances',
+            'This will rebuild the Cash Book from all transaction history. Use this if you see incorrect balances.\n\nAre you sure?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Recalculate',
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            const response = await reportsAPI.recalculateBalances();
+                            Alert.alert('Success', `Balances Updated:\nCash: ₹${response.data.balances.cash}\nBank: ₹${response.data.balances.bank}`);
+                        } catch (error: any) {
+                            console.error('Recalculate error:', error);
+                            Alert.alert('Error', 'Failed to recalculate balances');
+                        } finally {
+                            setLoading(false);
+                        }
                     },
                 },
             ]
@@ -208,31 +233,31 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={styles.tabContent}>
             {/* Stat Cards Row */}
             <View style={styles.statsRow}>
-                <View style={[styles.statCard, { backgroundColor: '#E8F5E9' }]}>
+                <View style={[styles.statCard, { backgroundColor: colors.card }]}>
                     <Text style={[styles.statIcon]}>💰</Text>
-                    <Text style={[styles.statValue, { color: '#2E7D32' }]}>{formatCurrency(totalPaid)}</Text>
-                    <Text style={styles.statLabel}>{t('profile.totalPaid') || 'Total Paid'}</Text>
+                    <Text style={[styles.statValue, { color: colors.primary }]}>{formatCurrency(totalPaid)}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile.totalPaid') || 'Total Paid'}</Text>
                 </View>
-                <View style={[styles.statCard, { backgroundColor: pendingDues.length > 0 ? '#FFF3E0' : '#E8F5E9' }]}>
+                <View style={[styles.statCard, { backgroundColor: colors.card }]}>
                     <Text style={[styles.statIcon]}>{pendingDues.length > 0 ? '⏳' : '✅'}</Text>
-                    <Text style={[styles.statValue, { color: pendingDues.length > 0 ? '#E65100' : '#2E7D32' }]}>
+                    <Text style={[styles.statValue, { color: pendingDues.length > 0 ? '#FF9800' : colors.primary }]}>
                         {pendingDues.length > 0 ? formatCurrency(totalPending) : 'Clear!'}
                     </Text>
-                    <Text style={styles.statLabel}>{t('profile.pendingDues') || 'Pending'}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile.pendingDues') || 'Pending'}</Text>
                 </View>
-                <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
+                <View style={[styles.statCard, { backgroundColor: colors.card }]}>
                     <Text style={[styles.statIcon]}>📊</Text>
-                    <Text style={[styles.statValue, { color: '#1565C0' }]}>{contributions.length}</Text>
-                    <Text style={styles.statLabel}>{t('profile.payments') || 'Payments'}</Text>
+                    <Text style={[styles.statValue, { color: '#2196F3' }]}>{contributions.length}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile.payments') || 'Payments'}</Text>
                 </View>
             </View>
 
             {/* Pending Dues with Progress Bars */}
             {pendingDues.length > 0 && (
-                <View style={styles.duesCard}>
+                <View style={[styles.duesCard, { backgroundColor: colors.card }]}>
                     <View style={styles.duesHeader}>
-                        <Text style={styles.duesTitle}>⚠️ {t('profile.pendingDues') || 'Pending Dues'}</Text>
-                        <View style={styles.duesTotalBadge}>
+                        <Text style={[styles.duesTitle, { color: colors.text }]}>⚠️ {t('profile.pendingDues') || 'Pending Dues'}</Text>
+                        <View style={[styles.duesTotalBadge, { backgroundColor: colors.background }]}>
                             <Text style={styles.duesTotalText}>{formatCurrency(totalPending)}</Text>
                         </View>
                     </View>
@@ -241,14 +266,14 @@ export default function ProfileScreen({ navigation }: any) {
                         return (
                             <View key={due.drive_id || 'legacy'} style={styles.dueItem}>
                                 <View style={styles.dueItemHeader}>
-                                    <Text style={styles.dueDriveTitle} numberOfLines={1}>
+                                    <Text style={[styles.dueDriveTitle, { color: colors.textSecondary }]} numberOfLines={1}>
                                         {language === 'hi' && due.drive_title_hi ? due.drive_title_hi : due.drive_title}
                                     </Text>
-                                    <Text style={styles.dueAmountText}>
+                                    <Text style={[styles.dueAmountText, { color: colors.textTertiary }]}>
                                         {formatCurrency(due.amount_paid)} / {formatCurrency(due.amount_required)}
                                     </Text>
                                 </View>
-                                <View style={styles.progressBarBg}>
+                                <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
                                     <View style={[styles.progressBarFill, { width: `${Math.min(progress * 100, 100)}%` }]} />
                                 </View>
                             </View>
@@ -268,8 +293,8 @@ export default function ProfileScreen({ navigation }: any) {
             )}
 
             {/* Quick Actions */}
-            <View style={styles.quickActionsCard}>
-                <Text style={styles.quickActionsTitle}>⚡ Quick Actions</Text>
+            <View style={[styles.quickActionsCard, { backgroundColor: colors.card }]}>
+                <Text style={[styles.quickActionsTitle, { color: colors.text }]}>⚡ Quick Actions</Text>
                 <View style={styles.quickActionsGrid}>
                     <TouchableOpacity
                         style={styles.quickAction}
@@ -278,7 +303,7 @@ export default function ProfileScreen({ navigation }: any) {
                         <View style={[styles.quickActionIcon, { backgroundColor: '#E3F2FD' }]}>
                             <Text style={styles.quickActionEmoji}>✏️</Text>
                         </View>
-                        <Text style={styles.quickActionLabel}>{t('profile.editProfile') || 'Edit Profile'}</Text>
+                        <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>{t('profile.editProfile') || 'Edit Profile'}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.quickAction}
@@ -287,7 +312,7 @@ export default function ProfileScreen({ navigation }: any) {
                         <View style={[styles.quickActionIcon, { backgroundColor: '#FFF3E0' }]}>
                             <Text style={styles.quickActionEmoji}>🔒</Text>
                         </View>
-                        <Text style={styles.quickActionLabel}>{t('profile.changePassword') || 'Password'}</Text>
+                        <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>{t('profile.changePassword') || 'Password'}</Text>
                     </TouchableOpacity>
                     {(user?.role === 'secretary' || user?.role === 'president') && (
                         <TouchableOpacity
@@ -297,7 +322,7 @@ export default function ProfileScreen({ navigation }: any) {
                             <View style={[styles.quickActionIcon, { backgroundColor: '#E8F5E9' }]}>
                                 <Text style={styles.quickActionEmoji}>👥</Text>
                             </View>
-                            <Text style={styles.quickActionLabel}>{t('members.title') || 'Members'}</Text>
+                            <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>{t('members.title') || 'Members'}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -305,22 +330,22 @@ export default function ProfileScreen({ navigation }: any) {
 
             {/* Recent Contributions (max 5) */}
             {contributions.length > 0 && (
-                <View style={styles.recentCard}>
+                <View style={[styles.recentCard, { backgroundColor: colors.card }]}>
                     <View style={styles.recentHeader}>
-                        <Text style={styles.recentTitle}>📋 Recent Payments</Text>
+                        <Text style={[styles.recentTitle, { color: colors.text }]}>📋 Recent Payments</Text>
                         <TouchableOpacity onPress={() => setActiveTab('history')}>
                             <Text style={styles.viewAllText}>View All →</Text>
                         </TouchableOpacity>
                     </View>
                     {contributions.slice(0, 5).map((c) => (
-                        <View key={c.id} style={styles.recentItem}>
+                        <View key={c.id} style={[styles.recentItem, { borderBottomColor: colors.border }]}>
                             <View style={styles.recentItemLeft}>
                                 <View style={styles.recentDot} />
                                 <View>
-                                    <Text style={styles.recentDrive} numberOfLines={1}>
+                                    <Text style={[styles.recentDrive, { color: colors.text }]} numberOfLines={1}>
                                         {language === 'hi' && c.drive_title_hi ? c.drive_title_hi : c.drive_title || 'General'}
                                     </Text>
-                                    <Text style={styles.recentDate}>
+                                    <Text style={[styles.recentDate, { color: colors.textSecondary }]}>
                                         {new Date(c.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                     </Text>
                                 </View>
@@ -350,14 +375,14 @@ export default function ProfileScreen({ navigation }: any) {
                             <View style={[styles.historyDot, index === 0 && styles.historyDotActive]} />
                             {index < contributions.length - 1 && <View style={styles.historyLine} />}
                         </View>
-                        <View style={styles.historyCard}>
+                        <View style={[styles.historyCard, { backgroundColor: colors.card }]}>
                             <View style={styles.historyCardHeader}>
-                                <Text style={styles.historyDrive} numberOfLines={1}>
+                                <Text style={[styles.historyDrive, { color: colors.text }]} numberOfLines={1}>
                                     {language === 'hi' && c.drive_title_hi ? c.drive_title_hi : c.drive_title || 'General'}
                                 </Text>
                                 <View style={[
                                     styles.statusBadge,
-                                    c.status === 'approved' ? styles.statusApproved : styles.statusPending
+                                    c.status === 'approved' ? { backgroundColor: '#E8F5E9' } : { backgroundColor: '#FFF3E0' }
                                 ]}>
                                     <Text style={[
                                         styles.statusText,
@@ -368,7 +393,7 @@ export default function ProfileScreen({ navigation }: any) {
                                 </View>
                             </View>
                             <View style={styles.historyCardFooter}>
-                                <Text style={styles.historyDate}>
+                                <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
                                     {new Date(c.created_at).toLocaleDateString('en-IN', {
                                         day: '2-digit', month: 'short', year: 'numeric'
                                     })}
@@ -387,9 +412,9 @@ export default function ProfileScreen({ navigation }: any) {
             {/* Language */}
             <View style={styles.settingsSection}>
                 <Text style={styles.settingsSectionTitle}>🌐 {t('profile.language') || 'Language'}</Text>
-                <View style={styles.settingsCard}>
+                <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
                     <View style={styles.settingRow}>
-                        <Text style={styles.settingLabel}>English / हिंदी</Text>
+                        <Text style={[styles.settingLabel, { color: colors.text }]}>English / हिंदी</Text>
                         <View style={styles.languageToggle}>
                             <Text style={[styles.langText, language === 'en' && styles.activeLang]}>EN</Text>
                             <Switch
@@ -439,25 +464,25 @@ export default function ProfileScreen({ navigation }: any) {
             {/* Account */}
             <View style={styles.settingsSection}>
                 <Text style={styles.settingsSectionTitle}>👤 Account</Text>
-                <View style={styles.settingsCard}>
+                <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
                     <TouchableOpacity
                         style={styles.settingRow}
                         onPress={() => navigation.navigate('AddMember', { member: user, isEdit: true })}
                     >
                         <View style={styles.settingRowLeft}>
                             <Text style={styles.settingIcon}>✏️</Text>
-                            <Text style={styles.settingLabel}>{t('profile.editProfile') || 'Edit Profile'}</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile.editProfile') || 'Edit Profile'}</Text>
                         </View>
                         <Text style={styles.settingArrow}>›</Text>
                     </TouchableOpacity>
-                    <View style={styles.settingDivider} />
+                    <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />
                     <TouchableOpacity
                         style={styles.settingRow}
                         onPress={() => navigation.navigate('ChangePassword')}
                     >
                         <View style={styles.settingRowLeft}>
                             <Text style={styles.settingIcon}>🔒</Text>
-                            <Text style={styles.settingLabel}>{t('profile.changePassword') || 'Change Password'}</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile.changePassword') || 'Change Password'}</Text>
                         </View>
                         <Text style={styles.settingArrow}>›</Text>
                     </TouchableOpacity>
@@ -465,26 +490,44 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
 
             {/* Management (role-based) */}
-            {(user?.role === 'secretary' || user?.role === 'president') && (
+            {(user?.role === 'secretary' || user?.role === 'president' || user?.role === 'cashier') && (
                 <View style={styles.settingsSection}>
                     <Text style={styles.settingsSectionTitle}>🏛️ Management</Text>
-                    <View style={styles.settingsCard}>
-                        <TouchableOpacity
-                            style={styles.settingRow}
-                            onPress={() => navigation.navigate('MembersList')}
-                        >
-                            <View style={styles.settingRowLeft}>
-                                <Text style={styles.settingIcon}>👥</Text>
-                                <Text style={styles.settingLabel}>{t('members.title') || 'Manage Members'}</Text>
-                            </View>
-                            <Text style={styles.settingArrow}>›</Text>
-                        </TouchableOpacity>
+                    <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+                        {(user?.role === 'secretary' || user?.role === 'president') && (
+                            <TouchableOpacity
+                                style={styles.settingRow}
+                                onPress={() => navigation.navigate('MembersList')}
+                            >
+                                <View style={styles.settingRowLeft}>
+                                    <Text style={styles.settingIcon}>👥</Text>
+                                    <Text style={[styles.settingLabel, { color: colors.text }]}>{t('members.title') || 'Manage Members'}</Text>
+                                </View>
+                                <Text style={styles.settingArrow}>›</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {(user?.role === 'president' || user?.role === 'cashier') && (
+                            <>
+                                {user?.role === 'president' && <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />}
+                                <TouchableOpacity
+                                    style={styles.settingRow}
+                                    onPress={handleRecalculateBalances}
+                                >
+                                    <View style={styles.settingRowLeft}>
+                                        <Text style={styles.settingIcon}>🔄</Text>
+                                        <Text style={[styles.settingLabel, { color: colors.text }]}>Fix/Recalculate Balances</Text>
+                                    </View>
+                                    <Text style={styles.settingArrow}>›</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 </View>
             )}
 
             {/* Logout */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.card, borderColor: colors.error }]} onPress={handleLogout}>
                 <Text style={styles.logoutButtonText}>🚪 {t('auth.logout')}</Text>
             </TouchableOpacity>
 

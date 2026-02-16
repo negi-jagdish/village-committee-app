@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../config/database');
-const { auth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -254,6 +254,53 @@ router.get('/payments-received', auth, async (req, res) => {
     } catch (error) {
         console.error('Payments Received Report Error:', error);
         res.status(500).json({ error: 'Failed to generate report' });
+    }
+});
+
+// POST /recalculate-balances (President or Cashier)
+router.post('/recalculate-balances', auth, requireRole('president', 'cashier'), async (req, res) => {
+    console.log(`[Reports] Recalculate balances requested by ${req.user.name}`);
+    try {
+        // 1. Ensure cash_book rows exist
+        await db.query(`
+            INSERT IGNORE INTO cash_book (account_type, balance) VALUES 
+            ('cash', 0.00),
+            ('bank', 0.00)
+        `);
+
+        // 2. Calculate totals from transactions (approved only)
+        const [rows] = await db.query(`
+            SELECT 
+                payment_method,
+                SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as net_amount
+            FROM transactions 
+            WHERE status = 'approved'
+            GROUP BY payment_method
+        `);
+
+        // 3. Update cash_book
+        let cashBalance = 0;
+        let bankBalance = 0;
+
+        rows.forEach(row => {
+            if (row.payment_method === 'cash') {
+                cashBalance += parseFloat(row.net_amount);
+            } else {
+                bankBalance += parseFloat(row.net_amount);
+            }
+        });
+
+        await db.query('UPDATE cash_book SET balance = ? WHERE account_type = ?', [cashBalance, 'cash']);
+        await db.query('UPDATE cash_book SET balance = ? WHERE account_type = ?', [bankBalance, 'bank']);
+
+        res.json({
+            message: 'Balances recalculated successfully',
+            balances: { cash: cashBalance, bank: bankBalance }
+        });
+
+    } catch (error) {
+        console.error('[Reports] Recalculate Balances Error:', error);
+        res.status(500).json({ error: 'Failed to recalculate balances' });
     }
 });
 

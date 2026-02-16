@@ -19,6 +19,7 @@ import { useTheme } from '../theme/ThemeContext';
 
 export default function AddMemberScreen({ navigation, route }: any) {
     const { colors, isDark } = useTheme();
+    const styles = getStyles(colors, isDark);
     const { t } = useTranslation();
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const { member, isEdit } = route.params || {};
@@ -294,13 +295,12 @@ export default function AddMemberScreen({ navigation, route }: any) {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     formCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         margin: 16,
         padding: 20,
         borderRadius: 12,
@@ -313,31 +313,32 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1a5f2a',
+        color: colors.primary,
         marginBottom: 16,
         marginTop: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.borderLight,
         paddingBottom: 8,
     },
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
+        color: colors.text,
         marginBottom: 6,
         marginTop: 10,
     },
     input: {
-        backgroundColor: '#f9f9f9',
+        backgroundColor: isDark ? '#333' : '#f9f9f9',
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
+        color: colors.text,
     },
     disabledInput: {
-        backgroundColor: '#e0e0e0',
-        color: '#666',
+        backgroundColor: isDark ? '#424242' : '#e0e0e0',
+        color: colors.textSecondary,
     },
     textArea: {
         height: 80,
@@ -352,31 +353,31 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 20,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: isDark ? '#333' : '#f0f0f0',
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.border,
     },
     roleButtonActive: {
-        backgroundColor: '#e8f5e9',
-        borderColor: '#1a5f2a',
+        backgroundColor: isDark ? '#1b3a20' : '#e8f5e9',
+        borderColor: colors.primary,
     },
     roleButtonText: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
     },
     roleButtonTextActive: {
-        color: '#1a5f2a',
+        color: colors.primary,
         fontWeight: 'bold',
     },
     pickerContainer: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.border,
         borderRadius: 8,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: isDark ? '#333' : '#f9f9f9',
         overflow: 'hidden',
     },
     submitButton: {
-        backgroundColor: '#1a5f2a',
+        backgroundColor: colors.primary,
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',

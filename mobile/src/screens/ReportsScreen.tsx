@@ -25,22 +25,22 @@ export default function ReportsScreen({ navigation }: any) {
 
     return (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Available Reports</Text>
+            <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+                <Text style={[styles.headerTitle, { color: colors.primary }]}>Available Reports</Text>
             </View>
 
             <View style={styles.list}>
                 {reports.map((report) => (
                     <TouchableOpacity
                         key={report.id}
-                        style={styles.card}
+                        style={[styles.card, { backgroundColor: colors.card }]}
                         onPress={() => navigation.navigate(report.target)}
                     >
                         <View style={styles.cardContent}>
-                            <Text style={styles.cardTitle}>{report.title}</Text>
-                            <Text style={styles.cardDescription}>{report.description}</Text>
+                            <Text style={[styles.cardTitle, { color: colors.text }]}>{report.title}</Text>
+                            <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>{report.description}</Text>
                         </View>
-                        <Text style={styles.arrow}>→</Text>
+                        <Text style={[styles.arrow, { color: colors.textTertiary }]}>→</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -51,24 +51,19 @@ export default function ReportsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1a5f2a',
     },
     list: {
         padding: 16,
     },
     card: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -88,16 +83,13 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
         marginBottom: 4,
     },
     cardDescription: {
         fontSize: 13,
-        color: '#666',
     },
     arrow: {
         fontSize: 20,
-        color: '#999',
         fontWeight: 'bold',
     },
 });

@@ -41,6 +41,10 @@ export const en = {
     dashboard: {
         title: 'Dashboard',
         totalBalance: 'Total Balance',
+        netWorth: 'Net Worth',
+        availableBalance: 'Available Balance',
+        cash: 'Cash',
+        bank: 'Bank',
         cashBalance: 'Cash',
         bankBalance: 'Bank',
         totalIncome: 'Total Income',
@@ -50,6 +54,9 @@ export const en = {
         totalMembers: 'Total Members',
         recentTransactions: 'Recent Transactions',
         viewCashbook: 'View Cashbook',
+        viewReports: 'View Reports',
+        viewMembers: 'Members',
+        viewDrives: 'Drives',
     },
     drives: {
         title: 'Contribution Drives',

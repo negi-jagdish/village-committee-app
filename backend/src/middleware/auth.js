@@ -27,7 +27,11 @@ const auth = async (req, res, next) => {
 // Role-based access control middleware
 const requireRole = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
+        const userRole = req.user.role ? req.user.role.toLowerCase() : '';
+        console.log(`[Auth] Checking role for user ${req.user.name} (${req.user.role}). Required: ${roles.map(r => r.toLowerCase()).join(', ')}`);
+
+        if (!roles.map(r => r.toLowerCase()).includes(userRole)) {
+            console.log('[Auth] Access denied');
             return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
         }
         next();

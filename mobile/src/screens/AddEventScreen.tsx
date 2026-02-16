@@ -91,9 +91,10 @@ export default function AddEventScreen({ navigation }: any) {
     return (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.formGroup}>
-                <Text style={styles.label}>Event Title (English) *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Event Title (English) *</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={title}
                     onChangeText={setTitle}
                     placeholder="e.g. Republic Day 2024"
@@ -101,9 +102,10 @@ export default function AddEventScreen({ navigation }: any) {
             </View>
 
             <View style={styles.formGroup}>
-                <Text style={styles.label}>Event Title (Hindi) - Optional</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Event Title (Hindi) - Optional</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={titleHi}
                     onChangeText={setTitleHi}
                     placeholder="e.g. गणतंत्र दिवस 2024"
@@ -114,21 +116,22 @@ export default function AddEventScreen({ navigation }: any) {
                 <DatePickerField
                     label="Event Date *"
                     value={date}
-                    onChange={setDate}
+                    onChange={(d) => setDate(d.toISOString().split('T')[0])}
                     placeholder="Select Event Date"
                 />
             </View>
 
             <View style={styles.formGroup}>
-                <Text style={styles.label}>Cover Image</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Cover Image</Text>
 
                 <View style={styles.imagePickerContainer}>
-                    <TouchableOpacity style={styles.pickBtn} onPress={handlePickImage}>
-                        <Text style={styles.pickBtnText}>📷 Pick from Gallery</Text>
+                    <TouchableOpacity style={[styles.pickBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handlePickImage}>
+                        <Text style={[styles.pickBtnText, { color: colors.text }]}>📷 Pick from Gallery</Text>
                     </TouchableOpacity>
-                    <Text style={styles.orText}>- OR -</Text>
+                    <Text style={[styles.orText, { color: colors.textSecondary }]}>- OR -</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                        placeholderTextColor={colors.inputPlaceholder}
                         value={coverImageUrl}
                         onChangeText={(text) => {
                             setCoverImageUrl(text);

@@ -62,50 +62,50 @@ export default function DrivesScreen({ navigation }: any) {
 
     const renderDrive = ({ item }: { item: Drive }) => (
         <TouchableOpacity
-            style={styles.driveCard}
+            style={[styles.driveCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
             onPress={() => navigation.navigate('DriveDetails', { driveId: item.id })}
         >
             <View style={styles.driveHeader}>
-                <Text style={styles.driveTitle}>
+                <Text style={[styles.driveTitle, { color: colors.text }]}>
                     {language === 'hi' && item.title_hi ? item.title_hi : item.title}
                 </Text>
-                <View style={[styles.statusBadge, { backgroundColor: item.is_active ? '#e8f5e9' : '#eeeeee' }]}>
-                    <Text style={[styles.statusText, { color: item.is_active ? '#2e7d32' : '#757575' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: item.is_active ? colors.successBg : colors.borderLight }]}>
+                    <Text style={[styles.statusText, { color: item.is_active ? colors.success : colors.textSecondary }]}>
                         {item.is_active ? 'Active' : 'Closed'}
                     </Text>
                 </View>
             </View>
 
-            <Text style={styles.amountPerMember}>
+            <Text style={[styles.amountPerMember, { color: colors.textSecondary }]}>
                 {formatCurrency(item.amount_per_member)} {t('drives.amountPerMember')}
             </Text>
 
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                     <View
                         style={[
                             styles.progressFill,
-                            { width: `${Math.min(item.collection_percentage, 100)}%` }
+                            { width: `${Math.min(item.collection_percentage, 100)}%`, backgroundColor: colors.primary }
                         ]}
                     />
                 </View>
-                <Text style={styles.progressText}>{item.collection_percentage}%</Text>
+                <Text style={[styles.progressText, { color: colors.primary }]}>{item.collection_percentage}%</Text>
             </View>
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
                 <View style={styles.stat}>
-                    <Text style={styles.statLabel}>{t('drives.collected')}</Text>
-                    <Text style={styles.statValue}>{formatCurrency(item.collected_amount)}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textTertiary }]}>{t('drives.collected')}</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{formatCurrency(item.collected_amount)}</Text>
                 </View>
                 <View style={styles.stat}>
-                    <Text style={styles.statLabel}>{t('drives.target')}</Text>
-                    <Text style={styles.statValue}>{formatCurrency(item.target_amount)}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textTertiary }]}>{t('drives.target')}</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{formatCurrency(item.target_amount)}</Text>
                 </View>
                 <View style={styles.stat}>
-                    <Text style={styles.statLabel}>{t('drives.contributors')}</Text>
-                    <Text style={styles.statValue}>{item.contributors_count}/{item.total_members}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textTertiary }]}>{t('drives.contributors')}</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{item.contributors_count}/{item.total_members}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -124,7 +124,7 @@ export default function DrivesScreen({ navigation }: any) {
                 ListEmptyComponent={
                     !loading ? (
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>No contribution drives yet</Text>
+                            <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No contribution drives yet</Text>
                         </View>
                     ) : null
                 }
@@ -133,10 +133,10 @@ export default function DrivesScreen({ navigation }: any) {
             {/* Create Drive Button */}
             {user?.role === 'president' && (
                 <TouchableOpacity
-                    style={styles.createButton}
+                    style={[styles.createButton, { backgroundColor: colors.primary, shadowColor: colors.shadow }]}
                     onPress={() => navigation.navigate('CreateDrive')}
                 >
-                    <Text style={styles.createButtonText}>+ {t('drives.createDrive')}</Text>
+                    <Text style={[styles.createButtonText, { color: colors.primaryText }]}>+ {t('drives.createDrive')}</Text>
                 </TouchableOpacity>
             )}
         </View>

@@ -135,10 +135,10 @@ export default function EventDetailsScreen({ route, navigation }: any) {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{event?.title}</Text>
+            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                <Text style={[styles.title, { color: colors.text }]}>{event?.title}</Text>
                 {event?.description && (
-                    <Text style={styles.description}>{event.description}</Text>
+                    <Text style={[styles.description, { color: colors.textSecondary }]}>{event.description}</Text>
                 )}
             </View>
 

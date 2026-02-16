@@ -297,18 +297,21 @@ export default function AddIncomeScreen({ navigation }: any) {
             <View style={styles.form}>
                 {/* Member Selection */}
                 <Text style={styles.label}>Select Member *</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, borderWidth: 1 }]}>
                     <Picker
                         selectedValue={selectedMember}
                         onValueChange={(value) => setSelectedMember(value)}
-                        style={styles.picker}
+                        style={[styles.picker, { color: colors.inputText }]}
+                        dropdownIconColor={colors.text}
                     >
-                        <Picker.Item label="-- Select Member --" value={undefined} />
+                        <Picker.Item label="-- Select Member --" value={undefined} color={colors.text} style={{ backgroundColor: colors.inputBg }} />
                         {members.map((member) => (
                             <Picker.Item
                                 key={member.id}
                                 label={`${member.name} (${member.contact_1})`}
                                 value={member.id}
+                                color={colors.text}
+                                style={{ backgroundColor: colors.inputBg }}
                             />
                         ))}
                     </Picker>
@@ -331,45 +334,52 @@ export default function AddIncomeScreen({ navigation }: any) {
                                         <TouchableOpacity
                                             style={[
                                                 styles.driveCard,
-                                                drive.is_paid && styles.driveCardPaid,
-                                                drive.selected && styles.driveCardSelected,
-                                            ]}
+                                                { backgroundColor: colors.card, borderColor: colors.border },
+                                                drive.is_paid && { backgroundColor: colors.primaryLight, borderColor: colors.border },
+                                                drive.selected && { borderColor: colors.primary, borderWidth: 2, backgroundColor: colors.primaryLight },
+                                            ]
+                                            }
                                             onPress={() => toggleDrive(drive.id)}
                                             disabled={!!drive.is_paid}
                                         >
                                             <View style={styles.driveInfo}>
                                                 <Text style={[
                                                     styles.driveTitle,
-                                                    drive.is_paid && styles.driveTitlePaid,
+                                                    { color: colors.text },
+                                                    drive.is_paid && { color: colors.textSecondary },
                                                 ]}>
                                                     {drive.title}
                                                     {drive.is_paid && ' ✓ PAID'}
                                                 </Text>
-                                                <Text style={styles.driveAmount}>
+                                                <Text style={[styles.driveAmount, { color: colors.textSecondary }]}>
                                                     Required: ₹{drive.amount_per_member.toLocaleString('en-IN')}
                                                 </Text>
                                                 {drive.paid_amount > 0 && !drive.is_paid && (
-                                                    <Text style={styles.drivePaidInfo}>
+                                                    <Text style={[styles.drivePaidInfo, { color: colors.warning }]}>
                                                         Already paid: ₹{drive.paid_amount.toLocaleString('en-IN')} |
                                                         Pending: ₹{drive.pending_amount.toLocaleString('en-IN')}
                                                     </Text>
                                                 )}
                                             </View>
                                             {drive.selected && (
-                                                <Text style={styles.checkmark}>✓</Text>
+                                                <Text style={[styles.checkmark, { color: colors.primary }]}>✓</Text>
                                             )}
                                         </TouchableOpacity>
 
                                         {/* Amount input for selected drives */}
                                         {drive.selected && (
-                                            <View style={styles.amountInputContainer}>
-                                                <Text style={styles.amountLabel}>Amount (₹):</Text>
+                                            <View style={[
+                                                styles.amountInputContainer,
+                                                { backgroundColor: colors.primaryLight, borderColor: colors.primary }
+                                            ]}>
+                                                <Text style={[styles.amountLabel, { color: colors.text }]}>Amount (₹):</Text>
                                                 <TextInput
-                                                    style={styles.amountInput}
+                                                    style={[styles.amountInput, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                                                     value={drive.customAmount}
                                                     onChangeText={(val) => updateDriveAmount(drive.id, val)}
                                                     keyboardType="numeric"
                                                     placeholder={drive.pending_amount.toString()}
+                                                    placeholderTextColor={colors.inputPlaceholder}
                                                 />
                                             </View>
                                         )}
@@ -392,21 +402,23 @@ export default function AddIncomeScreen({ navigation }: any) {
                             maximumDate={new Date()}
                         />
 
-                        <Text style={styles.label}>Payment Method *</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Payment Method *</Text>
                         <View style={styles.paymentMethods}>
                             {(['cash', 'upi', 'bank_transfer'] as const).map((method) => (
                                 <TouchableOpacity
                                     key={method}
                                     style={[
                                         styles.paymentButton,
-                                        paymentMethod === method && styles.paymentButtonActive,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
+                                        paymentMethod === method && { backgroundColor: colors.primary, borderColor: colors.primary },
                                     ]}
                                     onPress={() => setPaymentMethod(method)}
                                 >
                                     <Text
                                         style={[
                                             styles.paymentButtonText,
-                                            paymentMethod === method && styles.paymentButtonTextActive,
+                                            { color: colors.textSecondary },
+                                            paymentMethod === method && { color: colors.primaryText },
                                         ]}
                                     >
                                         {method === 'bank_transfer' ? 'Bank' : method.toUpperCase()}
@@ -418,41 +430,43 @@ export default function AddIncomeScreen({ navigation }: any) {
                         {/* Reference ID (for non-cash) */}
                         {paymentMethod !== 'cash' && (
                             <>
-                                <Text style={styles.label}>Reference ID / UTR / Cheque No</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>Reference ID / UTR / Cheque No</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                                     value={referenceId}
                                     onChangeText={setReferenceId}
                                     placeholder="Enter transaction reference..."
+                                    placeholderTextColor={colors.inputPlaceholder}
                                 />
                             </>
                         )}
 
                         {/* Notes */}
-                        <Text style={styles.label}>Notes (Optional)</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Notes (Optional)</Text>
                         <TextInput
-                            style={[styles.input, styles.textArea]}
+                            style={[styles.input, styles.textArea, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                             value={description}
                             onChangeText={setDescription}
                             placeholder="Any additional notes..."
+                            placeholderTextColor={colors.inputPlaceholder}
                             multiline
                             numberOfLines={2}
                         />
 
                         {/* Total Summary */}
-                        <View style={styles.summaryCard}>
-                            <Text style={styles.summaryTitle}>Payment Summary</Text>
+                        <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}>
+                            <Text style={[styles.summaryTitle, { color: colors.text }]}>Payment Summary</Text>
                             {selectedDrives.map(d => (
                                 <View key={d.id} style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>{d.title}</Text>
-                                    <Text style={styles.summaryValue}>
+                                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{d.title}</Text>
+                                    <Text style={[styles.summaryValue, { color: colors.text }]}>
                                         ₹{(parseFloat(d.customAmount || '0') || 0).toLocaleString('en-IN')}
                                     </Text>
                                 </View>
                             ))}
-                            <View style={[styles.summaryRow, styles.summaryTotal]}>
-                                <Text style={styles.summaryTotalLabel}>Total</Text>
-                                <Text style={styles.summaryTotalValue}>
+                            <View style={[styles.summaryRow, styles.summaryTotal, { borderTopColor: colors.border }]}>
+                                <Text style={[styles.summaryTotalLabel, { color: colors.text }]}>Total</Text>
+                                <Text style={[styles.summaryTotalValue, { color: colors.primary }]}>
                                     ₹{totalAmount.toLocaleString('en-IN')}
                                 </Text>
                             </View>

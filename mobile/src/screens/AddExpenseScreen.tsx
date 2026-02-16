@@ -90,70 +90,77 @@ export default function AddExpenseScreen({ navigation }: any) {
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Info Banner */}
-                <View style={styles.infoBanner}>
-                    <Text style={styles.infoText}>
+                <View style={[styles.infoBanner, { backgroundColor: colors.warningBg, borderLeftColor: colors.warning }]}>
+                    <Text style={[styles.infoText, { color: colors.warning }]}>
                         ⚠️ Expense entries require President approval before they are finalized.
                     </Text>
                 </View>
 
                 {/* Amount */}
-                <Text style={styles.label}>Amount (₹) *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Amount (₹) *</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                     value={amount}
                     onChangeText={setAmount}
                     keyboardType="numeric"
                     placeholder="Enter expense amount"
+                    placeholderTextColor={colors.inputPlaceholder}
                 />
 
                 {/* Description (English) */}
-                <Text style={styles.label}>Description (English) *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Description (English) *</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                     value={description}
                     onChangeText={setDescription}
                     placeholder="What is this expense for?"
+                    placeholderTextColor={colors.inputPlaceholder}
                     multiline
                     numberOfLines={3}
                 />
 
                 {/* Description (Hindi) */}
-                <Text style={styles.label}>Description (Hindi) - Optional</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Description (Hindi) - Optional</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                     value={descriptionHi}
                     onChangeText={setDescriptionHi}
                     placeholder="खर्च का विवरण (हिंदी में)"
+                    placeholderTextColor={colors.inputPlaceholder}
                     multiline
                     numberOfLines={3}
                 />
 
                 {/* Payment Date */}
-                <Text style={styles.label}>Payment Date</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Payment Date</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                     value={paymentDate}
                     onChangeText={setPaymentDate}
                     placeholder="YYYY-MM-DD"
+                    placeholderTextColor={colors.inputPlaceholder}
                     keyboardType="numbers-and-punctuation"
                 />
 
                 {/* Payment Method */}
-                <Text style={styles.label}>Payment Method *</Text>
+                {/* Payment Method */}
+                <Text style={[styles.label, { color: colors.text }]}>Payment Method *</Text>
                 <View style={styles.paymentMethods}>
                     {(['cash', 'upi', 'bank_transfer'] as const).map((method) => (
                         <TouchableOpacity
                             key={method}
                             style={[
                                 styles.paymentButton,
-                                paymentMethod === method && styles.paymentButtonActive,
+                                { backgroundColor: colors.card, borderColor: colors.border },
+                                paymentMethod === method && { backgroundColor: colors.primary, borderColor: colors.primary },
                             ]}
                             onPress={() => setPaymentMethod(method)}
                         >
                             <Text
                                 style={[
                                     styles.paymentButtonText,
-                                    paymentMethod === method && styles.paymentButtonTextActive,
+                                    { color: colors.textSecondary },
+                                    paymentMethod === method && { color: colors.primaryText },
                                 ]}
                             >
                                 {method === 'bank_transfer' ? 'Bank' : method.toUpperCase()}
@@ -165,12 +172,13 @@ export default function AddExpenseScreen({ navigation }: any) {
                 {/* Reference ID */}
                 {paymentMethod !== 'cash' && (
                     <>
-                        <Text style={styles.label}>Reference ID / UTR / Cheque No</Text>
+                        <Text style={[styles.label, { color: colors.text }]}>Reference ID / UTR / Cheque No</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.border }]}
                             value={referenceId}
                             onChangeText={setReferenceId}
                             placeholder="Enter transaction reference..."
+                            placeholderTextColor={colors.inputPlaceholder}
                         />
                     </>
                 )}

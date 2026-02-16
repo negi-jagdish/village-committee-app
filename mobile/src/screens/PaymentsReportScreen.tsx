@@ -168,11 +168,11 @@ export default function PaymentsReportScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.screenHeader}>
+            <View style={[styles.screenHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View>
-                        <Text style={styles.title}>Payments Received Report</Text>
-                        <Text style={styles.subtitle}>
+                        <Text style={[styles.title, { color: colors.primary }]}>Payments Received Report</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                             Green: Paid | Blue: Waived | Orange: Partial | Red: Zero
                         </Text>
                     </View>
@@ -215,16 +215,20 @@ export default function PaymentsReportScreen() {
                         {groups.map((group: any) => (
                             <View key={group.landmark}>
                                 {/* Group Header */}
-                                <View style={[styles.groupRow, { width: totalWidth }]}>
-                                    <Text style={styles.groupTitle}>📍 {group.landmark}</Text>
+                                <View style={[styles.groupRow, {
+                                    width: totalWidth,
+                                    backgroundColor: isDark ? '#1b3a20' : '#e8f5e9',
+                                    borderBottomColor: isDark ? '#2e7d32' : '#c8e6c9'
+                                }]}>
+                                    <Text style={[styles.groupTitle, { color: isDark ? '#a5d6a7' : '#2e7d32' }]}>📍 {group.landmark}</Text>
                                 </View>
 
                                 {/* Rows */}
                                 {group.members.map((member: any) => (
-                                    <View key={member.id} style={styles.row}>
-                                        <View style={[styles.cell, styles.nameCell]}>
-                                            <Text style={styles.nameText} numberOfLines={1}>{member.name}</Text>
-                                            <Text style={styles.subText} numberOfLines={1}>{member.father_name}</Text>
+                                    <View key={member.id} style={[styles.row, { backgroundColor: colors.card, borderBottomColor: colors.borderLight }]}>
+                                        <View style={[styles.cell, styles.nameCell, { backgroundColor: isDark ? colors.surface : '#fafafa', borderRightColor: colors.borderLight }]}>
+                                            <Text style={[styles.nameText, { color: colors.text }]} numberOfLines={1}>{member.name}</Text>
+                                            <Text style={[styles.subText, { color: colors.textSecondary }]} numberOfLines={1}>{member.father_name}</Text>
                                         </View>
 
                                         {columns.map((col: any) => {
@@ -234,29 +238,34 @@ export default function PaymentsReportScreen() {
 
                                             let cellStyle = styles.zeroText; // Default Red
                                             let displayText = formatCurrency(paid);
+                                            let textColor = isDark ? '#ef5350' : '#d32f2f'; // Default Red
 
                                             if (isWaived) {
                                                 cellStyle = styles.waivedText;
                                                 displayText = "Waived";
+                                                textColor = isDark ? '#64b5f6' : '#1976d2';
                                             } else if (paid >= required && required > 0) {
                                                 cellStyle = styles.paidText; // Green
+                                                textColor = isDark ? '#81c784' : '#2e7d32';
                                             } else if (paid > 0 && paid < required) {
                                                 cellStyle = styles.partialText; // Orange
+                                                textColor = isDark ? '#ffb74d' : '#f57c00';
                                             } else if (col.id === 'legacy' && paid > 0) {
                                                 cellStyle = styles.paidText; // Green for any legacy payment
+                                                textColor = isDark ? '#81c784' : '#2e7d32';
                                             }
 
                                             return (
-                                                <View key={col.id} style={[styles.cell, styles.dataCell]}>
-                                                    <Text style={[styles.amountText, cellStyle]}>
+                                                <View key={col.id} style={[styles.cell, styles.dataCell, { borderRightColor: colors.borderLight }]}>
+                                                    <Text style={[styles.amountText, cellStyle, { color: textColor }]}>
                                                         {displayText}
                                                     </Text>
                                                 </View>
                                             );
                                         })}
 
-                                        <View style={[styles.cell, styles.totalCell]}>
-                                            <Text style={[styles.amountText, styles.rowTotalText]}>
+                                        <View style={[styles.cell, styles.totalCell, { backgroundColor: isDark ? colors.surface : '#fafafa' }]}>
+                                            <Text style={[styles.amountText, styles.rowTotalText, { color: colors.text }]}>
                                                 {formatCurrency(member.row_total)}
                                             </Text>
                                         </View>
@@ -266,19 +275,31 @@ export default function PaymentsReportScreen() {
                         ))}
 
                         {/* Grand Totals Row */}
-                        <View style={[styles.row, styles.grandTotalRow, { marginBottom: 40 }]}>
-                            <View style={[styles.cell, styles.nameCell, styles.grandTotalCell]}>
-                                <Text style={styles.grandTotalLabel}>GRAND TOTAL</Text>
+                        <View style={[styles.row, styles.grandTotalRow, {
+                            marginBottom: 40,
+                            backgroundColor: isDark ? colors.surface : '#e0e0e0',
+                            borderTopColor: colors.textTertiary
+                        }]}>
+                            <View style={[styles.cell, styles.nameCell, styles.grandTotalCell, {
+                                backgroundColor: isDark ? colors.surface : '#e0e0e0',
+                                borderRightColor: colors.border
+                            }]}>
+                                <Text style={[styles.grandTotalLabel, { color: colors.text }]}>GRAND TOTAL</Text>
                             </View>
                             {columns.map((col: any) => (
-                                <View key={col.id} style={[styles.cell, styles.dataCell, styles.grandTotalCell]}>
-                                    <Text style={styles.grandTotalValue}>
+                                <View key={col.id} style={[styles.cell, styles.dataCell, styles.grandTotalCell, {
+                                    backgroundColor: isDark ? colors.surface : '#e0e0e0',
+                                    borderRightColor: colors.border
+                                }]}>
+                                    <Text style={[styles.grandTotalValue, { color: colors.text }]}>
                                         {formatCurrency(grand_totals[col.id])}
                                     </Text>
                                 </View>
                             ))}
-                            <View style={[styles.cell, styles.totalCell, styles.grandTotalCell]}>
-                                <Text style={styles.grandTotalValue}>
+                            <View style={[styles.cell, styles.totalCell, styles.grandTotalCell, {
+                                backgroundColor: isDark ? colors.surface : '#e0e0e0'
+                            }]}>
+                                <Text style={[styles.grandTotalValue, { color: colors.text }]}>
                                     {formatCurrency(grand_totals.total)}
                                 </Text>
                             </View>
@@ -293,7 +314,6 @@ export default function PaymentsReportScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     loadingContainer: {
         flex: 1,
@@ -302,18 +322,14 @@ const styles = StyleSheet.create({
     },
     screenHeader: {
         padding: 16,
-        backgroundColor: '#f8f9fa',
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
     },
     title: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1a5f2a',
     },
     subtitle: {
         fontSize: 12,
-        color: '#666',
         marginTop: 4,
     },
     horizontalScroll: {
@@ -329,19 +345,14 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-        backgroundColor: '#fff',
     },
     groupRow: {
-        backgroundColor: '#e8f5e9',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#c8e6c9',
     },
     groupTitle: {
         fontWeight: 'bold',
-        color: '#2e7d32',
         fontSize: 14,
     },
     cell: {
@@ -349,16 +360,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 10,
         borderRightWidth: 1,
-        borderRightColor: '#f0f0f0',
     },
     headerCell: {
-        backgroundColor: '#1a5f2a',
         alignItems: 'center',
-        borderRightColor: '#2e7d32',
     },
     nameCell: {
         width: NAME_COL_WIDTH,
-        backgroundColor: '#fafafa',
     },
     dataCell: {
         width: DATA_COL_WIDTH,
@@ -367,7 +374,6 @@ const styles = StyleSheet.create({
     totalCell: {
         width: TOTAL_COL_WIDTH,
         alignItems: 'center',
-        backgroundColor: '#fafafa',
     },
     headerText: {
         color: '#fff',
@@ -378,44 +384,33 @@ const styles = StyleSheet.create({
     nameText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#333',
     },
     subText: {
         fontSize: 11,
-        color: '#888',
     },
     amountText: {
         fontSize: 13,
         fontWeight: '500',
     },
     paidText: {
-        color: '#2e7d32', // Green
         fontWeight: 'bold',
     },
     partialText: {
-        color: '#f57c00', // Orange
         fontWeight: 'bold',
     },
     zeroText: {
-        color: '#d32f2f', // Red (or default greyish if preferred, but red highlights missing payments)
     },
     waivedText: {
-        color: '#1976d2', // Blue
         fontWeight: 'bold',
         fontSize: 11,
     },
     rowTotalText: {
         fontWeight: 'bold',
-        color: '#000',
     },
     grandTotalRow: {
-        backgroundColor: '#e0e0e0',
         borderTopWidth: 2,
-        borderTopColor: '#999',
     },
     grandTotalCell: {
-        backgroundColor: '#e0e0e0',
-        borderRightColor: '#ccc',
     },
     grandTotalLabel: {
         fontWeight: 'bold',

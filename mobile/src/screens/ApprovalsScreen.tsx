@@ -110,31 +110,31 @@ export default function ApprovalsScreen({ navigation }: any) {
     };
 
     const renderExpense = ({ item }: { item: PendingExpense }) => (
-        <View style={styles.expenseCard}>
+        <View style={[styles.expenseCard, { backgroundColor: colors.card }]}>
             <View style={styles.expenseHeader}>
-                <Text style={styles.expenseAmount}>{formatCurrency(item.amount)}</Text>
-                <Text style={styles.expenseDate}>{formatDate(item.created_at)}</Text>
+                <Text style={[styles.expenseAmount, { color: colors.error }]}>{formatCurrency(item.amount)}</Text>
+                <Text style={[styles.expenseDate, { color: colors.textTertiary }]}>{formatDate(item.created_at)}</Text>
             </View>
 
-            <Text style={styles.expenseDesc}>{item.description}</Text>
-            <Text style={styles.expenseMeta}>
+            <Text style={[styles.expenseDesc, { color: colors.text }]}>{item.description}</Text>
+            <Text style={[styles.expenseMeta, { color: colors.textSecondary }]}>
                 By: {item.created_by_name} • {item.payment_method?.toUpperCase()}
             </Text>
 
             <View style={styles.actionRow}>
                 <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
+                    style={[styles.actionButton, styles.rejectButton, { backgroundColor: colors.errorBg }]}
                     onPress={() => handleReject(item.id)}
                     disabled={processing === item.id}
                 >
-                    <Text style={styles.rejectButtonText}>Reject</Text>
+                    <Text style={[styles.rejectButtonText, { color: colors.error }]}>Reject</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.actionButton, styles.approveButton]}
+                    style={[styles.actionButton, styles.approveButton, { backgroundColor: colors.primary }]}
                     onPress={() => handleApprove(item.id)}
                     disabled={processing === item.id}
                 >
-                    <Text style={styles.approveButtonText}>Approve</Text>
+                    <Text style={[styles.approveButtonText, { color: '#fff' }]}>Approve</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -147,13 +147,13 @@ export default function ApprovalsScreen({ navigation }: any) {
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderExpense}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
                 }
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyIcon}>✓</Text>
-                        <Text style={styles.emptyText}>No pending approvals</Text>
+                        <Text style={[styles.emptyIcon, { color: colors.textSecondary }]}>✓</Text>
+                        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No pending approvals</Text>
                     </View>
                 }
             />
@@ -164,18 +164,17 @@ export default function ApprovalsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     listContent: {
         padding: 16,
     },
     expenseCard: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         borderLeftWidth: 4,
         borderLeftColor: '#ff9800',
+        elevation: 2,
     },
     expenseHeader: {
         flexDirection: 'row',
@@ -186,20 +185,16 @@ const styles = StyleSheet.create({
     expenseAmount: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#d32f2f',
     },
     expenseDate: {
         fontSize: 12,
-        color: '#999',
     },
     expenseDesc: {
         fontSize: 16,
-        color: '#333',
         marginBottom: 4,
     },
     expenseMeta: {
         fontSize: 12,
-        color: '#666',
         marginBottom: 12,
     },
     actionRow: {
@@ -213,17 +208,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     rejectButton: {
-        backgroundColor: '#ffebee',
+        // backgroundColor set in render
     },
     rejectButtonText: {
-        color: '#d32f2f',
         fontWeight: '600',
     },
     approveButton: {
-        backgroundColor: '#1a5f2a',
+        // backgroundColor set in render
     },
     approveButtonText: {
-        color: '#fff',
         fontWeight: '600',
     },
     emptyContainer: {
@@ -236,6 +229,5 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#999',
     },
 });

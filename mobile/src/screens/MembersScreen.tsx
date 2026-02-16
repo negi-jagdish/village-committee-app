@@ -67,18 +67,28 @@ export default function MembersScreen({ navigation }: any) {
         );
     };
 
+    const getRoleColor = (role: string) => {
+        switch (role) {
+            case 'president': return '#d32f2f'; // Red
+            case 'secretary': return '#1976d2'; // Blue
+            case 'cashier': return '#f57c00';   // Orange
+            case 'reporter': return '#7b1fa2';  // Purple
+            default: return '#1a5f2a';          // Green (Member)
+        }
+    };
+
     const renderMember = ({ item }: { item: Member }) => (
         <TouchableOpacity
-            style={styles.memberCard}
+            style={[styles.memberCard, { backgroundColor: colors.card }]}
             onPress={() => navigation.navigate('MemberDetails', { memberId: item.id })}
         >
             <View style={styles.memberHeader}>
-                <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+                <View style={[styles.avatar, { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }]}>
+                    <Text style={[styles.avatarText, { color: colors.primary }]}>{item.name.charAt(0).toUpperCase()}</Text>
                 </View>
                 <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>{item.name}</Text>
-                    <Text style={styles.memberFather}>S/o {item.father_name}</Text>
+                    <Text style={[styles.memberName, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.memberFather, { color: colors.textSecondary }]}>S/o {item.father_name}</Text>
                 </View>
                 <View style={styles.statusContainer}>
                     <View style={[styles.roleBadge, { backgroundColor: getRoleColor(item.role) }]}>
@@ -93,37 +103,28 @@ export default function MembersScreen({ navigation }: any) {
                     )}
                 </View>
             </View>
-            <View style={styles.contactRow}>
-                <Text style={styles.contactText}>📞 {item.contact_1}</Text>
-                <Text style={styles.landmarkText}>📍 {item.village_landmark}</Text>
+            <View style={[styles.contactRow, { borderTopColor: colors.borderLight }]}>
+                <Text style={[styles.contactText, { color: colors.textSecondary }]}>📞 {item.contact_1}</Text>
+                <Text style={[styles.landmarkText, { color: colors.textSecondary }]}>📍 {item.village_landmark}</Text>
             </View>
         </TouchableOpacity>
     );
 
-    const getRoleColor = (role: string) => {
-        switch (role) {
-            case 'president': return '#d32f2f'; // Red
-            case 'secretary': return '#1976d2'; // Blue
-            case 'cashier': return '#f57c00';   // Orange
-            case 'reporter': return '#7b1fa2';  // Purple
-            default: return '#1a5f2a';          // Green (Member)
-        }
-    };
-
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Search Bar */}
-            <View style={styles.searchBar}>
-                <Text style={styles.searchIcon}>🔍</Text>
+            <View style={[styles.searchBar, { backgroundColor: colors.card }]}>
+                <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>🔍</Text>
                 <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { color: colors.text }]}
                     placeholder={t('common.search') + " (Name, Contact)"}
+                    placeholderTextColor={colors.textTertiary}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
                 {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')}>
-                        <Text style={styles.clearIcon}>✕</Text>
+                        <Text style={[styles.clearIcon, { color: colors.textSecondary }]}>✕</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -133,13 +134,13 @@ export default function MembersScreen({ navigation }: any) {
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderMember}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
                 }
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     !loading ? (
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>No members found</Text>
+                            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No members found</Text>
                         </View>
                     ) : null
                 }
@@ -148,7 +149,7 @@ export default function MembersScreen({ navigation }: any) {
             {/* Add Member Button */}
             {(user?.role === 'president' || user?.role === 'secretary') && (
                 <TouchableOpacity
-                    style={styles.fab}
+                    style={[styles.fab, { backgroundColor: colors.primary }]}
                     onPress={() => navigation.navigate('AddMember')}
                 >
                     <Text style={styles.fabText}>+</Text>
@@ -161,12 +162,10 @@ export default function MembersScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
         margin: 16,
         paddingHorizontal: 12,
         borderRadius: 8,
@@ -187,7 +186,6 @@ const styles = StyleSheet.create({
     },
     clearIcon: {
         fontSize: 16,
-        color: '#999',
         padding: 8,
     },
     listContent: {
@@ -195,7 +193,6 @@ const styles = StyleSheet.create({
         paddingBottom: 80,
     },
     memberCard: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -214,7 +211,6 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#e8f5e9',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -222,7 +218,6 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1a5f2a',
     },
     memberInfo: {
         flex: 1,
@@ -230,11 +225,9 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
     },
     memberFather: {
         fontSize: 13,
-        color: '#666',
     },
     statusContainer: {
         alignItems: 'flex-end',
@@ -269,16 +262,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
         paddingTop: 12,
     },
     contactText: {
         fontSize: 13,
-        color: '#333',
     },
     landmarkText: {
         fontSize: 13,
-        color: '#666',
     },
     emptyContainer: {
         alignItems: 'center',
@@ -286,7 +276,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#999',
     },
     fab: {
         position: 'absolute',
@@ -295,7 +284,6 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#1a5f2a',
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 8,

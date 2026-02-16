@@ -104,21 +104,21 @@ export default function CashbookScreen(props: any) {
     };
 
     const renderEntry = ({ item }: { item: CashbookEntry }) => (
-        <View style={styles.entryCard}>
+        <View style={[styles.entryCard, { backgroundColor: colors.card }]}>
             <View style={styles.entryLeft}>
                 <View style={[
                     styles.typeIndicator,
-                    { backgroundColor: item.type === 'income' ? '#e8f5e9' : '#ffebee' }
+                    { backgroundColor: item.type === 'income' ? (isDark ? '#1b3a20' : '#e8f5e9') : (isDark ? '#3a1a1a' : '#ffebee') }
                 ]}>
-                    <Text style={{ fontSize: 16 }}>
+                    <Text style={{ fontSize: 16, color: item.type === 'income' ? '#4caf50' : '#ef5350' }}>
                         {item.type === 'income' ? '↓' : '↑'}
                     </Text>
                 </View>
                 <View style={styles.entryInfo}>
-                    <Text style={styles.entryDesc}>
+                    <Text style={[styles.entryDesc, { color: colors.text }]}>
                         {item.member_name || item.description}
                     </Text>
-                    <Text style={styles.entryMeta}>
+                    <Text style={[styles.entryMeta, { color: colors.textSecondary }]}>
                         {formatDate(item.created_at)} • {item.payment_method?.toUpperCase()}
                     </Text>
                 </View>
@@ -126,11 +126,11 @@ export default function CashbookScreen(props: any) {
             <View style={styles.entryRight}>
                 <Text style={[
                     styles.entryAmount,
-                    { color: item.type === 'income' ? '#2e7d32' : '#d32f2f' }
+                    { color: item.type === 'income' ? '#4caf50' : '#ef5350' }
                 ]}>
                     {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                 </Text>
-                <Text style={styles.runningBalance}>
+                <Text style={[styles.runningBalance, { color: colors.textTertiary }]}>
                     Bal: {formatCurrency(item.running_balance)}
                 </Text>
             </View>
@@ -143,16 +143,16 @@ export default function CashbookScreen(props: any) {
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Balance Summary */}
-            <View style={styles.balanceHeader}>
-                <View style={styles.balanceCard}>
-                    <Text style={styles.balanceLabel}>Cash Balance</Text>
-                    <Text style={[styles.balanceAmount, { color: '#2e7d32' }]}>
+            <View style={[styles.balanceHeader, { backgroundColor: colors.card }]}>
+                <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.border : colors.background }]}>
+                    <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>Cash Balance</Text>
+                    <Text style={[styles.balanceAmount, { color: '#4caf50' }]}>
                         {formatCurrency(balances.cash)}
                     </Text>
                 </View>
-                <View style={styles.balanceCard}>
-                    <Text style={styles.balanceLabel}>Bank Balance</Text>
-                    <Text style={[styles.balanceAmount, { color: '#1565c0' }]}>
+                <View style={[styles.balanceCard, { backgroundColor: isDark ? colors.border : colors.background }]}>
+                    <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>Bank Balance</Text>
+                    <Text style={[styles.balanceAmount, { color: '#2196f3' }]}>
                         {formatCurrency(balances.bank)}
                     </Text>
                 </View>
@@ -169,14 +169,22 @@ export default function CashbookScreen(props: any) {
             )}
 
             {/* Filter Tabs */}
-            <View style={styles.filterContainer}>
+            <View style={[styles.filterContainer, { backgroundColor: colors.card }]}>
                 {(['all', 'cash', 'bank'] as const).map((f) => (
                     <TouchableOpacity
                         key={f}
-                        style={[styles.filterTab, filter === f && styles.filterTabActive]}
+                        style={[
+                            styles.filterTab,
+                            { backgroundColor: isDark ? colors.border : colors.background },
+                            filter === f && { backgroundColor: colors.primary }
+                        ]}
                         onPress={() => setFilter(f)}
                     >
-                        <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+                        <Text style={[
+                            styles.filterText,
+                            { color: colors.textSecondary },
+                            filter === f && { color: '#fff', fontWeight: 'bold' }
+                        ]}>
                             {f.charAt(0).toUpperCase() + f.slice(1)}
                         </Text>
                     </TouchableOpacity>
@@ -184,12 +192,20 @@ export default function CashbookScreen(props: any) {
             </View>
 
             {/* Filter Bar */}
-            <View style={styles.filterBar}>
+            <View style={[styles.filterBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <TouchableOpacity
-                    style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+                    style={[
+                        styles.filterButton,
+                        { backgroundColor: isDark ? colors.border : colors.background },
+                        hasActiveFilters && { backgroundColor: colors.primary }
+                    ]}
                     onPress={() => setShowFilters(true)}
                 >
-                    <Text style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}>
+                    <Text style={[
+                        styles.filterButtonText,
+                        { color: colors.textSecondary },
+                        hasActiveFilters && { color: '#fff' }
+                    ]}>
                         🔍 Filters {hasActiveFilters && `(${[typeFilter !== 'all', monthFilter !== undefined].filter(Boolean).length})`}
                     </Text>
                 </TouchableOpacity>
@@ -211,7 +227,7 @@ export default function CashbookScreen(props: any) {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No entries found</Text>
+                        <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No entries found</Text>
                     </View>
                 }
             />
@@ -224,30 +240,32 @@ export default function CashbookScreen(props: any) {
                 onRequestClose={() => setShowFilters(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Filter Cashbook</Text>
+                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                        <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Filter Cashbook</Text>
                             <TouchableOpacity onPress={() => setShowFilters(false)}>
-                                <Text style={styles.modalClose}>✕</Text>
+                                <Text style={[styles.modalClose, { color: colors.textSecondary }]}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
                         <ScrollView style={styles.modalBody}>
                             {/* Type Filter */}
-                            <Text style={styles.filterLabel}>Transaction Type</Text>
+                            <Text style={[styles.filterLabel, { color: colors.text }]}>Transaction Type</Text>
                             <View style={styles.typeFilters}>
                                 {(['all', 'income', 'expense'] as const).map((type) => (
                                     <TouchableOpacity
                                         key={type}
                                         style={[
                                             styles.typeButton,
-                                            typeFilter === type && styles.typeButtonActive,
+                                            { backgroundColor: isDark ? colors.border : colors.background },
+                                            typeFilter === type && { backgroundColor: colors.primary },
                                         ]}
                                         onPress={() => setTypeFilter(type)}
                                     >
                                         <Text style={[
                                             styles.typeButtonText,
-                                            typeFilter === type && styles.typeButtonTextActive,
+                                            { color: colors.textSecondary },
+                                            typeFilter === type && { color: '#fff' },
                                         ]}>
                                             {type.charAt(0).toUpperCase() + type.slice(1)}
                                         </Text>
@@ -256,37 +274,39 @@ export default function CashbookScreen(props: any) {
                             </View>
 
                             {/* Month/Year Filter */}
-                            <Text style={styles.filterLabel}>Month</Text>
-                            <View style={styles.pickerContainer}>
+                            <Text style={[styles.filterLabel, { color: colors.text }]}>Month</Text>
+                            <View style={[styles.pickerContainer, { backgroundColor: isDark ? colors.border : colors.background }]}>
                                 <Picker
                                     selectedValue={monthFilter}
                                     onValueChange={setMonthFilter}
-                                    style={styles.picker}
+                                    style={[styles.picker, { color: colors.text }]}
+                                    dropdownIconColor={colors.text}
                                 >
-                                    <Picker.Item label="All Months" value={undefined} />
+                                    <Picker.Item label="All Months" value={undefined} color={colors.text} />
                                     {MONTHS.map((month, index) => (
-                                        <Picker.Item key={index} label={month} value={index} />
+                                        <Picker.Item key={index} label={month} value={index} color={colors.text} />
                                     ))}
                                 </Picker>
                             </View>
 
-                            <Text style={styles.filterLabel}>Year</Text>
-                            <View style={styles.pickerContainer}>
+                            <Text style={[styles.filterLabel, { color: colors.text }]}>Year</Text>
+                            <View style={[styles.pickerContainer, { backgroundColor: isDark ? colors.border : colors.background }]}>
                                 <Picker
                                     selectedValue={yearFilter}
                                     onValueChange={setYearFilter}
-                                    style={styles.picker}
+                                    style={[styles.picker, { color: colors.text }]}
+                                    dropdownIconColor={colors.text}
                                 >
                                     {[2024, 2025, 2026, 2027].map(year => (
-                                        <Picker.Item key={year} label={year.toString()} value={year} />
+                                        <Picker.Item key={year} label={year.toString()} value={year} color={colors.text} />
                                     ))}
                                 </Picker>
                             </View>
                         </ScrollView>
 
-                        <View style={styles.modalFooter}>
-                            <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
-                                <Text style={styles.clearButtonText}>Clear All</Text>
+                        <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+                            <TouchableOpacity style={[styles.clearButton, { borderColor: colors.border }]} onPress={clearFilters}>
+                                <Text style={[styles.clearButtonText, { color: colors.textSecondary }]}>Clear All</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.applyButton}
@@ -305,24 +325,20 @@ export default function CashbookScreen(props: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     balanceHeader: {
         flexDirection: 'row',
         padding: 16,
         gap: 12,
-        backgroundColor: '#fff',
     },
     balanceCard: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',
     },
     balanceLabel: {
         fontSize: 12,
-        color: '#666',
     },
     balanceAmount: {
         fontSize: 20,
@@ -333,7 +349,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         padding: 16,
         paddingTop: 0,
-        backgroundColor: '#fff',
         gap: 8,
     },
     filterTab: {
@@ -341,24 +356,14 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         alignItems: 'center',
         borderRadius: 8,
-        backgroundColor: '#f5f5f5',
-    },
-    filterTabActive: {
-        backgroundColor: '#1a5f2a',
     },
     filterText: {
         fontSize: 14,
-        color: '#666',
-    },
-    filterTextActive: {
-        color: '#fff',
-        fontWeight: '600',
     },
     listContent: {
         padding: 16,
     },
     entryCard: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 12,
         marginBottom: 8,
@@ -385,11 +390,9 @@ const styles = StyleSheet.create({
     entryDesc: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#333',
     },
     entryMeta: {
         fontSize: 11,
-        color: '#999',
         marginTop: 2,
     },
     entryRight: {
@@ -401,7 +404,6 @@ const styles = StyleSheet.create({
     },
     runningBalance: {
         fontSize: 11,
-        color: '#999',
         marginTop: 2,
     },
     emptyContainer: {
@@ -410,32 +412,21 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#999',
     },
     // Filter Styles
     filterBar: {
         flexDirection: 'row',
         padding: 12,
-        backgroundColor: '#fff',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
         alignItems: 'center',
     },
     filterButton: {
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-    },
-    filterButtonActive: {
-        backgroundColor: '#1a5f2a',
     },
     filterButtonText: {
-        color: '#666',
         fontSize: 14,
-    },
-    filterButtonTextActive: {
-        color: '#fff',
     },
     clearFiltersBtn: {
         marginLeft: 8,
@@ -453,7 +444,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#fff',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
@@ -464,7 +454,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
     modalTitle: {
         fontSize: 18,
@@ -472,7 +461,6 @@ const styles = StyleSheet.create({
     },
     modalClose: {
         fontSize: 20,
-        color: '#999',
         padding: 4,
     },
     modalBody: {
@@ -482,13 +470,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: '#eee',
         gap: 12,
     },
     filterLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
         marginBottom: 8,
         marginTop: 12,
     },
@@ -500,21 +486,12 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: '#f0f0f0',
         alignItems: 'center',
     },
-    typeButtonActive: {
-        backgroundColor: '#1a5f2a',
-    },
     typeButtonText: {
-        color: '#666',
         fontWeight: '500',
     },
-    typeButtonTextActive: {
-        color: '#fff',
-    },
     pickerContainer: {
-        backgroundColor: '#f5f5f5',
         borderRadius: 8,
         overflow: 'hidden',
     },
@@ -526,18 +503,15 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#ddd',
         alignItems: 'center',
     },
     clearButtonText: {
-        color: '#666',
         fontWeight: '600',
     },
     applyButton: {
         flex: 1,
         paddingVertical: 14,
         borderRadius: 8,
-        backgroundColor: '#1a5f2a',
         alignItems: 'center',
     },
     applyButtonText: {

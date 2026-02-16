@@ -7,6 +7,7 @@ import {
     Platform,
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
+import { useTheme } from '../theme/ThemeContext';
 
 interface DatePickerFieldProps {
     label?: string;
@@ -27,6 +28,7 @@ export default function DatePickerField({
     maximumDate,
     mode = 'date',
 }: DatePickerFieldProps) {
+    const { colors, isDark } = useTheme();
     const [open, setOpen] = useState(false);
 
     // Helper to get Date object
@@ -59,16 +61,19 @@ export default function DatePickerField({
 
     return (
         <View style={styles.container}>
-            {label && <Text style={styles.label}>{label}</Text>}
+            {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
             <TouchableOpacity
-                style={styles.inputContainer}
+                style={[styles.inputContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}
                 onPress={() => setOpen(true)}
                 activeOpacity={0.7}
             >
-                <Text style={styles.inputText}>
+                <Text style={[
+                    styles.inputText,
+                    { color: value ? colors.inputText : colors.inputPlaceholder }
+                ]}>
                     {formatDisplayDate()}
                 </Text>
-                <Text style={styles.calendarIcon}>📅</Text>
+                <Text style={[styles.calendarIcon, { color: colors.textSecondary }]}>📅</Text>
             </TouchableOpacity>
 
             <DatePicker
@@ -83,7 +88,7 @@ export default function DatePickerField({
                 title={label || "Select Date"}
                 confirmText="Confirm"
                 cancelText="Cancel"
-                theme="light"
+                theme={isDark ? "dark" : "light"}
             />
         </View>
     );

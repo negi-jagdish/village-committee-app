@@ -166,26 +166,29 @@ export default function PostNewsScreen({ navigation, route }: any) {
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.form}>
                 {/* Title */}
-                <Text style={styles.label}>Title (English) *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Title (English) *</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={title}
                     onChangeText={setTitle}
                     placeholder="News headline"
                 />
 
-                <Text style={styles.label}>Title (Hindi)</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Title (Hindi)</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={titleHi}
                     onChangeText={setTitleHi}
                     placeholder="Optional Hindi headline"
                 />
 
                 {/* Content */}
-                <Text style={styles.label}>Content (English) *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Content (English) *</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={content}
                     onChangeText={setContent}
                     placeholder="News details..."
@@ -193,9 +196,10 @@ export default function PostNewsScreen({ navigation, route }: any) {
                     numberOfLines={4}
                 />
 
-                <Text style={styles.label}>Content (Hindi)</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Content (Hindi)</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={contentHi}
                     onChangeText={setContentHi}
                     placeholder="Optional Hindi details..."
@@ -204,9 +208,10 @@ export default function PostNewsScreen({ navigation, route }: any) {
                 />
 
                 {/* YouTube Link */}
-                <Text style={styles.label}>YouTube Video URL</Text>
+                <Text style={[styles.label, { color: colors.text }]}>YouTube Video URL</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
+                    placeholderTextColor={colors.inputPlaceholder}
                     value={youtubeUrl}
                     onChangeText={setYoutubeUrl}
                     placeholder="https://youtube.com/..."
@@ -214,29 +219,31 @@ export default function PostNewsScreen({ navigation, route }: any) {
                 />
 
                 {/* Category Picker */}
-                <Text style={styles.label}>Category *</Text>
-                <View style={styles.pickerContainer}>
+                <Text style={[styles.label, { color: colors.text }]}>Category *</Text>
+                <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                     <Picker
                         selectedValue={category}
                         onValueChange={setCategory}
-                        style={styles.picker}
+                        style={[styles.picker, { color: colors.inputText }]}
+                        dropdownIconColor={colors.text}
                     >
                         {CATEGORIES.map((cat) => (
-                            <Picker.Item key={cat.id} label={cat.label} value={cat.id} />
+                            <Picker.Item key={cat.id} label={cat.label} value={cat.id} color={colors.text} style={{ backgroundColor: colors.background }} />
                         ))}
                     </Picker>
                 </View>
 
                 {/* Scope Picker */}
-                <Text style={styles.label}>Related To *</Text>
-                <View style={styles.pickerContainer}>
+                <Text style={[styles.label, { color: colors.text }]}>Related To *</Text>
+                <View style={[styles.pickerContainer, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                     <Picker
                         selectedValue={scope}
                         onValueChange={setScope}
-                        style={styles.picker}
+                        style={[styles.picker, { color: colors.inputText }]}
+                        dropdownIconColor={colors.text}
                     >
                         {SCOPES.map((s) => (
-                            <Picker.Item key={s.id} label={s.label} value={s.id} />
+                            <Picker.Item key={s.id} label={s.label} value={s.id} color={colors.text} style={{ backgroundColor: colors.background }} />
                         ))}
                     </Picker>
                 </View>

@@ -30,6 +30,7 @@ const formatCurrency = (amount: number) => {
 
 export default function MemberDetailsScreen({ route, navigation }: any) {
     const { colors, isDark } = useTheme();
+    const styles = getStyles(colors, isDark);
     const { memberId } = route.params;
     const { t, i18n } = useTranslation();
     const language = i18n.language;
@@ -276,18 +277,18 @@ export default function MemberDetailsScreen({ route, navigation }: any) {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: colors.background,
     },
     headerCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 24,
         alignItems: 'center',
         marginBottom: 16,
@@ -301,13 +302,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 0,
         top: 0,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: isDark ? '#333' : '#f0f0f0',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
     },
     editButtonText: {
-        color: '#1a5f2a',
+        color: colors.primary,
         fontWeight: 'bold',
         fontSize: 12,
     },
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#e8f5e9',
+        backgroundColor: isDark ? '#1b3a20' : '#e8f5e9',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 12,
@@ -323,18 +324,18 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#1a5f2a',
+        color: colors.primary,
     },
     name: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
         marginBottom: 4,
     },
     role: {
         fontSize: 14,
-        color: '#666',
-        backgroundColor: '#f0f0f0',
+        color: colors.textSecondary,
+        backgroundColor: isDark ? '#333' : '#f0f0f0',
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 12,
@@ -353,22 +354,22 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#f9f9f9',
+        borderBottomColor: colors.borderLight,
         paddingBottom: 8,
     },
     infoLabel: {
-        color: '#666',
+        color: colors.textSecondary,
         width: '35%',
         fontWeight: '500',
     },
     infoValue: {
-        color: '#333',
+        color: colors.text,
         width: '60%',
         textAlign: 'right',
         fontWeight: '600',
     },
     sectionCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         marginHorizontal: 16,
         marginBottom: 16,
         borderRadius: 12,
@@ -388,13 +389,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
         marginBottom: 12,
     },
     pendingTotal: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#d32f2f',
+        color: colors.error,
     },
     dueItem: {
         flexDirection: 'row',
@@ -403,35 +404,35 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: colors.borderLight,
     },
     dueTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#333',
+        color: colors.text,
     },
     dueSubtitle: {
         fontSize: 12,
-        color: '#666',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     dueAmount: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#d32f2f',
+        color: colors.error,
     },
     successCard: {
-        backgroundColor: '#e8f5e9',
+        backgroundColor: isDark ? '#1b3a20' : '#e8f5e9',
         alignItems: 'center',
         padding: 20,
     },
     successText: {
-        color: '#1a5f2a',
+        color: colors.primary,
         fontWeight: 'bold',
         fontSize: 16,
     },
     emptyText: {
-        color: '#999',
+        color: colors.textSecondary,
         textAlign: 'center',
         padding: 10,
     },
@@ -442,24 +443,24 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: colors.borderLight,
     },
     historyTitle: {
         fontSize: 15,
-        color: '#333',
+        color: colors.text,
     },
     historyDate: {
         fontSize: 12,
-        color: '#999',
+        color: colors.textSecondary,
     },
     historyAmount: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1a5f2a',
+        color: colors.primary,
     },
     resetPasswordBtn: {
         marginTop: 20,
-        backgroundColor: '#fff3e0',
+        backgroundColor: isDark ? '#3e2723' : '#fff3e0',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     modalContent: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 16,
         padding: 20,
         shadowColor: '#000',
@@ -491,21 +492,23 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 8,
         textAlign: 'center',
-        color: '#333',
+        color: colors.text,
     },
     modalSubtitle: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 20,
         textAlign: 'center',
     },
     modalInput: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
         marginBottom: 20,
+        color: colors.text,
+        backgroundColor: isDark ? '#333' : '#fff',
     },
     modalActions: {
         flexDirection: 'row',
@@ -519,13 +522,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     cancelBtn: {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: isDark ? '#424242' : '#f5f5f5',
     },
     confirmBtn: {
-        backgroundColor: '#d32f2f',
+        backgroundColor: colors.error,
     },
     cancelBtnText: {
-        color: '#333',
+        color: colors.text,
         fontWeight: '600',
     },
     confirmBtnText: {

@@ -44,13 +44,12 @@ router.get('/', auth, async (req, res) => {
         );
         const totalMembers = membersResult[0].count;
 
-        // Get recent transactions
+        // Get recent transactions (including pending for visibility)
         const [recentTransactions] = await db.query(
-            `SELECT t.*, m.name as member_name, d.title as drive_title
+            `SELECT t.*, m.name as member_name, m.profile_picture as profile_picture_url, d.title as drive_title
        FROM transactions t
        LEFT JOIN members m ON t.member_id = m.id
        LEFT JOIN contribution_drives d ON t.drive_id = d.id
-       WHERE t.status = 'approved'
        ORDER BY t.created_at DESC
        LIMIT 10`
         );

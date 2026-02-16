@@ -71,7 +71,7 @@ export default function GalleryScreen({ navigation }: any) {
     const renderEventItem = ({ item }: { item: EventItem }) => {
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.card }]}
                 onPress={() => navigation.navigate('EventDetails', { eventId: item.id, title: item.title })}
             >
                 {/* Cover Image */}
@@ -83,7 +83,7 @@ export default function GalleryScreen({ navigation }: any) {
                             resizeMode="cover"
                         />
                     ) : (
-                        <View style={[styles.coverImage, styles.placeholderImage]}>
+                        <View style={[styles.coverImage, styles.placeholderImage, { backgroundColor: colors.border }]}>
                             <Text style={styles.placeholderIcon}>🖼️</Text>
                         </View>
                     )}
@@ -97,10 +97,10 @@ export default function GalleryScreen({ navigation }: any) {
                 {/* Content */}
                 <View style={styles.cardContent}>
                     <Text style={styles.dateText}>{formatDate(item.event_date)}</Text>
-                    <Text style={styles.titleText}>
+                    <Text style={[styles.titleText, { color: colors.text }]}>
                         {language === 'hi' && item.title_hi ? item.title_hi : item.title}
                     </Text>
-                    <Text style={styles.authorText}>
+                    <Text style={[styles.authorText, { color: colors.textSecondary }]}>
                         Posted by {item.created_by_name}
                     </Text>
                 </View>

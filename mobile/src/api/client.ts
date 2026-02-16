@@ -10,6 +10,7 @@ const API_BASE_URL = 'https://village-committee-api.onrender.com/api';
 // const API_BASE_URL = Platform.OS === 'android'
 //     ? 'http://10.0.2.2:3000/api'
 //     : 'http://localhost:3000/api';
+// const API_BASE_URL = 'http://192.168.1.8:3000/api';
 
 export { API_BASE_URL };
 
@@ -154,6 +155,7 @@ export const dashboardAPI = {
 export const reportsAPI = {
     getPendingDues: () => api.get('/reports/pending-dues'),
     getPaymentsReceived: () => api.get('/reports/payments-received'),
+    recalculateBalances: () => api.post('/reports/recalculate-balances'),
 };
 
 export const galleryAPI = {

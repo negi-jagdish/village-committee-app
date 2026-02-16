@@ -56,36 +56,43 @@ export default function ChangePasswordScreen({ navigation }: any) {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.form}>
-                <Text style={styles.label}>{t('auth.currentPassword') || 'Current Password'}</Text>
+            <View style={[styles.form, { backgroundColor: colors.card }]}>
+                <Text style={[styles.label, { color: colors.text }]}>{t('auth.currentPassword') || 'Current Password'}</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: isDark ? '#333' : '#f9f9f9', borderColor: colors.border, color: colors.text }]}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
                     secureTextEntry
                     placeholder="Enter current password"
+                    placeholderTextColor={colors.textTertiary}
                 />
 
-                <Text style={styles.label}>{t('auth.newPassword') || 'New Password'}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>{t('auth.newPassword') || 'New Password'}</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: isDark ? '#333' : '#f9f9f9', borderColor: colors.border, color: colors.text }]}
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry
                     placeholder="Enter new password"
+                    placeholderTextColor={colors.textTertiary}
                 />
 
-                <Text style={styles.label}>{t('auth.confirmPassword') || 'Confirm New Password'}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>{t('auth.confirmPassword') || 'Confirm New Password'}</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: isDark ? '#333' : '#f9f9f9', borderColor: colors.border, color: colors.text }]}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
                     placeholder="Confirm new password"
+                    placeholderTextColor={colors.textTertiary}
                 />
 
                 <TouchableOpacity
-                    style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+                    style={[
+                        styles.submitButton,
+                        { backgroundColor: colors.primary },
+                        submitting && styles.submitButtonDisabled
+                    ]}
                     onPress={handleSubmit}
                     disabled={submitting}
                 >
@@ -103,11 +110,9 @@ export default function ChangePasswordScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
         padding: 16,
     },
     form: {
-        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 20,
         shadowColor: '#000',
@@ -119,20 +124,16 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
         marginBottom: 8,
         marginTop: 16,
     },
     input: {
-        backgroundColor: '#f9f9f9',
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#ddd',
         padding: 12,
         fontSize: 16,
     },
     submitButton: {
-        backgroundColor: '#1a5f2a',
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',

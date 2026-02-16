@@ -113,36 +113,36 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
                 {heroImage ? (
                     <Image source={{ uri: heroImage }} style={styles.heroImage} resizeMode="cover" />
                 ) : (
-                    <View style={styles.placeholderHero}>
-                        <Icon name="article" size={60} color="#ccc" />
+                    <View style={[styles.placeholderHero, { backgroundColor: isDark ? colors.border : '#f0f0f0' }]}>
+                        <Icon name="article" size={60} color={colors.textTertiary} />
                     </View>
                 )}
 
                 <View style={styles.contentContainer}>
                     {/* Meta Row */}
                     <View style={styles.metaRow}>
-                        <View style={styles.categoryBadge}>
-                            <Text style={styles.categoryText}>{newsItem.category?.toUpperCase() || 'GENERAL'}</Text>
+                        <View style={[styles.categoryBadge, { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }]}>
+                            <Text style={[styles.categoryText, { color: isDark ? '#a5d6a7' : '#1a5f2a' }]}>{newsItem.category?.toUpperCase() || 'GENERAL'}</Text>
                         </View>
-                        <Text style={styles.dateText}>{new Date(newsItem.created_at).toDateString()}</Text>
+                        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{new Date(newsItem.created_at).toDateString()}</Text>
                     </View>
 
                     {/* Title */}
-                    <Text style={styles.title}>{displayTitle}</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>{displayTitle}</Text>
 
                     {/* Author */}
-                    <View style={styles.authorRow}>
+                    <View style={[styles.authorRow, { borderBottomColor: colors.borderLight }]}>
                         <View style={styles.avatar}>
                             <Text style={styles.avatarText}>{newsItem.posted_by_name?.charAt(0).toUpperCase()}</Text>
                         </View>
                         <View>
-                            <Text style={styles.authorName}>{newsItem.posted_by_name}</Text>
-                            <Text style={styles.authorRole}>{newsItem.posted_by_role}</Text>
+                            <Text style={[styles.authorName, { color: colors.text }]}>{newsItem.posted_by_name}</Text>
+                            <Text style={[styles.authorRole, { color: colors.textSecondary }]}>{newsItem.posted_by_role}</Text>
                         </View>
                     </View>
 
                     {/* Content */}
-                    <Text style={styles.content}>{displayContent}</Text>
+                    <Text style={[styles.content, { color: colors.text }]}>{displayContent}</Text>
 
                     {newsItem.youtube_url && (
                         <TouchableOpacity style={styles.youtubeLink} onPress={() => {/* Handle Open URL */ }}>
@@ -153,35 +153,47 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
             </ScrollView>
 
             {/* Bottom Bar for Reactions */}
-            <View style={styles.bottomBar}>
+            <View style={[styles.bottomBar, { backgroundColor: colors.card, borderTopColor: colors.borderLight }]}>
                 <View style={styles.reactionContainer}>
                     <TouchableOpacity
-                        style={[styles.reactionBtn, newsItem.user_reaction === 'like' && styles.activeReaction]}
+                        style={[
+                            styles.reactionBtn,
+                            { backgroundColor: isDark ? colors.border : colors.background },
+                            newsItem.user_reaction === 'like' && { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }
+                        ]}
                         onPress={() => handleReaction('like')}
                     >
                         <Text style={styles.emoji}>👍</Text>
-                        <Text style={styles.count}>{newsItem.likes || 0}</Text>
+                        <Text style={[styles.count, { color: colors.text }]}>{newsItem.likes || 0}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.reactionBtn, newsItem.user_reaction === 'love' && styles.activeReaction]}
+                        style={[
+                            styles.reactionBtn,
+                            { backgroundColor: isDark ? colors.border : colors.background },
+                            newsItem.user_reaction === 'love' && { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }
+                        ]}
                         onPress={() => handleReaction('love')}
                     >
                         <Text style={styles.emoji}>❤️</Text>
-                        <Text style={styles.count}>{newsItem.loves || 0}</Text>
+                        <Text style={[styles.count, { color: colors.text }]}>{newsItem.loves || 0}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.reactionBtn, newsItem.user_reaction === 'celebrate' && styles.activeReaction]}
+                        style={[
+                            styles.reactionBtn,
+                            { backgroundColor: isDark ? colors.border : colors.background },
+                            newsItem.user_reaction === 'celebrate' && { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }
+                        ]}
                         onPress={() => handleReaction('celebrate')}
                     >
                         <Text style={styles.emoji}>🎉</Text>
-                        <Text style={styles.count}>{newsItem.celebrates || 0}</Text>
+                        <Text style={[styles.count, { color: colors.text }]}>{newsItem.celebrates || 0}</Text>
                     </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-                    <Icon name="share" size={24} color="#1a5f2a" />
+                    <Icon name="share" size={24} color={colors.primary} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -191,7 +203,6 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     loadingContainer: {
         flex: 1,
@@ -208,7 +219,6 @@ const styles = StyleSheet.create({
     placeholderHero: {
         width: '100%',
         height: 200,
-        backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -228,18 +238,15 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     categoryText: {
-        color: '#1a5f2a',
         fontWeight: 'bold',
         fontSize: 12,
     },
     dateText: {
-        color: '#666',
         fontSize: 12,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1a1a1a',
         marginBottom: 16,
         lineHeight: 32,
     },
@@ -249,7 +256,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         paddingBottom: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
     },
     avatar: {
         width: 40,
@@ -268,16 +274,13 @@ const styles = StyleSheet.create({
     authorName: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
     },
     authorRole: {
         fontSize: 12,
-        color: '#666',
     },
     content: {
         fontSize: 16,
         lineHeight: 26,
-        color: '#333',
     },
     youtubeLink: {
         marginTop: 20,
@@ -298,9 +301,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        backgroundColor: '#fff',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
         elevation: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
@@ -314,13 +315,9 @@ const styles = StyleSheet.create({
     reactionBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f5f5f5',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 20,
-    },
-    activeReaction: {
-        backgroundColor: '#e8f5e9',
     },
     emoji: {
         fontSize: 18,
@@ -329,7 +326,6 @@ const styles = StyleSheet.create({
     count: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
     },
     shareBtn: {
         padding: 8,
