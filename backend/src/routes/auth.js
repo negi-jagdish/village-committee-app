@@ -121,13 +121,19 @@ router.post('/login-sim', async (req, res) => {
             return res.status(400).json({ error: 'Phone number is required' });
         }
 
-        // Clean phone number (remove +91, spaces, etc if needed, but for now exact match)
-        // Ideally we should fuzzy match or store normalized numbers.
-        // Assuming strict match for now or basic cleaning could be added.
+        // Clean phone number (remove +91, spaces, etc)
+        // Normalize to 10 digits
+        let cleanNumber = phoneNumber.replace(/\D/g, ''); // Remove non-digits
+        if (cleanNumber.length > 10) {
+            if (cleanNumber.startsWith('91')) cleanNumber = cleanNumber.slice(2);
+            else if (cleanNumber.startsWith('0')) cleanNumber = cleanNumber.slice(1);
+        }
+        // If still > 10, take last 10 (risky but common for India)
+        if (cleanNumber.length > 10) cleanNumber = cleanNumber.slice(-10);
 
         const [rows] = await db.query(
             'SELECT * FROM members WHERE contact_1 = ? AND is_active = TRUE',
-            [phoneNumber]
+            [cleanNumber]
         );
 
         if (rows.length === 0) {
