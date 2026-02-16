@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,9 +7,9 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
-    Image,
     KeyboardAvoidingView,
     Platform,
+    PermissionsAndroid,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -17,209 +17,257 @@ import { authAPI } from '../api/client';
 import { setCredentials, persistAuth } from '../store';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeContext';
+import SimCardsManager from 'react-native-sim-cards-manager';
 
 export default function LoginScreen() {
-    const { colors, isDark } = useTheme();
+    const { colors } = useTheme();
     const { t } = useTranslation();
     const dispatch = useDispatch();
+
+    // State
     const [contact, setContact] = useState('');
-    const [password, setPassword] = useState('');
+    const [password, setPassword] = useState(''); // Used for Password / MPIN
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [loginMethod, setLoginMethod] = useState<'password' | 'mpin'>('mpin'); // Default to MPIN for simplicity
 
-    const performLogin = async (mobile: string, pass: string) => {
-        setLoading(true);
+    // --- SIM Login Logic ---
+    const handleSimLogin = async () => {
+        if (Platform.OS !== 'android') {
+            Alert.alert('Not Supported', 'SIM Login is only available on Android.');
+            return;
+        }
+
         try {
-            const response = await authAPI.login(mobile, pass);
-            const { token, user } = response.data;
-            await persistAuth(user, token);
-            dispatch(setCredentials({ user, token }));
+            setLoading(true);
+            const granted = await PermissionsAndroid.requestMultiple([
+                PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+                PermissionsAndroid.PERMISSIONS.READ_PHONE_NUMBERS
+            ]);
+
+            if (
+                granted['android.permission.READ_PHONE_STATE'] === PermissionsAndroid.RESULTS.GRANTED ||
+                granted['android.permission.READ_PHONE_NUMBERS'] === PermissionsAndroid.RESULTS.GRANTED
+            ) {
+                // Get SIM Cards
+                const simCards = await SimCardsManager.getSimCards({
+                    title: 'Permission Required',
+                    message: 'This app needs access to your SIM card to log you in automatically.',
+                    buttonPositive: 'OK',
+                    buttonNegative: 'Cancel'
+                });
+
+                if (simCards && simCards.length > 0) {
+                    // Try to login with the first SIM's number
+                    // Note: phoneNumber might not be available on all carriers
+                    const phoneNumber = simCards[0].phoneNumber;
+
+                    if (phoneNumber) {
+                        // Normalize: Remove +91 or other prefixes if backend expects 10 digits
+                        // For now sending as is, backend should handle
+                        const response = await authAPI.loginSim(phoneNumber);
+                        const { token, user } = response.data;
+                        await persistAuth(user, token);
+                        dispatch(setCredentials({ user, token }));
+                    } else {
+                        Alert.alert('SIM Error', 'Could not read phone number from SIM. Please use MPIN or Password.');
+                    }
+                } else {
+                    Alert.alert('No SIM', 'No SIM card detected.');
+                }
+            } else {
+                Alert.alert('Permission Denied', 'Phone permission is required for SIM Login.');
+            }
         } catch (error: any) {
-            Alert.alert(t('common.error'), error.response?.data?.error || t('auth.invalidCredentials'));
+            // 404 means user not found
+            if (error.response?.status === 404) {
+                Alert.alert('Not Registered', 'This phone number is not registered. Please contact the admin.');
+            } else {
+                console.error('SIM Login Error:', error);
+                Alert.alert('Error', 'SIM Login failed. Please try manual login.');
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const handleLogin = () => {
+    const performLogin = async () => {
         if (!contact || !password) {
-            Alert.alert(t('common.error'), t('auth.invalidCredentials'));
+            Alert.alert('Error', 'Please enter required fields');
             return;
         }
-        performLogin(contact, password);
-    };
 
+        setLoading(true);
+        try {
+            let response;
+            if (loginMethod === 'mpin') {
+                response = await authAPI.loginMpin(contact, password);
+            } else {
+                response = await authAPI.login(contact, password);
+            }
+
+            const { token, user } = response.data;
+            await persistAuth(user, token);
+            dispatch(setCredentials({ user, token }));
+        } catch (error: any) {
+            const msg = error.response?.data?.error || 'Login failed';
+            Alert.alert('Login Failed', msg);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.background }]}
+            style={[styles.container, { backgroundColor: '#1a5f2a' }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <React.Fragment>
-                <View style={styles.scrollViewContent}>
-                    {/* Using a View wrapper instead of proper ScrollView for now to keep structure, 
-                        assuming screen height is enough or we rely on outer handling. 
-                        Actually better to just use ScrollView inside here if many buttons. 
-                    */}
-                    <View style={styles.logoContainer}>
-                        <View style={styles.logoCircle}>
-                            <Text style={styles.logoText}>🏘️</Text>
-                        </View>
-                        <Text style={styles.title}>Chamdoli Village Committee</Text>
-                        <Text style={styles.subtitle}>चामडोली ग्राम समिति</Text>
+            <View style={styles.content}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <View style={styles.logoCircle}>
+                        <Text style={styles.logoEmoji}>🏘️</Text>
                     </View>
+                    <Text style={styles.title}>Chamdoli Village</Text>
+                    <Text style={styles.subtitle}>चामडोली ग्राम समिति</Text>
+                </View>
 
-                    <View style={styles.formContainer}>
-                        <Text style={styles.label}>{t('auth.contact')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter contact number"
-                            value={contact}
-                            onChangeText={setContact}
-                            keyboardType="phone-pad"
-                            autoCapitalize="none"
-                        />
+                {/* Main Card */}
+                <View style={[styles.card, { backgroundColor: colors.card }]}>
 
-                        <Text style={styles.label}>{t('auth.password')}</Text>
-                        <View style={styles.passwordContainer}>
-                            <TextInput
-                                style={styles.passwordInput}
-                                placeholder="Enter password"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={!showPassword}
-                            />
-                            <TouchableOpacity
-                                style={styles.eyeButton}
-                                onPress={() => setShowPassword(!showPassword)}
-                            >
-                                <Icon
-                                    name={showPassword ? 'visibility' : 'visibility-off'}
-                                    size={24}
-                                    color="#666"
-                                />
-                            </TouchableOpacity>
-                        </View>
-
+                    {/* Method Tabs */}
+                    <View style={styles.methodTabs}>
                         <TouchableOpacity
-                            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                            onPress={handleLogin}
-                            disabled={loading}
+                            style={[styles.methodTab, loginMethod === 'mpin' && styles.methodTabActive]}
+                            onPress={() => setLoginMethod('mpin')}
                         >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={styles.loginButtonText}>{t('auth.loginButton')}</Text>
-                            )}
+                            <Text style={[styles.methodTabText, loginMethod === 'mpin' && styles.methodTabTextActive]}>Use MPIN</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.methodTab, loginMethod === 'password' && styles.methodTabActive]}
+                            onPress={() => setLoginMethod('password')}
+                        >
+                            <Text style={[styles.methodTabText, loginMethod === 'password' && styles.methodTabTextActive]}>Password</Text>
                         </TouchableOpacity>
                     </View>
 
+                    {/* Input Fields */}
+                    <Text style={[styles.label, { color: colors.text }]}>Phone Number</Text>
+                    <TextInput
+                        style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
+                        placeholder="e.g. 9876543210"
+                        placeholderTextColor="#666"
+                        value={contact}
+                        onChangeText={setContact}
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                    />
 
+                    <Text style={[styles.label, { color: colors.text }]}>
+                        {loginMethod === 'mpin' ? '4-Digit MPIN' : 'Password'}
+                    </Text>
+                    <View style={[styles.passwordContainer, { backgroundColor: colors.background }]}>
+                        <TextInput
+                            style={[styles.passwordInput, { color: colors.text }]}
+                            placeholder={loginMethod === 'mpin' ? 'Enter 4-digit PIN' : 'Enter Password'}
+                            placeholderTextColor="#666"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                            keyboardType={loginMethod === 'mpin' ? 'numeric' : 'default'}
+                            maxLength={loginMethod === 'mpin' ? 4 : undefined}
+                        />
+                        <TouchableOpacity
+                            style={styles.eyeButton}
+                            onPress={() => setShowPassword(!showPassword)}
+                        >
+                            <Icon name={showPassword ? 'visibility' : 'visibility-off'} size={20} color="#666" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Primary Login Button */}
+                    <TouchableOpacity
+                        style={[styles.loginButton, loading && styles.disabledButton]}
+                        onPress={performLogin}
+                        disabled={loading}
+                    >
+                        {loading ? <ActivityIndicator color="#fff" /> : (
+                            <Text style={styles.loginButtonText}>
+                                {loginMethod === 'mpin' ? 'Login with MPIN' : 'Login'}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Divider */}
+                    {Platform.OS === 'android' && (
+                        <>
+                            <View style={styles.dividerContainer}>
+                                <View style={styles.dividerLine} />
+                                <Text style={styles.dividerText}>OR</Text>
+                                <View style={styles.dividerLine} />
+                            </View>
+
+                            {/* SIM Login Button */}
+                            <TouchableOpacity
+                                style={[styles.simButton, loading && styles.disabledButton]}
+                                onPress={handleSimLogin}
+                                disabled={loading}
+                            >
+                                <Icon name="sim-card" size={20} color="#1a5f2a" style={{ marginRight: 8 }} />
+                                <Text style={styles.simButtonText}>Login instantly with SIM</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
-            </React.Fragment>
+            </View>
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1a5f2a',
-    },
-    scrollViewContent: {
-        flex: 1,
-        justifyContent: 'center',
-        padding: 20,
-    },
-    logoContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
+    container: { flex: 1 },
+    content: { flex: 1, justifyContent: 'center', padding: 20 },
+    header: { alignItems: 'center', marginBottom: 30 },
     logoCircle: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        width: 80, height: 80, borderRadius: 40, backgroundColor: '#fff',
+        justifyContent: 'center', alignItems: 'center', marginBottom: 12, elevation: 5
     },
-    logoText: {
-        fontSize: 40,
+    logoEmoji: { fontSize: 40 },
+    title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+    subtitle: { fontSize: 16, color: '#AED581' },
+    card: {
+        borderRadius: 20, padding: 24, elevation: 8, shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8
     },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#bfe6c8',
-        marginTop: 4,
-    },
-    formContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
+    methodTabs: { flexDirection: 'row', marginBottom: 20, backgroundColor: '#f0f0f0', borderRadius: 12, padding: 4 },
+    methodTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
+    methodTabActive: { backgroundColor: '#fff', elevation: 2 },
+    methodTabText: { fontWeight: '600', color: '#666' },
+    methodTabTextActive: { color: '#1a5f2a', fontWeight: 'bold' },
+    label: { fontSize: 14, fontWeight: '600', marginBottom: 6, marginLeft: 4 },
     input: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    loginButton: {
-        backgroundColor: '#1a5f2a',
-        borderRadius: 8,
-        padding: 14,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    loginButtonDisabled: {
-        backgroundColor: '#7cb887',
-    },
-    loginButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16,
+        marginBottom: 16, borderWidth: 1, borderColor: '#eee'
     },
     passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        marginBottom: 12,
+        flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1,
+        borderColor: '#eee', marginBottom: 24
     },
-    passwordInput: {
-        flex: 1,
-        padding: 12,
-        fontSize: 16,
+    passwordInput: { flex: 1, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16 },
+    eyeButton: { padding: 12 },
+    loginButton: {
+        backgroundColor: '#1a5f2a', borderRadius: 12, paddingVertical: 16,
+        alignItems: 'center', elevation: 2
     },
-    eyeButton: {
-        padding: 12,
+    loginButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    disabledButton: { opacity: 0.7 },
+    dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+    dividerLine: { flex: 1, height: 1, backgroundColor: '#eee' },
+    dividerText: { marginHorizontal: 10, color: '#999', fontWeight: '600', fontSize: 12 },
+    simButton: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#E8F5E9', borderRadius: 12, paddingVertical: 16,
+        borderWidth: 1, borderColor: '#C8E6C9'
     },
-
+    simButtonText: { color: '#1a5f2a', fontSize: 15, fontWeight: 'bold' },
 });

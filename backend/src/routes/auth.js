@@ -108,4 +108,120 @@ router.post('/reset-password/:id', auth, async (req, res) => {
     }
 });
 
+
+
+// --- SIM & MPIN Login Routes ---
+
+// Login with SIM (Phone Number)
+router.post('/login-sim', async (req, res) => {
+    try {
+        const { phoneNumber } = req.body;
+
+        if (!phoneNumber) {
+            return res.status(400).json({ error: 'Phone number is required' });
+        }
+
+        // Clean phone number (remove +91, spaces, etc if needed, but for now exact match)
+        // Ideally we should fuzzy match or store normalized numbers.
+        // Assuming strict match for now or basic cleaning could be added.
+
+        const [rows] = await db.query(
+            'SELECT * FROM members WHERE contact_1 = ? AND is_active = TRUE',
+            [phoneNumber]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'User not found. Please register first.' });
+        }
+
+        const user = rows[0];
+
+        // Generate Token
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+
+        const { password_hash, mpin_hash, ...userDetails } = user;
+
+        res.json({
+            token,
+            user: userDetails
+        });
+
+    } catch (error) {
+        console.error('SIM Login error:', error);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Set MPIN
+router.post('/set-mpin', auth, async (req, res) => {
+    try {
+        const { mpin } = req.body;
+
+        if (!mpin || mpin.length !== 4 || isNaN(mpin)) {
+            return res.status(400).json({ error: 'MPIN must be a 4-digit number' });
+        }
+
+        const hashedMpin = await bcrypt.hash(mpin, 10);
+        await db.query('UPDATE members SET mpin_hash = ? WHERE id = ?', [hashedMpin, req.user.id]);
+
+        res.json({ message: 'MPIN set successfully' });
+    } catch (error) {
+        console.error('Set MPIN error:', error);
+        res.status(500).json({ error: 'Failed to set MPIN' });
+    }
+});
+
+// Login with MPIN
+router.post('/login-mpin', async (req, res) => {
+    try {
+        const { contact, mpin } = req.body;
+
+        if (!contact || !mpin) {
+            return res.status(400).json({ error: 'Contact and MPIN are required' });
+        }
+
+        const [rows] = await db.query(
+            'SELECT * FROM members WHERE contact_1 = ? AND is_active = TRUE',
+            [contact]
+        );
+
+        if (rows.length === 0) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const user = rows[0];
+
+        if (!user.mpin_hash) {
+            return res.status(400).json({ error: 'MPIN not set for this user. Please login with password first.' });
+        }
+
+        const isMatch = await bcrypt.compare(mpin, user.mpin_hash);
+
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid MPIN' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+
+        const { password_hash, mpin_hash, ...userDetails } = user;
+
+        res.json({
+            token,
+            user: userDetails
+        });
+
+    } catch (error) {
+        console.error('MPIN Login error:', error);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
 module.exports = router;

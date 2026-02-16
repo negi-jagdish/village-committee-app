@@ -59,6 +59,9 @@ export const authAPI = {
         api.post('/auth/change-password', { currentPassword, newPassword }),
     resetPassword: (id: number, newPassword: string) =>
         api.post(`/auth/reset-password/${id}`, { newPassword }),
+    loginSim: (phoneNumber: string) => api.post('/auth/login-sim', { phoneNumber }),
+    setMpin: (mpin: string) => api.post('/auth/set-mpin', { mpin }),
+    loginMpin: (contact: string, mpin: string) => api.post('/auth/login-mpin', { contact, mpin }),
 };
 
 // Members APIs

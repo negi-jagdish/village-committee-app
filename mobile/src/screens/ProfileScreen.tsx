@@ -18,8 +18,9 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser, setThemeMode, persistTheme } from '../store';
-import { membersAPI, reportsAPI } from '../api/client';
+import { membersAPI, reportsAPI, authAPI } from '../api/client';
 import i18n from '../i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 import { useTheme } from '../theme/ThemeContext';
@@ -138,9 +139,43 @@ export default function ProfileScreen({ navigation }: any) {
 
     const toggleLanguage = async () => {
         const newLang = language === 'en' ? 'hi' : 'en';
-        dispatch(setLanguage(newLang));
-        await persistLanguage(newLang);
+        await AsyncStorage.setItem('language', newLang);
         i18n.changeLanguage(newLang);
+        dispatch(setLanguage(newLang)); // Changed from setLanguage(newLang) to dispatch(setLanguage(newLang))
+    };
+
+    const handleSetMpin = async () => {
+        Alert.prompt(
+            'Set MPIN',
+            'Enter a 4-digit PIN for quick login',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Set PIN',
+                    onPress: async (mpin?: string) => {
+                        if (mpin && mpin.length === 4 && !isNaN(Number(mpin))) {
+                            try {
+                                setLoading(true);
+                                await authAPI.setMpin(mpin);
+                                Alert.alert('Success', 'MPIN set successfully');
+                            } catch (error) {
+                                Alert.alert('Error', 'Failed to set MPIN');
+                            } finally {
+                                setLoading(false);
+                            }
+                        } else {
+                            Alert.alert('Invalid MPIN', 'Please enter a 4-digit number');
+                        }
+                    },
+                },
+            ],
+            'plain-text',
+            '',
+            'numeric'
+        );
     };
 
     const formatCurrency = (amount: number) => {
