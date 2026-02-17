@@ -58,6 +58,7 @@ async function importData() {
         const tablesToImport = [
             'members',
             'transactions',
+            'contribution_drives', // Added table
             'news',
             'polls',
             'poll_options',
@@ -73,6 +74,10 @@ async function importData() {
         // 3. Import Data in Order
         // Members first
         await insertData('members', readJSON('members'));
+
+        // Drives
+        await insertData('contribution_drives', readJSON('drives'));
+
 
         // News
         await insertData('news', readJSON('news'));

@@ -11,7 +11,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 
 const TABLES = [
     'members',
-    'drives',
+    'contribution_drives', // Maps to 'drives' in local schema
     'transactions',
     'news',
     'gallery_events',
@@ -20,6 +20,7 @@ const TABLES = [
     'poll_options',
     'poll_votes'
 ];
+
 
 async function exportData() {
     console.log('Connecting to TiDB...');
@@ -38,11 +39,16 @@ async function exportData() {
         try {
             console.log(`Exporting ${table}...`);
             const [rows] = await connection.query(`SELECT * FROM ${table}`);
+
+            // Map table names if needed
+            let filename = table;
+            if (table === 'contribution_drives') filename = 'drives'; // Rename to match local schema
+
             fs.writeFileSync(
-                path.join(OUTPUT_DIR, `${table}.json`),
+                path.join(OUTPUT_DIR, `${filename}.json`),
                 JSON.stringify(rows, null, 2)
             );
-            console.log(`  Saved ${rows.length} rows to ${table}.json`);
+            console.log(`  Saved ${rows.length} rows to ${filename}.json`);
         } catch (error) {
             console.error(`  Failed to export ${table}:`, error.message);
         }
