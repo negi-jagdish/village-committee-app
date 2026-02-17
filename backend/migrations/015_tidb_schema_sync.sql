@@ -31,16 +31,17 @@ CREATE TABLE IF NOT EXISTS payments (
 -- The fresh_start.sql has cash_balance/bank_balance columns
 -- but the code expects account_type/balance structure
 -- =====================================================
-DROP TABLE IF EXISTS cash_book;
+-- WARNING: Commented out to prevent data loss on restart
+-- DROP TABLE IF EXISTS cash_book;
+-- CREATE TABLE IF NOT EXISTS cash_book (
+--   id INT AUTO_INCREMENT PRIMARY KEY,
+--   account_type ENUM('bank', 'cash') NOT NULL UNIQUE,
+--   balance DECIMAL(12, 2) DEFAULT 0,
+--   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
 
-CREATE TABLE cash_book (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  account_type ENUM('bank', 'cash') NOT NULL UNIQUE,
-  balance DECIMAL(12, 2) DEFAULT 0,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-INSERT INTO cash_book (account_type, balance) VALUES ('bank', 0), ('cash', 0);
+-- Ensure default entries exist (safe)
+INSERT IGNORE INTO cash_book (account_type, balance) VALUES ('bank', 0), ('cash', 0);
 
 -- =====================================================
 -- FIX: polls tables - create if not exists

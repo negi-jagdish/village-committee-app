@@ -61,8 +61,10 @@ async function importData() {
             'contribution_drives', // Added table
             'news',
             'events', // Added table
+            'cash_book', // Added table
             'polls',
             'poll_options',
+
 
             'poll_options',
             'poll_votes',
@@ -89,8 +91,12 @@ async function importData() {
         await insertData('events', readJSON('events'));
         await insertData('gallery_media', readJSON('gallery_media'));
 
+        // Cash Book
+        await insertData('cash_book', readJSON('cash_book'));
 
         // Polls
+        await insertData('polls', readJSON('polls'));
+
         await insertData('polls', readJSON('polls'));
         await insertData('poll_options', readJSON('poll_options'));
         await insertData('poll_votes', readJSON('poll_votes'));
