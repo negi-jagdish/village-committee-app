@@ -56,21 +56,17 @@ async function importData() {
         // Only truncate tables we have data for, OR all relevant tables to be safe?
         // Let's truncate the main ones we are importing to avoid duplicates/conflicts.
         const tablesToImport = [
-            'members',
-            'transactions',
-            'contribution_drives', // Added table
+            // 'members',
+            // 'transactions',
+            // 'contribution_drives', 
             'news',
             'news_media', // Added table
             'events', // Added table
-            'cash_book', // Added table
-
-            'polls',
-            'poll_options',
-
-
-            'poll_options',
-            'poll_votes',
-            'gallery_media' // And gallery_events if we successfully exported it
+            // 'cash_book', 
+            // 'polls',
+            // 'poll_options',
+            // 'poll_votes',
+            'gallery_media'
         ];
 
         for (const table of tablesToImport) {
@@ -80,10 +76,10 @@ async function importData() {
 
         // 3. Import Data in Order
         // Members first
-        await insertData('members', readJSON('members'));
+        // await insertData('members', readJSON('members'));
 
         // Drives
-        await insertData('contribution_drives', readJSON('drives'));
+        // await insertData('contribution_drives', readJSON('drives'));
 
 
         // News
@@ -96,17 +92,17 @@ async function importData() {
         await insertData('gallery_media', readJSON('gallery_media'));
 
         // Cash Book
-        await insertData('cash_book', readJSON('cash_book'));
+        // await insertData('cash_book', readJSON('cash_book'));
 
         // Polls
-        await insertData('polls', readJSON('polls'));
+        // await insertData('polls', readJSON('polls'));
 
-        await insertData('polls', readJSON('polls'));
-        await insertData('poll_options', readJSON('poll_options'));
-        await insertData('poll_votes', readJSON('poll_votes'));
+        // await insertData('polls', readJSON('polls'));
+        // await insertData('poll_options', readJSON('poll_options'));
+        // await insertData('poll_votes', readJSON('poll_votes'));
 
         // Transactions
-        await insertData('transactions', readJSON('transactions'));
+        // await insertData('transactions', readJSON('transactions'));
 
         // Gallery
         // Note: gallery_events was missing in export, so gallery_media might be orphaned if it refers to events.
@@ -116,6 +112,7 @@ async function importData() {
         // Check if gallery_events exists in backup (it failed, so no)
         // await insertData('gallery_events', readJSON('gallery_events')); 
         await insertData('gallery_media', readJSON('gallery_media'));
+
 
         console.log('Import completed successfully!');
 
