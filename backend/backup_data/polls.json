@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "What program we should do in May",
+    "description": "",
+    "image_url": "https://res.cloudinary.com/dypvpj2fx/image/upload/v1770575671/village-committee/ip75h4sbvj13xnierrxg.jpg",
+    "created_by": 1,
+    "is_anonymous": 1,
+    "poll_type": "single",
+    "start_at": "2026-02-08T13:00:56.000Z",
+    "end_at": "2026-02-14T13:00:00.000Z",
+    "status": "draft",
+    "created_at": "2026-02-08T13:04:32.000Z",
+    "allow_custom_answer": 0,
+    "show_results": 1
+  },
+  {
+    "id": 2,
+    "title": "Program date",
+    "description": "",
+    "image_url": "https://res.cloudinary.com/dypvpj2fx/image/upload/v1770576293/village-committee/mionykhibw2ixivwhlh4.jpg",
+    "created_by": 2,
+    "is_anonymous": 0,
+    "poll_type": "single",
+    "start_at": "2026-02-08T13:14:00.000Z",
+    "end_at": "2026-02-13T13:14:00.000Z",
+    "status": "draft",
+    "created_at": "2026-02-08T13:14:53.000Z",
+    "allow_custom_answer": 0,
+    "show_results": 1
+  },
+  {
+    "id": 30001,
+    "title": "What development work is needed",
+    "description": "",
+    "image_url": "https://res.cloudinary.com/dypvpj2fx/image/upload/v1770578536/village-committee/enghzs5rd9nckgfw0mzc.jpg",
+    "created_by": 1,
+    "is_anonymous": 0,
+    "poll_type": "single",
+    "start_at": "2026-02-08T13:51:01.000Z",
+    "end_at": "2026-02-10T13:51:00.000Z",
+    "status": "active",
+    "created_at": "2026-02-08T13:52:17.000Z",
+    "allow_custom_answer": 0,
+    "show_results": 1
+  },
+  {
+    "id": 30002,
+    "title": "Testing custom answer",
+    "description": "",
+    "image_url": null,
+    "created_by": 2,
+    "is_anonymous": 1,
+    "poll_type": "single",
+    "start_at": "2026-02-08T14:04:40.000Z",
+    "end_at": "2026-02-09T14:04:40.000Z",
+    "status": "draft",
+    "created_at": "2026-02-08T14:04:58.000Z",
+    "allow_custom_answer": 0,
+    "show_results": 1
+  }
+]

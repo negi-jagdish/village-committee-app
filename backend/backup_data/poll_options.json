@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "poll_id": 1,
+    "text": "Bhagavad Geeta",
+    "image_url": null
+  },
+  {
+    "id": 2,
+    "poll_id": 1,
+    "text": "Satyanarayan",
+    "image_url": null
+  },
+  {
+    "id": 3,
+    "poll_id": 1,
+    "text": "Badrinath Tour",
+    "image_url": null
+  },
+  {
+    "id": 4,
+    "poll_id": 1,
+    "text": "Cultural Programme",
+    "image_url": null
+  },
+  {
+    "id": 5,
+    "poll_id": 2,
+    "text": "May 1st week",
+    "image_url": null
+  },
+  {
+    "id": 6,
+    "poll_id": 2,
+    "text": "May 2nd week",
+    "image_url": null
+  },
+  {
+    "id": 7,
+    "poll_id": 2,
+    "text": "June 3rd week",
+    "image_url": null
+  },
+  {
+    "id": 30001,
+    "poll_id": 30001,
+    "text": "Road",
+    "image_url": null
+  },
+  {
+    "id": 30002,
+    "poll_id": 30001,
+    "text": "Electricity",
+    "image_url": null
+  },
+  {
+    "id": 30003,
+    "poll_id": 30002,
+    "text": "a",
+    "image_url": null
+  },
+  {
+    "id": 30004,
+    "poll_id": 30002,
+    "text": "b",
+    "image_url": null
+  }
+]
