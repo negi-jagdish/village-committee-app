@@ -53,15 +53,7 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 const PORT = process.env.PORT || 3000;
-// Debug Cloudinary config
-app.get('/api/debug-config', (req, res) => {
-    res.json({
-        cloudinary_configured: !!process.env.CLOUDINARY_CLOUD_NAME,
-        cloud_name_masked: process.env.CLOUDINARY_CLOUD_NAME ? '***' : 'missing',
-        api_key_masked: process.env.CLOUDINARY_API_KEY ? 'ok' : 'missing',
-        api_secret_masked: process.env.CLOUDINARY_API_SECRET ? 'ok' : 'missing'
-    });
-});
+
 
 const runMigrations = require('../migrations/run');
 

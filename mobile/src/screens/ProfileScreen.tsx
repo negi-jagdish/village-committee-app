@@ -13,6 +13,9 @@ import {
     Dimensions,
     ImageBackground,
     Animated,
+    Modal,
+    TextInput,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -144,38 +147,29 @@ export default function ProfileScreen({ navigation }: any) {
         dispatch(setLanguage(newLang)); // Changed from setLanguage(newLang) to dispatch(setLanguage(newLang))
     };
 
-    const handleSetMpin = async () => {
-        Alert.prompt(
-            'Set MPIN',
-            'Enter a 4-digit PIN for quick login',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Set PIN',
-                    onPress: async (mpin?: string) => {
-                        if (mpin && mpin.length === 4 && !isNaN(Number(mpin))) {
-                            try {
-                                setLoading(true);
-                                await authAPI.setMpin(mpin);
-                                Alert.alert('Success', 'MPIN set successfully');
-                            } catch (error) {
-                                Alert.alert('Error', 'Failed to set MPIN');
-                            } finally {
-                                setLoading(false);
-                            }
-                        } else {
-                            Alert.alert('Invalid MPIN', 'Please enter a 4-digit number');
-                        }
-                    },
-                },
-            ],
-            'plain-text',
-            '',
-            'numeric'
-        );
+    const [showMpinModal, setShowMpinModal] = useState(false);
+    const [mpinInput, setMpinInput] = useState('');
+
+    const handleSetMpin = () => {
+        setMpinInput('');
+        setShowMpinModal(true);
+    };
+
+    const submitMpin = async () => {
+        if (mpinInput.length === 4 && !isNaN(Number(mpinInput))) {
+            try {
+                setLoading(true);
+                setShowMpinModal(false);
+                await authAPI.setMpin(mpinInput);
+                Alert.alert('Success', 'MPIN set successfully');
+            } catch (error) {
+                Alert.alert('Error', 'Failed to set MPIN');
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            Alert.alert('Invalid MPIN', 'Please enter a 4-digit number');
+        }
     };
 
     const formatCurrency = (amount: number) => {
@@ -521,6 +515,17 @@ export default function ProfileScreen({ navigation }: any) {
                         </View>
                         <Text style={styles.settingArrow}>›</Text>
                     </TouchableOpacity>
+                    <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={handleSetMpin}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>🔢</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>Set/Change MPIN</Text>
+                        </View>
+                        <Text style={styles.settingArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -665,6 +670,49 @@ export default function ProfileScreen({ navigation }: any) {
                 {activeTab === 'settings' && renderSettingsTab()}
                 <View style={{ height: 30 }} />
             </ScrollView>
+            {/* MPIN Modal */}
+            <Modal
+                visible={showMpinModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowMpinModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                        <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Set MPIN</Text>
+                            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>Enter a 4-digit PIN for quick login</Text>
+
+                            <TextInput
+                                style={[styles.mpinInput, { backgroundColor: colors.background, color: colors.text }]}
+                                value={mpinInput}
+                                onChangeText={(text) => setMpinInput(text.replace(/[^0-9]/g, '').slice(0, 4))}
+                                keyboardType="numeric"
+                                maxLength={4}
+                                secureTextEntry
+                                placeholder="----"
+                                placeholderTextColor={colors.textTertiary}
+                                autoFocus
+                            />
+
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, { borderColor: colors.border, borderWidth: 1 }]}
+                                    onPress={() => setShowMpinModal(false)}
+                                >
+                                    <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, { backgroundColor: colors.primary }]}
+                                    onPress={submitMpin}
+                                >
+                                    <Text style={[styles.modalButtonText, { color: '#fff', fontWeight: 'bold' }]}>Set PIN</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </KeyboardAvoidingView>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -787,6 +835,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 14,
         padding: 14,
+
         alignItems: 'center',
         elevation: 1,
         shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
@@ -1117,5 +1166,51 @@ const styles = StyleSheet.create({
     themeOptionText: {
         fontSize: 13,
         fontWeight: '500',
+    },
+
+    // ─── Modal ───
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        borderRadius: 16,
+        padding: 24,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    mpinInput: {
+        fontSize: 24,
+        textAlign: 'center',
+        letterSpacing: 8,
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 24,
+        fontWeight: 'bold',
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        fontSize: 16,
     },
 });

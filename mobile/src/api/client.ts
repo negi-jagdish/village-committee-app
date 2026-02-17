@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // Production URL
-const API_BASE_URL = 'https://village-committee-api.onrender.com/api';
+const API_BASE_URL = 'http://178.16.138.41/api';
 
 // Local Development URL
 // const API_BASE_URL = Platform.OS === 'android'
