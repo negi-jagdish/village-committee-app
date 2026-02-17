@@ -14,9 +14,10 @@ const TABLES = [
     'contribution_drives', // Maps to 'drives' in local schema
     'transactions',
     'news',
-    'gallery_events',
+    'events', // Correct table name in TiDB
     'gallery_media',
     'polls',
+
     'poll_options',
     'poll_votes'
 ];

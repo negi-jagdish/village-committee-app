@@ -60,7 +60,10 @@ async function importData() {
             'transactions',
             'contribution_drives', // Added table
             'news',
+            'events', // Added table
             'polls',
+            'poll_options',
+
             'poll_options',
             'poll_votes',
             'gallery_media' // And gallery_events if we successfully exported it
@@ -81,6 +84,11 @@ async function importData() {
 
         // News
         await insertData('news', readJSON('news'));
+
+        // Gallery / Events
+        await insertData('events', readJSON('events'));
+        await insertData('gallery_media', readJSON('gallery_media'));
+
 
         // Polls
         await insertData('polls', readJSON('polls'));
