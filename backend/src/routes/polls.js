@@ -28,8 +28,8 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
                 imageUrl,
                 req.user.id,
                 is_anonymous === 'true' || is_anonymous === true,
-                start_at,
-                end_at,
+                new Date(start_at),
+                new Date(end_at),
                 poll_type || 'single',
                 allow_custom_answer === 'true' || allow_custom_answer === true,
                 show_results === 'false' ? false : true // Default true
