@@ -18,6 +18,11 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
             return res.status(400).json({ message: 'Title, start time, and end time are required' });
         }
 
+        const formatDbDate = (iso) => {
+            const d = new Date(iso);
+            return d.toISOString().slice(0, 19).replace('T', ' ');
+        };
+
         // Insert Poll
         const [result] = await connection.query(
             `INSERT INTO polls (title, description, image_url, created_by, is_anonymous, start_at, end_at, poll_type, allow_custom_answer, show_results) 
@@ -27,12 +32,12 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
                 description,
                 imageUrl,
                 req.user.id,
-                is_anonymous === 'true' || is_anonymous === true,
-                new Date(start_at),
-                new Date(end_at),
+                is_anonymous === 'true' || is_anonymous === true ? 1 : 0,
+                formatDbDate(start_at),
+                formatDbDate(end_at),
                 poll_type || 'single',
-                allow_custom_answer === 'true' || allow_custom_answer === true,
-                show_results === 'false' ? false : true // Default true
+                allow_custom_answer === 'true' || allow_custom_answer === true ? 1 : 0,
+                show_results === 'false' ? false : true ? 1 : 0
             ]
         );
 
@@ -48,7 +53,7 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
             }
 
             if (Array.isArray(optionsArray) && optionsArray.length > 0) {
-                const values = optionsArray.map(opt => [pollId, opt.text, opt.image_url || null]);
+                const values = optionsArray.map(opt => [pollId, opt.text, null]);
                 await connection.query(
                     'INSERT INTO poll_options (poll_id, text, image_url) VALUES ?',
                     [values]
@@ -61,7 +66,7 @@ router.post('/', auth, requireRole('president', 'secretary'), upload.single('ima
     } catch (error) {
         await connection.rollback();
         console.error('Create poll error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     } finally {
         connection.release();
     }
