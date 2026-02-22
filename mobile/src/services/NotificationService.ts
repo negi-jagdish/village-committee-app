@@ -19,7 +19,7 @@ export class NotificationService {
 
             // Create a channel (required for Android)
             const channelId = await notifee.createChannel({
-                id: 'chamdoli_chat_v3',
+                id: 'chamdoli_chat_v4',
                 name: 'Urgent Chat Messages',
                 sound: 'jai_chamdoli',
                 importance: AndroidImportance.HIGH,

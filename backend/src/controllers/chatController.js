@@ -235,11 +235,11 @@ exports.sendMessage = async (req, res) => {
                 android: {
                     priority: 'high',
                     notification: {
-                        sound: 'default',
-                        channelId: 'chamdoli_chat',
+                        sound: 'jai_chamdoli',
+                        channelId: 'chamdoli_chat_v4',
                         priority: 'max',
                         visibility: 'public',
-                        defaultSound: true,
+                        defaultSound: false,
                         defaultVibrateTimings: true,
                         defaultLightSettings: true
                     }

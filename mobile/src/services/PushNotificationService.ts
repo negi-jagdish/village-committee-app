@@ -16,11 +16,13 @@ class PushNotificationService {
 
             // 3. Create a channel for notifications
             await notifee.createChannel({
-                id: 'chamdoli_chat',
+                id: 'chamdoli_chat_v4',
                 name: 'Chat Messages',
+                sound: 'jai_chamdoli',
                 importance: AndroidImportance.HIGH,
                 visibility: AndroidVisibility.PUBLIC,
                 vibration: true,
+                vibrationPattern: [300, 500],
             });
 
             // 4. Register for remote notifications
