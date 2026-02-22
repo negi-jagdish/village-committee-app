@@ -47,3 +47,5 @@ backend/reproduce_500.js
 backend/reset_admin_password.js
 backend/test.jpg
 backend/uploads/
+villageapp-9a711-firebase-adminsdk-fbsvc-81d5603f65.json
+backend/src/config/firebase-admin.json

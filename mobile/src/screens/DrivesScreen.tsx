@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { drivesAPI } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Drive {
     id: number;
@@ -46,9 +47,11 @@ export default function DrivesScreen({ navigation }: any) {
         }
     };
 
-    useEffect(() => {
-        fetchDrives();
-    }, []);
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchDrives();
+        }, [])
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);

@@ -7,8 +7,9 @@ import { Switch } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 const EditPollScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const route = useRoute();
+    const { colors, isDark } = useTheme();
     const { pollId } = route.params as { pollId: number };
 
     const [loading, setLoading] = useState(true);
@@ -86,25 +87,27 @@ const EditPollScreen = () => {
 
     return (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.section}>
-                <Text style={styles.label}>Question / Topic</Text>
+            <View style={[styles.section, { backgroundColor: isDark ? '#1e1e1e' : '#fff' }]}>
+                <Text style={[styles.label, { color: colors.text }]}>Question / Topic</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: isDark ? '#333' : '#fff' }]}
                     value={title}
                     onChangeText={setTitle}
+                    placeholderTextColor={colors.textTertiary}
                 />
 
-                <Text style={styles.label}>Description</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Description</Text>
                 <TextInput
-                    style={[styles.input, styles.textArea]}
+                    style={[styles.input, styles.textArea, { borderColor: colors.border, color: colors.text, backgroundColor: isDark ? '#333' : '#fff' }]}
                     value={description}
                     onChangeText={setDescription}
                     multiline
+                    placeholderTextColor={colors.textTertiary}
                 />
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.label}>Timing (IST)</Text>
+            <View style={[styles.section, { backgroundColor: isDark ? '#1e1e1e' : '#fff' }]}>
+                <Text style={[styles.label, { color: colors.text }]}>Timing (IST)</Text>
                 <DatePickerField
                     label="Start Time"
                     value={startDate}
@@ -119,16 +122,24 @@ const EditPollScreen = () => {
                 />
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.label}>Status</Text>
+            <View style={[styles.section, { backgroundColor: isDark ? '#1e1e1e' : '#fff' }]}>
+                <Text style={[styles.label, { color: colors.text }]}>Status</Text>
                 <View style={styles.statusContainer}>
                     {['active', 'closed', 'archived'].map((s) => (
                         <TouchableOpacity
                             key={s}
-                            style={[styles.statusButton, status === s && styles.statusButtonSelected]}
+                            style={[
+                                styles.statusButton,
+                                { borderColor: colors.border, backgroundColor: isDark ? '#333' : '#fff' },
+                                status === s && styles.statusButtonSelected
+                            ]}
                             onPress={() => setStatus(s)}
                         >
-                            <Text style={[styles.statusText, status === s && styles.statusTextSelected]}>
+                            <Text style={[
+                                styles.statusText,
+                                { color: isDark ? '#ccc' : '#666' },
+                                status === s && styles.statusTextSelected
+                            ]}>
                                 {s.charAt(0).toUpperCase() + s.slice(1)}
                             </Text>
                         </TouchableOpacity>
@@ -136,14 +147,14 @@ const EditPollScreen = () => {
                 </View>
             </View>
 
-            <View style={styles.section}>
+            <View style={[styles.section, { backgroundColor: isDark ? '#1e1e1e' : '#fff' }]}>
                 <View style={styles.row}>
-                    <Text style={styles.label}>Allow Custom Answer</Text>
+                    <Text style={[styles.label, { color: colors.text }]}>Allow Custom Answer</Text>
                     <Switch value={allowCustomAnswer} onValueChange={setAllowCustomAnswer} />
                 </View>
 
                 <View style={[styles.row, { marginTop: 12 }]}>
-                    <Text style={styles.label}>Show Real-time Results</Text>
+                    <Text style={[styles.label, { color: colors.text }]}>Show Real-time Results</Text>
                     <Switch value={showResults} onValueChange={setShowResults} />
                 </View>
             </View>

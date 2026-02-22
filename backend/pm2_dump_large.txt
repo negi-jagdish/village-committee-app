@@ -1,0 +1,652 @@
+[1m[90m[TAILING] Tailing last 5000 lines for [village-backend] process (change the value with --lines option)[39m[22m
+[90m/Users/jagdishnegi/.pm2/logs/village-backend-out.log last 5000 lines:[39m
+[32m0|village- | [39mRunning database migrations...
+[32m0|village- | [39mConnected to database...
+[32m0|village- | [39mRunning migration: 001_initial_schema.sql
+[32m0|village- | [39mRunning migration: 002_add_waivers.sql
+[32m0|village- | [39mRunning migration: 005_add_member_status.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 006_add_member_sex.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'sex'
+[32m0|village- | [39mRunning migration: 007_add_legacy_due.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'legacy_due'
+[32m0|village- | [39mRunning migration: 008_add_payment_details.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39mRunning migration: 009_test_users.sql
+[32m0|village- | [39mRunning migration: 010_news_filters.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'category'
+[32m0|village- | [39mRunning migration: 011_gallery_feature.sql
+[32m0|village- | [39mRunning migration: 012_add_profile_pictures.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'profile_picture'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'background_picture'
+[32m0|village- | [39mRunning migration: 013_add_polling.sql
+[32m0|village- | [39mRunning migration: 014_poll_enhancements.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'allow_custom_answer'
+[32m0|village- | [39mRunning migration: 015_tidb_schema_sync.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'screenshot_url'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'edit_allowed'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_by'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_at'
+[32m0|village- | [39mRunning migration: 016_ensure_news_tables.sql
+[32m0|village- | [39mRunning migration: 017_add_mpin_to_members.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'mpin_hash'
+[32m0|village- | [39mRunning migration: 017_fix_news_enums.sql
+[32m0|village- | [39mRunning migration: 018_news_archive.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 019_add_views_to_news.sql
+[32m0|village- | [39mRunning migration: 020_update_drives_schema.sql
+[32m0|village- | [39mRunning migration: 021_add_created_at_to_news_media.sql
+[32m0|village- | [39mRunning migration: 022_chat_schema.sql
+[32m0|village- | [39mRunning migration: 023_fix_chat_schema_renamed.sql
+[32m0|village- | [39mRunning migration: 024_add_group_description.sql
+[32m0|village- | [39mRunning migration: 024_add_missing_chat_columns.sql
+[32m0|village- | [39mRunning migration: 025_chat_advanced_features.sql
+[32m0|village- | [39mAll migrations completed successfully!
+[32m0|village- | [39mMigrations completed.
+[32m0|village- | [39mDues Reminder Cron Job Scheduled (Every Mon 10 AM)
+[32m0|village- | [39mServer running on port 3000
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mUser connected: 1 (undefined)
+[32m0|village- | [39mUser 1 joining room: group_2
+[32m0|village- | [39mUser 1 leaving room: group_2
+[32m0|village- | [39mUser disconnected: 1
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_2
+[32m0|village- | [39mRunning database migrations...
+[32m0|village- | [39mConnected to database...
+[32m0|village- | [39mRunning migration: 001_initial_schema.sql
+[32m0|village- | [39mRunning migration: 002_add_waivers.sql
+[32m0|village- | [39mRunning migration: 005_add_member_status.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 006_add_member_sex.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'sex'
+[32m0|village- | [39mRunning migration: 007_add_legacy_due.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'legacy_due'
+[32m0|village- | [39mRunning migration: 008_add_payment_details.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39mRunning migration: 009_test_users.sql
+[32m0|village- | [39mRunning migration: 010_news_filters.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'category'
+[32m0|village- | [39mRunning migration: 011_gallery_feature.sql
+[32m0|village- | [39mRunning migration: 012_add_profile_pictures.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'profile_picture'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'background_picture'
+[32m0|village- | [39mRunning migration: 013_add_polling.sql
+[32m0|village- | [39mRunning migration: 014_poll_enhancements.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'allow_custom_answer'
+[32m0|village- | [39mRunning migration: 015_tidb_schema_sync.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'screenshot_url'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'edit_allowed'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_by'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_at'
+[32m0|village- | [39mRunning migration: 016_ensure_news_tables.sql
+[32m0|village- | [39mRunning migration: 017_add_mpin_to_members.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'mpin_hash'
+[32m0|village- | [39mRunning migration: 017_fix_news_enums.sql
+[32m0|village- | [39mRunning migration: 018_news_archive.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 019_add_views_to_news.sql
+[32m0|village- | [39mRunning migration: 020_update_drives_schema.sql
+[32m0|village- | [39mRunning migration: 021_add_created_at_to_news_media.sql
+[32m0|village- | [39mRunning migration: 022_chat_schema.sql
+[32m0|village- | [39mRunning migration: 023_fix_chat_schema_renamed.sql
+[32m0|village- | [39mRunning migration: 024_add_group_description.sql
+[32m0|village- | [39mRunning migration: 024_add_missing_chat_columns.sql
+[32m0|village- | [39mRunning migration: 025_chat_advanced_features.sql
+[32m0|village- | [39mAll migrations completed successfully!
+[32m0|village- | [39mMigrations completed.
+[32m0|village- | [39mDues Reminder Cron Job Scheduled (Every Mon 10 AM)
+[32m0|village- | [39mServer running on port 3000
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mLogin attempt: { contact: '9811620581', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '9811620581', password: '***' }
+[32m0|village- | [39mUser connected: 5 (undefined)
+[32m0|village- | [39mUser disconnected: 5
+[32m0|village- | [39mLogin attempt: { contact: '9811422624', password: '***' }
+[32m0|village- | [39mUser connected: 2 (undefined)
+[32m0|village- | [39mUser 2 joining room: group_1
+[32m0|village- | [39mUser 2 leaving room: group_1
+[32m0|village- | [39mUser 2 joining room: group_1
+[32m0|village- | [39mUser 2 leaving room: group_1
+[32m0|village- | [39mUser 2 joining room: group_1
+[32m0|village- | [39mUser 2 leaving room: group_1
+[32m0|village- | [39mUser disconnected: 2
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mRunning database migrations...
+[32m0|village- | [39mConnected to database...
+[32m0|village- | [39mRunning migration: 001_initial_schema.sql
+[32m0|village- | [39mRunning migration: 002_add_waivers.sql
+[32m0|village- | [39mRunning migration: 005_add_member_status.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 006_add_member_sex.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'sex'
+[32m0|village- | [39mRunning migration: 007_add_legacy_due.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'legacy_due'
+[32m0|village- | [39mRunning migration: 008_add_payment_details.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39mRunning migration: 009_test_users.sql
+[32m0|village- | [39mRunning migration: 010_news_filters.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'category'
+[32m0|village- | [39mRunning migration: 011_gallery_feature.sql
+[32m0|village- | [39mRunning migration: 012_add_profile_pictures.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'profile_picture'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'background_picture'
+[32m0|village- | [39mRunning migration: 013_add_polling.sql
+[32m0|village- | [39mRunning migration: 014_poll_enhancements.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'allow_custom_answer'
+[32m0|village- | [39mRunning migration: 015_tidb_schema_sync.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'screenshot_url'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'edit_allowed'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_by'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_at'
+[32m0|village- | [39mRunning migration: 016_ensure_news_tables.sql
+[32m0|village- | [39mRunning migration: 017_add_mpin_to_members.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'mpin_hash'
+[32m0|village- | [39mRunning migration: 017_fix_news_enums.sql
+[32m0|village- | [39mRunning migration: 018_news_archive.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 019_add_views_to_news.sql
+[32m0|village- | [39mRunning migration: 020_update_drives_schema.sql
+[32m0|village- | [39mRunning migration: 021_add_created_at_to_news_media.sql
+[32m0|village- | [39mRunning migration: 022_chat_schema.sql
+[32m0|village- | [39mRunning migration: 023_fix_chat_schema_renamed.sql
+[32m0|village- | [39mRunning migration: 024_add_group_description.sql
+[32m0|village- | [39mRunning migration: 024_add_missing_chat_columns.sql
+[32m0|village- | [39mRunning migration: 025_chat_advanced_features.sql
+[32m0|village- | [39mAll migrations completed successfully!
+[32m0|village- | [39mMigrations completed.
+[32m0|village- | [39mDues Reminder Cron Job Scheduled (Every Mon 10 AM)
+[32m0|village- | [39mServer running on port 3000
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39m--- REACT ENDPOINT HIT ---
+[32m0|village- | [39m[REACT] Request: Msg=1, User=4, Reaction=👍
+[32m0|village- | [39m[REACT] Previous Reactions: {}
+[32m0|village- | [39m[REACT] User was reacting with target? false
+[32m0|village- | [39m[REACT] Added user to '👍'
+[32m0|village- | [39m[REACT] New Reactions: {"👍":[4]}
+[32m0|village- | [39m--- REACT ENDPOINT HIT ---
+[32m0|village- | [39m[REACT] Request: Msg=1, User=4, Reaction=👍
+[32m0|village- | [39m[REACT] Previous Reactions: {"👍":[4]}
+[32m0|village- | [39m[REACT] User was reacting with target? true
+[32m0|village- | [39m[REACT] Removed user from '👍' (Withdraw)
+[32m0|village- | [39m[REACT] New Reactions: {}
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mRunning database migrations...
+[32m0|village- | [39mConnected to database...
+[32m0|village- | [39mRunning migration: 001_initial_schema.sql
+[32m0|village- | [39mRunning migration: 002_add_waivers.sql
+[32m0|village- | [39mRunning migration: 005_add_member_status.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 006_add_member_sex.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'sex'
+[32m0|village- | [39mRunning migration: 007_add_legacy_due.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'legacy_due'
+[32m0|village- | [39mRunning migration: 008_add_payment_details.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_date'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'reference_id'
+[32m0|village- | [39mRunning migration: 009_test_users.sql
+[32m0|village- | [39mRunning migration: 010_news_filters.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'category'
+[32m0|village- | [39mRunning migration: 011_gallery_feature.sql
+[32m0|village- | [39mRunning migration: 012_add_profile_pictures.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'profile_picture'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'background_picture'
+[32m0|village- | [39mRunning migration: 013_add_polling.sql
+[32m0|village- | [39mRunning migration: 014_poll_enhancements.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'allow_custom_answer'
+[32m0|village- | [39mRunning migration: 015_tidb_schema_sync.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'screenshot_url'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'payment_id'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'edit_allowed'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_by'
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'approved_at'
+[32m0|village- | [39mRunning migration: 016_ensure_news_tables.sql
+[32m0|village- | [39mRunning migration: 017_add_mpin_to_members.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'mpin_hash'
+[32m0|village- | [39mRunning migration: 017_fix_news_enums.sql
+[32m0|village- | [39mRunning migration: 018_news_archive.sql
+[32m0|village- | [39m  Skipped (already applied): Duplicate column name 'status'
+[32m0|village- | [39mRunning migration: 019_add_views_to_news.sql
+[32m0|village- | [39mRunning migration: 020_update_drives_schema.sql
+[32m0|village- | [39mRunning migration: 021_add_created_at_to_news_media.sql
+[32m0|village- | [39mRunning migration: 022_chat_schema.sql
+[32m0|village- | [39mRunning migration: 023_fix_chat_schema_renamed.sql
+[32m0|village- | [39mRunning migration: 024_add_group_description.sql
+[32m0|village- | [39mRunning migration: 024_add_missing_chat_columns.sql
+[32m0|village- | [39mRunning migration: 025_chat_advanced_features.sql
+[32m0|village- | [39mAll migrations completed successfully!
+[32m0|village- | [39mMigrations completed.
+[32m0|village- | [39mDues Reminder Cron Job Scheduled (Every Mon 10 AM)
+[32m0|village- | [39mServer running on port 3000
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+[32m0|village- | [39mUser connected: 1 (undefined)
+[32m0|village- | [39mUser 1 joining room: group_1
+[32m0|village- | [39mUser 1 leaving room: group_1
+[32m0|village- | [39mUser disconnected: 1
+[32m0|village- | [39mUser connected: 1 (undefined)
+[32m0|village- | [39mLogin attempt: { contact: '9650200177', password: '***' }
+[32m0|village- | [39mUser connected: 4 (undefined)
+[32m0|village- | [39mUser 1 joining room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 1 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 1 joining room: group_1
+[32m0|village- | [39mUser 1 leaving room: group_1
+[32m0|village- | [39mUser 1 joining room: group_1
+[32m0|village- | [39mUser 1 leaving room: group_1
+[32m0|village- | [39mUser 1 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_1
+[32m0|village- | [39mUser 4 joining room: group_2
+[32m0|village- | [39mUser 4 leaving room: group_2
+[32m0|village- | [39mUser 1 leaving room: group_1
+[32m0|village- | [39mUser 1 joining room: group_2
+[32m0|village- | [39mUser 1 leaving room: group_2
+[32m0|village- | [39mUser 4 leaving room: group_1
+[32m0|village- | [39mUser 4 joining room: group_3
+[32m0|village- | [39mUser 1 joining room: group_4
+[32m0|village- | [39mUser 1 leaving room: group_4
+[32m0|village- | [39mUser 4 leaving room: group_3
+[32m0|village- | [39mUser 4 joining room: group_3
+[32m0|village- | [39mUser 4 leaving room: group_3
+[32m0|village- | [39mUser 4 joining room: group_3
+[32m0|village- | [39mUser 1 joining room: group_4
+[32m0|village- | [39mUser 1 leaving room: group_4
+[32m0|village- | [39mUser 4 leaving room: group_3
+[32m0|village- | [39mUser disconnected: 4
+[32m0|village- | [39mUser disconnected: 1
+[32m0|village- | [39mLogin attempt: { contact: '7042600498', password: '***' }
+
+[90m/Users/jagdishnegi/.pm2/logs/village-backend-error.log last 5000 lines:[39m
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Socket.ondisconnect (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:513:14)
+[31m0|village- | [39m    at Socket._onpacket (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:442:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:207:24
+[31m0|village- | [39m    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Client.onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:253:20)
+[31m0|village- | [39m    at Socket.emit (node:events:519:35)
+[31m0|village- | [39m    at Socket.onClose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/engine.io/build/socket.js:320:18)
+[31m0|village- | [39m    at Object.onceWrapper (node:events:621:28)
+[31m0|village- | [39m    at WebSocket.emit (node:events:507:28) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Client.onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:253:20)
+[31m0|village- | [39m    at Socket.emit (node:events:519:35)
+[31m0|village- | [39m    at Socket.onClose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/engine.io/build/socket.js:320:18)
+[31m0|village- | [39m    at Object.onceWrapper (node:events:621:28)
+[31m0|village- | [39m    at WebSocket.emit (node:events:507:28) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Client.onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:253:20)
+[31m0|village- | [39m    at Socket.emit (node:events:519:35)
+[31m0|village- | [39m    at Socket.onClose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/engine.io/build/socket.js:320:18)
+[31m0|village- | [39m    at Object.onceWrapper (node:events:621:28)
+[31m0|village- | [39m    at WebSocket.emit (node:events:507:28) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 019_add_views_to_news.sql: PROCEDURE village_committee.AddViewsColumn does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 020_update_drives_schema.sql: PROCEDURE village_committee.AddDrivesColumns does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 021_add_created_at_to_news_media.sql: PROCEDURE village_committee.AddNewsMediaCreatedAt does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syn
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39m  Warning in 022_chat_schema.sql: PROCEDURE village_committee.AddChatColumns does not exist
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Socket.ondisconnect (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:513:14)
+[31m0|village- | [39m    at Socket._onpacket (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:442:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:207:24
+[31m0|village- | [39m    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mError: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at Socket.<anonymous> (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/services/socketService.js:45:16)
+[31m0|village- | [39m    at Socket.emit (node:events:507:28)
+[31m0|village- | [39m    at Socket.emitReserved (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/typed-events.js:56:22)
+[31m0|village- | [39m    at Socket._onclose (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:554:14)
+[31m0|village- | [39m    at Socket.ondisconnect (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:513:14)
+[31m0|village- | [39m    at Socket._onpacket (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/socket.js:442:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/socket.io/dist/client.js:207:24
+[31m0|village- | [39m    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+[31m0|village- | [39mLogin error: Error: connect ECONNREFUSED 127.0.0.1:3307
+[31m0|village- | [39m    at PromisePool.query (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/mysql2/lib/promise/pool.js:36:22)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/src/routes/auth.js:19:33
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:149:13)
+[31m0|village- | [39m    at Route.dispatch (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/route.js:119:3)
+[31m0|village- | [39m    at Layer.handle [as handle_request] (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/layer.js:95:5)
+[31m0|village- | [39m    at /Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:284:15
+[31m0|village- | [39m    at Function.process_params (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:346:12)
+[31m0|village- | [39m    at next (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:280:10)
+[31m0|village- | [39m    at Function.handle (/Users/jagdishnegi/.gemini/antigravity/scratch/village-committee-app/backend/node_modules/express/lib/router/index.js:175:3) {
+[31m0|village- | [39m  code: 'ECONNREFUSED',
+[31m0|village- | [39m  errno: -61,
+[31m0|village- | [39m  sql: undefined,
+[31m0|village- | [39m  sqlState: undefined,
+[31m0|village- | [39m  sqlMessage: undefined
+[31m0|village- | [39m}
+

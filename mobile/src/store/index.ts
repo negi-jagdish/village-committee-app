@@ -1,5 +1,6 @@
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import chatReducer from './slices/chatSlice';
 
 // Types
 export interface User {
@@ -90,6 +91,7 @@ export const store = configureStore({
     reducer: {
         auth: authSlice.reducer,
         app: appSlice.reducer,
+        chat: chatReducer,
     },
 });
 

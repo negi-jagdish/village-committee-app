@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../config/database');
 const { auth, isCashier, isPresident } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const ChamBot = require('../services/chamBot'); // Import ChamBot
 
 const router = express.Router();
 
@@ -214,6 +215,20 @@ router.post('/income', auth, optionalUpload('screenshot'), async (req, res) => {
             [amount, accountType]
         );
 
+        // ChamBot: Send Receipt
+        if (member_id) {
+            try {
+                let driveTitle = 'General Contribution';
+                if (drive_id) {
+                    const [drive] = await db.query('SELECT title FROM contribution_drives WHERE id = ?', [drive_id]);
+                    if (drive.length > 0) driveTitle = drive[0].title;
+                }
+                await ChamBot.sendReceipt(member_id, amount, driveTitle, result.insertId);
+            } catch (err) {
+                console.error('ChamBot Receipt Error:', err); // Don't block response
+            }
+        }
+
         res.status(201).json({ id: result.insertId, message: 'Income entry created successfully' });
     } catch (error) {
         console.error('Create income error:', error);
@@ -259,6 +274,15 @@ router.post('/bulk-income', auth, isCashier, optionalUpload('screenshot'), async
             'UPDATE cash_book SET balance = balance + ? WHERE account_type = ?',
             [total_amount, accountType]
         );
+
+        // ChamBot: Send Detailed Bulk Receipt with breakdown and pending dues
+        if (member_id) {
+            try {
+                await ChamBot.sendBulkReceipt(member_id, total_amount, payment_method, allocationsParsed, paymentId);
+            } catch (err) {
+                console.error('ChamBot Bulk Receipt Error:', err);
+            }
+        }
 
         res.status(201).json({ payment_id: paymentId, message: 'Bulk payment recorded successfully' });
     } catch (error) {
@@ -347,6 +371,30 @@ router.patch('/:id/approve', auth, isPresident, async (req, res) => {
         }
 
         res.json({ message: `Expense ${status} successfully` });
+
+        // ChamBot: Notify the cashier who created this expense
+        try {
+            const createdBy = transaction[0].created_by;
+            if (createdBy) {
+                const emoji = status === 'approved' ? '✅' : '❌';
+                const msg = `${emoji} *Expense ${status === 'approved' ? 'Approved' : 'Rejected'}*
+Amount: *₹${transaction[0].amount}*
+Description: ${transaction[0].description || 'N/A'}
+By: President
+Ref: #${req.params.id}
+
+---
+
+${emoji} *खर्च ${status === 'approved' ? 'स्वीकृत' : 'अस्वीकृत'}*
+राशि: *₹${transaction[0].amount}*
+विवरण: ${transaction[0].description || 'N/A'}
+द्वारा: अध्यक्ष
+संदर्भ: #${req.params.id}`;
+                await ChamBot.sendMessage(createdBy, msg);
+            }
+        } catch (err) {
+            console.error('ChamBot Approve/Reject Notification Error:', err);
+        }
     } catch (error) {
         console.error('Approve expense error:', error);
         res.status(500).json({ error: 'Failed to update expense status' });
@@ -394,6 +442,40 @@ router.put('/:id', auth, isCashier, optionalUpload('screenshot'), async (req, re
         // For simplicity in this "hotfix" I will leave it, but noting it's imperfect.
 
         res.json({ message: 'Transaction updated successfully' });
+
+        // ChamBot: Notify concerned member about the edit
+        try {
+            const memberId = transaction[0].member_id;
+            if (memberId) {
+                const [editor] = await db.query('SELECT name FROM members WHERE id = ?', [req.user.id]);
+                const editorName = editor[0]?.name || 'Cashier';
+                let driveInfoEn = '';
+                let driveInfoHi = '';
+                if (transaction[0].drive_id) {
+                    const [drive] = await db.query('SELECT title FROM contribution_drives WHERE id = ?', [transaction[0].drive_id]);
+                    if (drive.length > 0) {
+                        driveInfoEn = `\nDrive: ${drive[0].title}`;
+                        driveInfoHi = `\nखाता: ${drive[0].title}`;
+                    }
+                }
+                const msg = `✏️ *Transaction Updated*
+Your entry has been edited by: *${editorName}*
+Old Amount: ₹${transaction[0].amount}
+New Amount: *₹${amount}*${driveInfoEn}
+Ref: #${req.params.id}
+
+---
+
+✏️ *लेन-देन अद्यतन*
+आपकी प्रविष्टि को संपादित किया गया है: *${editorName}*
+पुरानी राशि: ₹${transaction[0].amount}
+नई राशि: *₹${amount}*${driveInfoHi}
+संदर्भ: #${req.params.id}`;
+                await ChamBot.sendMessage(memberId, msg);
+            }
+        } catch (err) {
+            console.error('ChamBot Edit Notification Error:', err);
+        }
     } catch (error) {
         res.status(500).json({ error: 'Failed to update transaction' });
     }
@@ -462,6 +544,32 @@ router.put('/bulk-income/:paymentId', auth, isCashier, optionalUpload('screensho
 
         res.json({ message: 'Bulk payment updated successfully' });
 
+        // ChamBot: Notify member about updated bulk payment
+        try {
+            if (member_id) {
+                const [editor] = await db.query('SELECT name FROM members WHERE id = ?', [req.user.id]);
+                const editorName = editor[0]?.name || 'Cashier';
+                const msg = `✏️ *Payment Updated*
+Your payment record has been updated by: *${editorName}*
+Old Total: ₹${oldAmount}
+New Total: *₹${total_amount}*
+Allocated to ${allocationsParsed.length} drives
+Ref: #${paymentId}
+
+---
+
+✏️ *भुगतान अद्यतन*
+आपका भुगतान रिकॉर्ड संपादित किया गया है: *${editorName}*
+पुरानी कुल राशि: ₹${oldAmount}
+नई कुल राशि: *₹${total_amount}*
+${allocationsParsed.length} खातों में आवंटित
+संदर्भ: #${paymentId}`;
+                await ChamBot.sendMessage(member_id, msg);
+            }
+        } catch (err) {
+            console.error('ChamBot Bulk Edit Notification Error:', err);
+        }
+
     } catch (error) {
         console.error('Update bulk income error:', error);
         res.status(500).json({ error: 'Failed to update bulk payment' });
@@ -528,6 +636,37 @@ router.delete('/:id', auth, async (req, res) => {
         await db.query('DELETE FROM transactions WHERE id = ?', [req.params.id]);
 
         res.json({ message: 'Transaction deleted successfully' });
+
+        // ChamBot: Notify the concerned member about deletion
+        try {
+            if (t.member_id) {
+                const [deleter] = await db.query('SELECT name FROM members WHERE id = ?', [req.user.id]);
+                const deleterName = deleter[0]?.name || 'Admin';
+                let driveInfoEn = '';
+                let driveInfoHi = '';
+                if (t.drive_id) {
+                    const [drive] = await db.query('SELECT title FROM contribution_drives WHERE id = ?', [t.drive_id]);
+                    if (drive.length > 0) {
+                        driveInfoEn = `\nDrive: ${drive[0].title}`;
+                        driveInfoHi = `\nखाता: ${drive[0].title}`;
+                    }
+                }
+                const msg = `🗑️ *Transaction Deleted*
+A ${t.type} entry of *₹${t.amount}* has been deleted by: *${deleterName}*${driveInfoEn}
+Method: ${t.payment_method === 'cash' ? 'Cash' : 'Bank'}
+Ref: #${req.params.id}
+
+---
+
+🗑️ *लेन-देन हटा दिया गया*
+*₹${t.amount}* की ${t.type === 'income' ? 'आय' : 'खर्च'} प्रविष्टि हटा दी गई है: *${deleterName}*${driveInfoHi}
+माध्यम: ${t.payment_method === 'cash' ? 'नकद' : 'बैंक'}
+संदर्भ: #${req.params.id}`;
+                await ChamBot.sendMessage(t.member_id, msg);
+            }
+        } catch (err) {
+            console.error('ChamBot Delete Notification Error:', err);
+        }
     } catch (error) {
         console.error('Delete transaction error:', error);
         res.status(500).json({ error: 'Failed to delete transaction' });

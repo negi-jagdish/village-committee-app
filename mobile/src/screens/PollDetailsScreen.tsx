@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, TextInput } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { pollsAPI } from '../api/client';
+import { pollsAPI, API_BASE_URL } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -9,7 +9,8 @@ import { useTheme } from '../theme/ThemeContext';
 
 const PollDetailsScreen = () => {
     const route = useRoute();
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
+    const { colors, isDark } = useTheme();
     const { pollId } = route.params as { pollId: number };
     const [poll, setPoll] = useState<any>(null);
     const [options, setOptions] = useState<any[]>([]);
@@ -25,6 +26,7 @@ const PollDetailsScreen = () => {
 
     const user = useSelector((state: RootState) => state.auth.user);
     const canEdit = user?.role === 'president' || user?.role === 'secretary';
+    const isPresident = user?.role === 'president';
 
     useEffect(() => {
         loadPollDetails();
@@ -129,6 +131,32 @@ const PollDetailsScreen = () => {
         navigation.navigate('EditPoll', { pollId: poll.id });
     };
 
+    const handleDelete = () => {
+        Alert.alert(
+            'Delete Poll',
+            'Are you sure you want to delete this poll? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await pollsAPI.delete(pollId);
+                            Alert.alert('Success', 'Poll deleted successfully');
+                            navigation.goBack();
+                        } catch (error: any) {
+                            console.error(error);
+                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete poll');
+                            setLoading(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const hasVoted = userVote && userVote.length > 0;
     const isExpired = poll ? new Date() > new Date(poll.end_at) : false;
     const isActive = !isExpired && (poll?.status === 'active' || !poll?.status || poll?.status === 'draft');
@@ -142,20 +170,34 @@ const PollDetailsScreen = () => {
     // Calculate total votes for percentage
     const totalVotes = results.reduce((acc: number, curr: any) => acc + curr.count, 0);
 
+    const hasMedia = poll.image_url && poll.image_url.length > 0;
+    const heroImage = hasMedia
+        ? (poll.image_url.startsWith('http')
+            ? poll.image_url
+            : `${API_BASE_URL.replace('/api', '')}/${poll.image_url}`)
+        : null;
+
     return (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-            {poll.image_url && (
-                <Image source={{ uri: poll.image_url }} style={styles.banner} resizeMode="cover" />
+            {heroImage && (
+                <Image source={{ uri: heroImage }} style={styles.banner} resizeMode="cover" />
             )}
 
             <View style={styles.header}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Text style={[styles.title, { flex: 1 }]}>{poll.title}</Text>
-                    {canEdit && (
-                        <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
-                            <Icon name="edit" size={24} color="#1a5f2a" />
-                        </TouchableOpacity>
-                    )}
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                        {canEdit && (
+                            <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
+                                <Icon name="edit" size={24} color="#1a5f2a" />
+                            </TouchableOpacity>
+                        )}
+                        {isPresident && (
+                            <TouchableOpacity onPress={handleDelete} style={styles.editButton}>
+                                <Icon name="delete" size={24} color="#d32f2f" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
                 {poll.description && <Text style={styles.description}>{poll.description}</Text>}
 
@@ -215,6 +257,13 @@ const PollDetailsScreen = () => {
                             // Only show results if enabled or expired or admin
                             const showStats = (poll.show_results || isExpired || canEdit) && (hasVoted || isExpired);
 
+                            const hasOptMedia = opt.image_url && opt.image_url.length > 0;
+                            const optHeroImage = hasOptMedia
+                                ? (opt.image_url.startsWith('http')
+                                    ? opt.image_url
+                                    : `${API_BASE_URL.replace('/api', '')}/${opt.image_url}`)
+                                : null;
+
                             return (
                                 <TouchableOpacity
                                     key={opt.id}
@@ -227,8 +276,8 @@ const PollDetailsScreen = () => {
                                     disabled={!canVote}
                                 >
                                     <View style={styles.optionContent}>
-                                        {opt.image_url && (
-                                            <Image source={{ uri: opt.image_url }} style={styles.optionImage} />
+                                        {optHeroImage && (
+                                            <Image source={{ uri: optHeroImage }} style={styles.optionImage} />
                                         )}
                                         <View style={{ flex: 1 }}>
                                             <View style={styles.optionRow}>

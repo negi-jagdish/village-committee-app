@@ -12,6 +12,8 @@ import {
     Dimensions,
     TextInput,
     ActivityIndicator,
+    Platform,
+    Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -19,7 +21,10 @@ import { RootState } from '../store';
 import { newsAPI, pollsAPI, API_BASE_URL } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FilterDropdown from '../components/FilterDropdown';
+import WeatherWidget from '../components/WeatherWidget';
 import { useTheme } from '../theme/ThemeContext';
+import { ScrollView } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -48,16 +53,15 @@ interface NewsItem {
 const NEWS_CACHE_KEY = 'cached_news';
 
 const CATEGORIES = [
-    { id: 'all', label: 'All Category' },
-    { id: 'general', label: 'General' },
-    { id: 'sports', label: 'Sports' },
-    { id: 'political', label: 'Political' },
-    { id: 'cultural', label: 'Cultural' },
-    { id: 'entertainment', label: 'Entertainment' },
-    { id: 'talent', label: 'Talent' },
-    { id: 'education', label: 'Education' },
-    { id: 'health', label: 'Health' },
-    { id: 'science', label: 'Science' },
+    { id: 'all', label: 'All', icon: "🌐" },
+    { id: 'general', label: 'Local', icon: "🏘️" },
+    { id: 'health', label: 'Health', icon: "🏥" },
+    { id: 'weather', label: 'Weather', icon: "⛅" },
+    { id: 'polls', label: 'Polls', icon: "📊" },
+    { id: 'event', label: 'Events', icon: "🎉" },
+    { id: 'update', label: 'Gov Schemes', icon: "📋" },
+    { id: 'sports', label: 'Sports', icon: "⚽" },
+    { id: 'cultural', label: 'Cultural', icon: "🎭" },
 ];
 
 const SCOPES = [
@@ -95,8 +99,13 @@ export default function NewsScreen({ navigation }: any) {
     const { colors, isDark } = useTheme();
     const [news, setNews] = useState<NewsItem[]>([]);
     const [polls, setPolls] = useState<any[]>([]);
+    const [pastPolls, setPastPolls] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    // Manage Post Modal
+    const [manageMenuVisible, setManageMenuVisible] = useState(false);
+    const [selectedPost, setSelectedPost] = useState<NewsItem | null>(null);
 
     // Filters
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -128,12 +137,15 @@ export default function NewsScreen({ navigation }: any) {
                 sortBy,
                 status: statusFilter,
             };
-            if (categoryFilter !== 'all') params.category = categoryFilter;
+            if (categoryFilter !== 'all' && categoryFilter !== 'weather') params.category = categoryFilter;
             if (scopeFilter !== 'all') params.scope = scopeFilter;
             if (searchQuery.trim()) params.search = searchQuery.trim();
 
-            const res = await newsAPI.getAll(params);
-            const newItems = res.data;
+            let newItems = [];
+            if (categoryFilter !== 'weather' && categoryFilter !== 'polls') {
+                const res = await newsAPI.getAll(params);
+                newItems = res.data;
+            }
 
             if (append) {
                 setNews(prev => [...prev, ...newItems]);
@@ -157,11 +169,23 @@ export default function NewsScreen({ navigation }: any) {
         }
     };
 
-    const fetchPolls = async () => {
+    const fetchPolls = async (isInitial = false) => {
         try {
-            const pollsRes = await pollsAPI.getActive();
-            const visiblePolls = pollsRes.data.filter((p: any) => canCreatePoll || !p.has_voted);
-            setPolls(visiblePolls);
+            const [pollsRes, historyRes] = await Promise.all([
+                pollsAPI.getActive(),
+                pollsAPI.getHistory()
+            ]);
+
+            // Do not filter out polls if the user has voted. Keep them visible!
+            setPolls(pollsRes.data);
+            setPastPolls(historyRes.data);
+
+            if (isInitial) {
+                const hasPendingVoting = pollsRes.data.some((p: any) => !p.has_voted);
+                if (hasPendingVoting) {
+                    setCategoryFilter('polls');
+                }
+            }
         } catch (error) {
             console.error('Fetch polls error:', error);
         }
@@ -174,9 +198,11 @@ export default function NewsScreen({ navigation }: any) {
         fetchNews(0, false);
     }, [categoryFilter, scopeFilter, sortBy, statusFilter, searchQuery]);
 
-    useEffect(() => {
-        fetchPolls();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchPolls(true);
+        }, [])
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -281,35 +307,49 @@ export default function NewsScreen({ navigation }: any) {
         return CATEGORIES.find(c => c.id === cat)?.label || cat;
     };
 
-    const renderPollItem = ({ item }: { item: any }) => (
-        <TouchableOpacity
-            style={styles.pollCard}
-            onPress={() => navigation.navigate('PollDetails', { pollId: item.id })}
-        >
-            {item.image_url ? (
-                <Image source={{ uri: item.image_url }} style={styles.pollImage} resizeMode="cover" />
-            ) : (
-                <View style={[styles.pollImage, { backgroundColor: '#252525', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={{ fontSize: 32 }}>📊</Text>
+    const renderPollItem = ({ item }: { item: any }) => {
+        const hasMedia = item.image_url && item.image_url.length > 0;
+        const heroImage = hasMedia
+            ? (item.image_url.startsWith('http')
+                ? item.image_url
+                : `${API_BASE_URL.replace('/api', '')}/${item.image_url}`)
+            : null;
+
+        return (
+            <TouchableOpacity
+                style={[styles.pollCard, { backgroundColor: colors.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }]}
+                onPress={() => navigation.navigate('PollDetails', { pollId: item.id })}
+            >
+                {heroImage ? (
+                    <Image source={{ uri: heroImage }} style={styles.pollImage} resizeMode="cover" />
+                ) : (
+                    <View style={[styles.pollImage, { backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{ fontSize: 32 }}>📊</Text>
+                    </View>
+                )}
+                <View style={styles.pollContent}>
+                    <Text style={[styles.pollTitle, { color: colors.text }]} numberOfLines={2}>{item.title}</Text>
+                    <Text style={[styles.pollMeta, { color: colors.textTertiary }]}>Ends: {new Date(item.end_at).toLocaleDateString()}</Text>
                 </View>
-            )}
-            <View style={styles.pollContent}>
-                <Text style={styles.pollTitle} numberOfLines={2}>{item.title}</Text>
-                <Text style={styles.pollMeta}>Ends: {new Date(item.end_at).toLocaleDateString()}</Text>
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     const renderListHeader = () => (
         <View>
+            {categoryFilter === 'weather' && (
+                <WeatherWidget />
+            )}
+
             {/* Polls Section */}
-            {(polls.length > 0 || canCreatePoll) && (
-                <View style={styles.pollsSection}>
+            {categoryFilter === 'polls' && (
+                <View style={[styles.pollsSection, { backgroundColor: 'transparent', paddingVertical: 14 }]}>
+                    {/* Active Polls */}
                     <View style={styles.pollsHeader}>
-                        <Text style={styles.sectionTitle}>📢 Active Polls</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.text, fontSize: 18, fontWeight: '800' }]}>📢 Active Polls</Text>
                         {canCreatePoll && (
                             <TouchableOpacity onPress={() => navigation.navigate('CreatePoll')}>
-                                <Text style={styles.createPollBtn}>+ Create</Text>
+                                <Text style={styles.createPollBtn}>+ Create Poll</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -319,12 +359,31 @@ export default function NewsScreen({ navigation }: any) {
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             renderItem={renderPollItem}
-                            keyExtractor={item => item.id.toString()}
-                            contentContainerStyle={{ paddingHorizontal: 12 }}
+                            keyExtractor={item => item.id.toString() + "_active"}
+                            contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 20 }}
                         />
                     ) : (
-                        <View style={styles.noPollsBox}>
-                            <Text style={{ color: '#888', fontSize: 13 }}>No active polls</Text>
+                        <View style={[styles.noPollsBox, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, paddingVertical: 20, marginBottom: 20 }]}>
+                            <Text style={{ color: colors.textTertiary, fontSize: 13, fontWeight: '600' }}>No active polls</Text>
+                        </View>
+                    )}
+
+                    {/* Past Polls */}
+                    <View style={styles.pollsHeader}>
+                        <Text style={[styles.sectionTitle, { color: colors.text, fontSize: 18, fontWeight: '800' }]}>🕰️ Past Polls</Text>
+                    </View>
+                    {pastPolls.length > 0 ? (
+                        <FlatList
+                            data={pastPolls}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={renderPollItem}
+                            keyExtractor={item => item.id.toString() + "_past"}
+                            contentContainerStyle={{ paddingHorizontal: 16 }}
+                        />
+                    ) : (
+                        <View style={[styles.noPollsBox, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, paddingVertical: 20 }]}>
+                            <Text style={{ color: colors.textTertiary, fontSize: 13, fontWeight: '600' }}>No past polls</Text>
                         </View>
                     )}
                 </View>
@@ -345,95 +404,132 @@ export default function NewsScreen({ navigation }: any) {
         const canEdit = item.posted_by === user?.id;
         const canDelete = item.posted_by === user?.id || isPresident;
         const displayTitle = language === 'hi' && item.title_hi ? item.title_hi : item.title;
+        const displayContent = language === 'hi' && item.content_hi ? item.content_hi : item.content;
 
-        return (
-            <TouchableOpacity
-                style={[styles.newsCard, { backgroundColor: colors.card }]}
-                onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
-                activeOpacity={0.85}
-            >
-                <View style={styles.cardRow}>
-                    {/* Left: Thumbnail */}
-                    <View style={styles.thumbnailWrap}>
-                        {heroImage ? (
-                            <Image source={{ uri: heroImage }} style={styles.thumbnail} resizeMode="cover" />
-                        ) : (
-                            <View style={[styles.thumbnail, styles.thumbnailPlaceholder, { backgroundColor: colors.border }]}>
-                                <Text style={{ fontSize: 28 }}>📰</Text>
-                            </View>
-                        )}
+        // Pick a color for category
+        const tagColors: any = {
+            general: "#00A878", local: "#00A878", sports: "#FF6B00", health: "#FF4444", event: "#7C3AED", update: "#1D6FA4"
+        };
+        const catColor = tagColors[item.category] || "#4CAF50";
+
+        if (heroImage) {
+            return (
+                <TouchableOpacity
+                    style={[styles.newsCard, { backgroundColor: colors.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, padding: 0 }]}
+                    onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
+                    activeOpacity={0.85}
+                >
+                    <View style={{ position: "relative", height: 200, width: '100%', overflow: "hidden", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+                        <Image
+                            source={{ uri: heroImage }}
+                            style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+                        />
                         {youtubeId && (
-                            <View style={styles.playBtnWrap}>
-                                <View style={styles.playBtn}>
-                                    <Text style={{ fontSize: 12, color: '#000', marginLeft: 1 }}>▶</Text>
+                            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center', justifyContent: 'center' }}>
+                                <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 22, color: '#000', marginLeft: 4 }}>▶</Text>
                                 </View>
                             </View>
                         )}
+                        <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: catColor, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20 }}>
+                            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                                {getCategoryLabel(item.category)}
+                            </Text>
+                        </View>
+                        {item.status === 'archived' && (
+                            <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#333', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20 }}>
+                                <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>ARCHIVED</Text>
+                            </View>
+                        )}
                     </View>
-
-                    {/* Right: Title + Meta */}
-                    <View style={styles.cardTextArea}>
-                        <Text style={[styles.newsTitle, { color: colors.text }]} numberOfLines={3}>
+                    <View style={{ padding: 16 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, lineHeight: 22, marginBottom: 6 }} numberOfLines={2}>
                             {displayTitle}
                         </Text>
-                        <View style={styles.metaRow}>
-                            <View style={[styles.categoryPill, { backgroundColor: colors.badge }]}>
-                                <Text style={[styles.categoryPillText, { color: colors.badgeText }]}>{getCategoryLabel(item.category)}</Text>
+                        <Text style={{ fontSize: 13, color: colors.textTertiary, lineHeight: 18, marginBottom: 16 }} numberOfLines={2}>
+                            {displayContent.replace(/<[^>]+>/g, '') || 'No additional details provided.'}
+                        </Text>
+
+                        {/* Meta Row */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: catColor, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 13, color: '#fff', fontWeight: 'bold' }}>{item.posted_by_name?.charAt(0) || 'U'}</Text>
+                                </View>
+                                <View>
+                                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>{item.posted_by_name}</Text>
+                                    <Text style={{ fontSize: 10, color: colors.textTertiary }}>{formatDate(item.created_at)}</Text>
+                                </View>
                             </View>
-                            <Text style={styles.metaDot}>•</Text>
-                            <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
+
+                            <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+                                <TouchableOpacity onPress={() => handleReaction(item.id, 'like')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                    <Text style={{ fontSize: 13 }}>{item.user_reaction === 'like' ? '👍' : '🤍'}</Text>
+                                    <Text style={{ fontSize: 12, color: colors.textTertiary }}>{item.likes || 0}</Text>
+                                </TouchableOpacity>
+                                {(canEdit || canDelete) && (
+                                    <TouchableOpacity style={{ paddingHorizontal: 4 }} onPress={() => {
+                                        setSelectedPost(item);
+                                        setManageMenuVisible(true);
+                                    }}>
+                                        <Text style={{ fontSize: 16, color: colors.textTertiary, fontWeight: '700' }}>⋮</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
-                        <Text style={styles.authorText}>{item.posted_by_name}</Text>
                     </View>
+                </TouchableOpacity>
+            );
+        }
+
+        // Text Card implementation
+        return (
+            <TouchableOpacity
+                style={[styles.newsCard, { backgroundColor: colors.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderLeftWidth: 4, borderLeftColor: catColor, padding: 18 }]}
+                onPress={() => navigation.navigate('NewsDetails', { newsId: item.id, newsItem: item })}
+                activeOpacity={0.85}
+            >
+                <View style={{ alignSelf: 'flex-start', backgroundColor: catColor + '1A', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ color: catColor, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                        {getCategoryLabel(item.category)}
+                    </Text>
+                    {item.status === 'archived' && (
+                        <Text style={{ color: '#666', fontSize: 10, fontWeight: '700' }}>• ARCHIVED</Text>
+                    )}
                 </View>
 
-                {/* Bottom: Reactions + Actions */}
-                <View style={[styles.cardBottom, { borderTopColor: colors.border }]}>
-                    <View style={styles.reactionsRow}>
-                        <TouchableOpacity
-                            style={[styles.rxnBtn, { backgroundColor: colors.inputBg }, item.user_reaction === 'like' && styles.rxnActive]}
-                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'like'); }}
-                        >
-                            <Text style={styles.rxnEmoji}>👍</Text>
-                            <Text style={styles.rxnCount}>{item.likes || 0}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.rxnBtn, item.user_reaction === 'love' && styles.rxnActive]}
-                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'love'); }}
-                        >
-                            <Text style={styles.rxnEmoji}>❤️</Text>
-                            <Text style={styles.rxnCount}>{item.loves || 0}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.rxnBtn, item.user_reaction === 'celebrate' && styles.rxnActive]}
-                            onPress={(e) => { e.stopPropagation(); handleReaction(item.id, 'celebrate'); }}
-                        >
-                            <Text style={styles.rxnEmoji}>🎉</Text>
-                            <Text style={styles.rxnCount}>{item.celebrates || 0}</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {(canEdit || canDelete) && (
-                        <View style={styles.actionBtns}>
-                            {canEdit && (
-                                <TouchableOpacity style={styles.actBtn}
-                                    onPress={(e) => { e.stopPropagation(); handleEdit(item); }}>
-                                    <Text style={styles.actBtnText}>✏️</Text>
-                                </TouchableOpacity>
-                            )}
-                            {canDelete && (
-                                <TouchableOpacity style={styles.actBtn}
-                                    onPress={(e) => { e.stopPropagation(); handleArchive(item); }}>
-                                    <Text style={styles.actBtnText}>{item.status === 'archived' ? '📤' : '📥'}</Text>
-                                </TouchableOpacity>
-                            )}
-                            {canDelete && (
-                                <TouchableOpacity style={[styles.actBtn, { backgroundColor: '#3a1a1a' }]}
-                                    onPress={(e) => { e.stopPropagation(); handleDelete(item); }}>
-                                    <Text style={styles.actBtnText}>🗑️</Text>
-                                </TouchableOpacity>
-                            )}
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, lineHeight: 22, marginBottom: 8 }} numberOfLines={2}>
+                    {displayTitle}
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textTertiary, lineHeight: 18, marginBottom: 16 }} numberOfLines={3}>
+                    {displayContent.replace(/<[^>]+>/g, '') || 'No additional details provided.'}
+                </Text>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: catColor, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontSize: 13, color: '#fff', fontWeight: 'bold' }}>{item.posted_by_name?.charAt(0) || 'U'}</Text>
                         </View>
-                    )}
+                        <View>
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>{item.posted_by_name}</Text>
+                            <Text style={{ fontSize: 10, color: colors.textTertiary }}>{formatDate(item.created_at)}</Text>
+                        </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+                        <TouchableOpacity onPress={() => handleReaction(item.id, 'like')} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text style={{ fontSize: 13 }}>{item.user_reaction === 'like' ? '👍' : '🤍'}</Text>
+                            <Text style={{ fontSize: 12, color: colors.textTertiary }}>{item.likes || 0}</Text>
+                        </TouchableOpacity>
+                        {(canEdit || canDelete) && (
+                            <TouchableOpacity style={{ paddingHorizontal: 4 }} onPress={() => {
+                                setSelectedPost(item);
+                                setManageMenuVisible(true);
+                            }}>
+                                <Text style={{ fontSize: 16, color: colors.textTertiary, fontWeight: '700' }}>⋮</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
             </TouchableOpacity>
         );
@@ -451,61 +547,70 @@ export default function NewsScreen({ navigation }: any) {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Top Bar: Search + Filters */}
-            <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                {/* Search Input */}
-                <View style={styles.searchRow}>
-                    <View style={[styles.searchBox, { backgroundColor: colors.inputBg }]}>
-                        <Text style={styles.searchIcon}>🔍</Text>
-                        <TextInput
-                            style={[styles.searchInput, { color: colors.inputText }]}
-                            placeholder="Search news..."
-                            placeholderTextColor={colors.inputPlaceholder}
-                            value={searchQuery}
-                            onChangeText={handleSearchChange}
-                            returnKeyType="search"
-                        />
-                        {searchQuery.length > 0 && (
-                            <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Text style={[styles.clearBtn, { color: colors.textTertiary }]}>✕</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
-
-                {/* Compact Filter Row */}
-                <View style={styles.filterRow}>
-                    <View style={styles.filterChip}>
-                        <FilterDropdown
-                            options={CATEGORIES}
-                            selectedValue={categoryFilter}
-                            onValueChange={setCategoryFilter}
-                        />
-                    </View>
-                    <View style={styles.filterChip}>
-                        <FilterDropdown
-                            options={SCOPES}
-                            selectedValue={scopeFilter}
-                            onValueChange={setScopeFilter}
-                        />
-                    </View>
-                    <View style={styles.filterChip}>
-                        <FilterDropdown
-                            options={SORT_OPTIONS}
-                            selectedValue={sortBy}
-                            onValueChange={setSortBy}
-                        />
-                    </View>
-                    {canPostNews && (
-                        <View style={styles.filterChipSmall}>
-                            <FilterDropdown
-                                options={STATUS_OPTIONS}
-                                selectedValue={statusFilter}
-                                onValueChange={setStatusFilter}
-                            />
-                        </View>
+            {/* Top Bar (Slimmed Down) */}
+            <View style={{
+                backgroundColor: '#1a6eb5',
+                paddingTop: 12,
+                paddingHorizontal: 16,
+                paddingBottom: 16,
+            }}>
+                {/* Search */}
+                <View style={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                }}>
+                    <Text style={{ fontSize: 16, opacity: 0.8, color: '#fff' }}>🔍</Text>
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={handleSearchChange}
+                        placeholder="Search village news..."
+                        placeholderTextColor="rgba(255,255,255,0.6)"
+                        style={{ flex: 1, color: '#fff', fontSize: 14, height: 44, marginLeft: 10, fontWeight: '500' }}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <Text style={{ color: '#fff', fontSize: 16, padding: 4, opacity: 0.7 }}>✕</Text>
+                        </TouchableOpacity>
                     )}
                 </View>
+            </View>
+
+            {/* Category Tabs */}
+            <View style={{ backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, zIndex: 99 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 8 }}>
+                    {CATEGORIES.map(cat => {
+                        const isActive = cat.id === categoryFilter;
+                        return (
+                            <TouchableOpacity
+                                key={cat.id}
+                                onPress={() => setCategoryFilter(cat.id)}
+                                activeOpacity={0.8}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: isActive ? '#1a6eb5' : colors.card,
+                                    paddingHorizontal: 14,
+                                    paddingVertical: 7,
+                                    borderRadius: 40,
+                                    gap: 5,
+                                    borderWidth: isActive ? 0 : 1,
+                                    borderColor: colors.border,
+                                    elevation: isActive ? 4 : 0,
+                                    shadowColor: '#1a6eb5',
+                                    shadowOpacity: isActive ? 0.3 : 0,
+                                    shadowRadius: 5,
+                                    shadowOffset: { width: 0, height: 2 },
+                                }}
+                            >
+                                <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
+                                <Text style={{ fontSize: 13, fontWeight: '700', color: isActive ? '#fff' : colors.text }}>{cat.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
             </View>
 
             {/* News List */}
@@ -522,7 +627,7 @@ export default function NewsScreen({ navigation }: any) {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}
                 ListEmptyComponent={
-                    !loading ? (
+                    !loading && categoryFilter !== 'weather' && categoryFilter !== 'polls' ? (
                         <View style={styles.emptyContainer}>
                             <Text style={styles.emptyEmoji}>📰</Text>
                             <Text style={styles.emptyText}>No news found</Text>
@@ -531,9 +636,8 @@ export default function NewsScreen({ navigation }: any) {
                             </Text>
                         </View>
                     ) : (
-                        <View style={styles.emptyContainer}>
-                            <ActivityIndicator size="large" color="#4caf50" />
-                        </View>
+                        (!loading && (categoryFilter === 'weather' || categoryFilter === 'polls')) ? null
+                            : <View style={styles.emptyContainer}><ActivityIndicator size="large" color="#4caf50" /></View>
                     )
                 }
             />
@@ -548,6 +652,33 @@ export default function NewsScreen({ navigation }: any) {
                     <Text style={styles.fabText}>+</Text>
                 </TouchableOpacity>
             )}
+
+            {/* Manage Post Modal */}
+            <Modal transparent={true} visible={manageMenuVisible} animationType="fade" onRequestClose={() => setManageMenuVisible(false)}>
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setManageMenuVisible(false)}>
+                    <View style={[styles.modalContent, { backgroundColor: isDark ? '#2e2e2e' : '#fff' }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Manage Post</Text>
+
+                        {selectedPost && (selectedPost.posted_by === user?.id) && (
+                            <TouchableOpacity style={[styles.modalOption, { borderBottomColor: colors.border }]} onPress={() => { setManageMenuVisible(false); handleEdit(selectedPost); }}>
+                                <Text style={[styles.modalOptionText, { color: colors.text }]}>Edit</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {selectedPost && ((selectedPost.posted_by === user?.id) || isPresident) && (
+                            <TouchableOpacity style={[styles.modalOption, { borderBottomColor: colors.border }]} onPress={() => { setManageMenuVisible(false); handleArchive(selectedPost); }}>
+                                <Text style={[styles.modalOptionText, { color: colors.text }]}>{selectedPost.status === 'archived' ? 'Restore' : 'Archive'}</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {selectedPost && ((selectedPost.posted_by === user?.id) || isPresident) && (
+                            <TouchableOpacity style={[styles.modalOption, { borderBottomColor: 'transparent' }]} onPress={() => { setManageMenuVisible(false); handleDelete(selectedPost); }}>
+                                <Text style={[styles.modalOptionText, { color: '#ef4444' }]}>Delete</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
@@ -744,6 +875,36 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         gap: 8,
     },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        borderRadius: 12,
+        padding: 20,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 16,
+    },
+    modalOption: {
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+    },
+    modalOptionText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
     loadingMoreText: {
         color: '#888',
         fontSize: 13,
@@ -792,56 +953,50 @@ const styles = StyleSheet.create({
     },
     // Polls section
     pollsSection: {
-        backgroundColor: '#1a1a1a',
-        paddingVertical: 10,
-        marginBottom: 4,
+        marginBottom: 8,
     },
     pollsHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'baseline',
         paddingHorizontal: 16,
-        marginBottom: 8,
+        marginBottom: 12,
     },
     sectionTitle: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: '700',
-        color: '#4caf50',
     },
     createPollBtn: {
-        color: '#4caf50',
-        fontWeight: 'bold',
+        color: '#1a6eb5',
+        fontWeight: '700',
         fontSize: 13,
     },
     noPollsBox: {
-        padding: 12,
         alignItems: 'center',
-        backgroundColor: '#252525',
         marginHorizontal: 16,
-        borderRadius: 8,
+        borderRadius: 12,
     },
     pollCard: {
-        width: 220,
-        backgroundColor: '#252525',
-        borderRadius: 10,
-        marginRight: 10,
+        width: 240,
+        borderRadius: 12,
+        marginRight: 12,
         overflow: 'hidden',
     },
     pollImage: {
         width: '100%',
-        height: 90,
+        height: 100,
     },
     pollContent: {
-        padding: 10,
+        padding: 12,
     },
     pollTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#eee',
+        fontSize: 14,
+        fontWeight: '700',
         marginBottom: 4,
+        lineHeight: 20,
     },
     pollMeta: {
         fontSize: 11,
-        color: '#888',
+        fontWeight: '600',
     },
 });

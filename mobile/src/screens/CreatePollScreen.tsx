@@ -9,6 +9,7 @@ import DatePickerField from '../components/DatePickerField'; // Reused component
 
 const CreatePollScreen = () => {
     const navigation = useNavigation();
+    const { colors } = useTheme();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [pollType, setPollType] = useState<'single' | 'multiple' | 'text'>('single');

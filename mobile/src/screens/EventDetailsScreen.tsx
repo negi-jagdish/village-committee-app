@@ -9,12 +9,15 @@ import {
     Dimensions,
     Alert,
     Linking,
+    Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { galleryAPI } from '../api/client';
+import { galleryAPI, API_BASE_URL } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
+import YoutubePlayer from 'react-native-youtube-iframe';
+import Video from 'react-native-video';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -40,6 +43,7 @@ export default function EventDetailsScreen({ route, navigation }: any) {
     const user = useSelector((state: RootState) => state.auth.user);
     const [event, setEvent] = useState<EventDetails | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
     const canEdit = ['president', 'secretary', 'reporter'].includes(user?.role || '');
 
@@ -85,11 +89,15 @@ export default function EventDetailsScreen({ route, navigation }: any) {
 
     const openMedia = (item: MediaItem) => {
         if (item.type === 'video') {
-            Linking.openURL(item.url);
+            setSelectedMedia(item);
         } else {
             // For now, just open in browser or show simple Alert. 
             // In a real app we'd use a Lightbox.
-            Linking.openURL(item.url).catch(() => {
+            let imageUrl = item.url;
+            if (!imageUrl.startsWith('http')) {
+                imageUrl = `${API_BASE_URL.replace('/api', '')}${imageUrl}`;
+            }
+            Linking.openURL(imageUrl).catch(() => {
                 Alert.alert('Image', 'Cannot open image URL');
             });
         }
@@ -100,6 +108,10 @@ export default function EventDetailsScreen({ route, navigation }: any) {
 
         // Simple YouTube Thumbnail Logic
         let imageUrl = item.url;
+        if (!imageUrl.startsWith('http') && !isVideo) {
+            imageUrl = `${API_BASE_URL.replace('/api', '')}${imageUrl}`;
+        }
+
         if (isVideo && item.url.includes('youtube')) {
             const videoId = item.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1];
             if (videoId) {
@@ -164,6 +176,36 @@ export default function EventDetailsScreen({ route, navigation }: any) {
                     <Text style={styles.fabIcon}>📷+</Text>
                 </TouchableOpacity>
             )}
+
+            {/* Video Modal */}
+            <Modal visible={!!selectedMedia} transparent={true} animationType="fade" onRequestClose={() => setSelectedMedia(null)}>
+                <View style={styles.modalBg}>
+                    <TouchableOpacity style={styles.modalClose} onPress={() => setSelectedMedia(null)}>
+                        <Text style={styles.modalCloseText}>✕</Text>
+                    </TouchableOpacity>
+                    {(() => {
+                        if (!selectedMedia) return null;
+                        let url = selectedMedia.url;
+                        if (!url.startsWith('http')) {
+                            url = `${API_BASE_URL.replace('/api', '')}${url}`;
+                        }
+                        const isYoutube = url.includes('youtube') || url.includes('youtu.be');
+                        if (isYoutube) {
+                            const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/)?.[1];
+                            return (
+                                <View style={{ width: '100%' }}>
+                                    <YoutubePlayer height={250} videoId={videoId || ''} play={true} />
+                                </View>
+                            );
+                        } else {
+                            // Assume MP4
+                            return (
+                                <Video source={{ uri: url }} style={styles.videoPlayer} controls={true} resizeMode="contain" />
+                            );
+                        }
+                    })()}
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -256,5 +298,32 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    modalBg: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalClose: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        zIndex: 10,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalCloseText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    videoPlayer: {
+        width: '100%',
+        height: 300,
     },
 });

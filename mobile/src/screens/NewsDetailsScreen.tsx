@@ -9,6 +9,7 @@ import {
     Dimensions,
     Share,
     Alert,
+    Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -16,6 +17,8 @@ import { RootState } from '../store';
 import { newsAPI, API_BASE_URL } from '../api/client';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeContext';
+import YoutubePlayer from 'react-native-youtube-iframe';
+import Video from 'react-native-video';
 
 const { width } = Dimensions.get('window');
 
@@ -144,11 +147,45 @@ export default function NewsDetailsScreen({ route, navigation }: any) {
                     {/* Content */}
                     <Text style={[styles.content, { color: colors.text }]}>{displayContent}</Text>
 
-                    {newsItem.youtube_url && (
-                        <TouchableOpacity style={styles.youtubeLink} onPress={() => {/* Handle Open URL */ }}>
-                            <Text style={styles.youtubeText}>Watch Video: {newsItem.youtube_url}</Text>
-                        </TouchableOpacity>
-                    )}
+                    {/* Media attachments */}
+                    {(() => {
+                        const getYouTubeVideoId = (url: string) => {
+                            if (!url) return null;
+                            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                            const match = url.match(regExp);
+                            return match && match[2].length === 11 ? match[2] : null;
+                        };
+
+                        const youtubeId = getYouTubeVideoId(newsItem.youtube_url || '');
+
+                        // Parse mp4 from heroImage if applicable
+                        const isMp4 = heroImage && (heroImage.toLowerCase().endsWith('.mp4') || heroImage.toLowerCase().endsWith('.mov'));
+
+                        return (
+                            <View style={{ marginTop: 20 }}>
+                                {youtubeId ? (
+                                    <View style={{ borderRadius: 12, overflow: 'hidden', backgroundColor: '#000' }}>
+                                        <YoutubePlayer height={220} videoId={youtubeId} />
+                                    </View>
+                                ) : newsItem.youtube_url ? (
+                                    <TouchableOpacity style={styles.youtubeLink} onPress={() => Linking.openURL(newsItem.youtube_url)}>
+                                        <Text style={styles.youtubeText}>Watch Video: {newsItem.youtube_url}</Text>
+                                    </TouchableOpacity>
+                                ) : null}
+
+                                {isMp4 && (
+                                    <View style={{ borderRadius: 12, overflow: 'hidden', backgroundColor: '#000', marginTop: youtubeId ? 16 : 0 }}>
+                                        <Video
+                                            source={{ uri: heroImage }}
+                                            style={{ width: '100%', height: 220 }}
+                                            controls={true}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
+                                )}
+                            </View>
+                        );
+                    })()}
                 </View>
             </ScrollView>
 

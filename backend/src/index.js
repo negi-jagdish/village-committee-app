@@ -20,10 +20,13 @@ const app = express();
 // Security Middleware
 app.use(helmet());
 
-// Rate Limiting: 100 requests per 15 minutes
+// Enable trust proxy for Nginx/Load Balancer
+app.set('trust proxy', 1);
+
+// Rate Limiting: 1000 requests per 15 minutes
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -45,6 +48,8 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/gallery', galleryRoutes);
 const pollsRoutes = require('./routes/polls');
 app.use('/api/polls', pollsRoutes);
+const chatRoutes = require('./routes/chat');
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -57,13 +62,26 @@ const PORT = process.env.PORT || 3000;
 
 const runMigrations = require('../migrations/run');
 
+const http = require('http'); // Import http
+const socketService = require('./services/socketService'); // Import socket service
+
 const startServer = async () => {
     try {
         console.log('Running database migrations...');
         await runMigrations();
         console.log('Migrations completed.');
 
-        app.listen(PORT, () => {
+        // Start Cron Jobs
+        const startDuesReminderCron = require('./cron/duesReminder');
+        const { startMessagePurgeCron } = require('./cron/messagePurge');
+
+        startDuesReminderCron();
+        startMessagePurgeCron();
+
+        const server = http.createServer(app); // Create HTTP server
+        socketService.init(server); // Initialize Socket.io
+
+        server.listen(PORT, () => { // Listen on server, not app
             console.log(`Server running on port ${PORT}`);
         });
     } catch (error) {

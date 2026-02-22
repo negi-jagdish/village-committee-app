@@ -172,11 +172,16 @@ router.put('/:id', auth, requireRole('president', 'secretary'), async (req, res)
         const updates = [];
         const values = [];
 
+        const formatDbDate = (iso) => {
+            const d = new Date(iso);
+            return d.toISOString().slice(0, 19).replace('T', ' ');
+        };
+
         console.log('Edit poll body:', req.body);
         if (title) { updates.push('title = ?'); values.push(title); }
         if (description !== undefined) { updates.push('description = ?'); values.push(description); }
-        if (start_at) { updates.push('start_at = ?'); values.push(start_at); }
-        if (end_at) { updates.push('end_at = ?'); values.push(end_at); }
+        if (start_at) { updates.push('start_at = ?'); values.push(formatDbDate(start_at)); }
+        if (end_at) { updates.push('end_at = ?'); values.push(formatDbDate(end_at)); }
         if (status) { updates.push('status = ?'); values.push(status); }
         if (allow_custom_answer !== undefined) {
             updates.push('allow_custom_answer = ?');
@@ -320,6 +325,38 @@ router.get('/:id/votes', auth, async (req, res) => {
     } catch (error) {
         console.error('Get votes error:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete Poll (President only)
+router.delete('/:id', auth, requireRole('president'), async (req, res) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const pollId = req.params.id;
+
+        // Verify poll exists
+        const [polls] = await connection.query('SELECT * FROM polls WHERE id = ?', [pollId]);
+        if (polls.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Poll not found' });
+        }
+
+        // Delete dependencies first
+        await connection.query('DELETE FROM poll_votes WHERE poll_id = ?', [pollId]);
+        await connection.query('DELETE FROM poll_options WHERE poll_id = ?', [pollId]);
+
+        // Delete the poll
+        await connection.query('DELETE FROM polls WHERE id = ?', [pollId]);
+
+        await connection.commit();
+        res.json({ message: 'Poll deleted successfully' });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Delete poll error:', error);
+        res.status(500).json({ message: 'Server error' });
+    } finally {
+        connection.release();
     }
 });
 

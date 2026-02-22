@@ -4,13 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // Production URL
+// Production URL
 const API_BASE_URL = 'http://178.16.138.41/api';
 
-// Local Development URL
-// const API_BASE_URL = Platform.OS === 'android'
-//     ? 'http://10.0.2.2:3000/api'
-//     : 'http://localhost:3000/api';
+// Local Development URL (Physical Device Testing)
 // const API_BASE_URL = 'http://192.168.1.8:3000/api';
+
+// Emulator URL (Standard Android Emulator)
+// const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000/api' : 'http://localhost:3000/api';
 
 export { API_BASE_URL };
 
@@ -42,6 +43,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
+        if (error.response) {
+            // Skip disruptive console.error (which triggers RN LogBox) for expected 403s on group operations
+            const isChat403 = error.response.status === 403 && error.config?.url?.startsWith('/chat/');
+            const isChatUpdateToken401 = error.response.status === 401 && error.config?.url?.includes('/chat/update-token');
+            if (!isChat403 && !isChatUpdateToken401) {
+                console.error('API Error Response:', error.response.status, error.response.data);
+            }
+        } else if (error.request) {
+            console.error('API Error Request:', error.request);
+        } else {
+            console.error('API Error Message:', error.message);
+        }
+
         if (error.response?.status === 401) {
             await AsyncStorage.removeItem('token');
             await AsyncStorage.removeItem('user');
@@ -67,6 +81,7 @@ export const authAPI = {
 // Members APIs
 export const membersAPI = {
     getAll: () => api.get('/members'),
+    getList: () => api.get('/members/list'),
     getById: (id: number) => api.get(`/members/${id}`),
     create: (data: any) => api.post('/members', data),
     update: (id: number, data: any) => api.put(`/members/${id}`, data),
@@ -81,6 +96,8 @@ export const membersAPI = {
         api.post(`/members/${id}/background-picture`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         }),
+    updateBio: (id: number, bio: string) =>
+        api.put(`/members/${id}`, { bio }),
 };
 
 // Drives APIs
@@ -191,4 +208,44 @@ export const pollsAPI = {
     getVotes: (id: number) => api.get(`/polls/${id}/votes`),
 };
 
+// Chat APIs
+export const chatAPI = {
+    getList: () => api.get('/chat/list'),
+    getMessages: (groupId: number, limit = 50, offset = 0) =>
+        api.get(`/chat/${groupId}/messages`, { params: { limit, offset } }),
+    updateToken: (fcmToken: string) => api.post('/chat/update-token', { fcmToken }),
+    sendMessage: (groupId: number, content: string, type = 'text', metadata?: any) =>
+        api.post(`/chat/${groupId}/message`, { content, type, metadata }),
+    uploadMedia: (formData: FormData) =>
+        api.post('/chat/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+    createBroadcast: (content: string, type = 'text', metadata?: any) =>
+        api.post('/chat/broadcast', { content, type, metadata }),
+    createGroup: (data: { name?: string, type: 'private' | 'group', memberIds: number[] }) =>
+        api.post('/chat/group', data),
+    deleteMessage: (messageId: number) => api.delete(`/chat/message/${messageId}`),
+    reactToMessage: (messageId: number, reaction: string) => api.post(`/chat/message/${messageId}/react`, { reaction }),
+    replyToMessage: (groupId: number, content: string, replyToId: number, type = 'text', metadata?: any) =>
+        api.post(`/chat/${groupId}/message`, { content, type, metadata, replyToId }),
+    forwardMessage: (groupId: number, content: string, type = 'text', metadata?: any, isForwarded = true) =>
+        api.post(`/chat/${groupId}/message`, { content, type, metadata, isForwarded }),
+    getReactions: (messageId: number) => api.get(`/chat/message/${messageId}/reactions`),
+
+    // Group Management
+    getGroupDetails: (groupId: number) => api.get(`/chat/${groupId}`),
+    updateGroupDetails: (groupId: number, data: { name?: string, description?: string, icon_url?: string }) =>
+        api.put(`/chat/${groupId}`, data),
+    addGroupMembers: (groupId: number, memberIds: number[]) =>
+        api.post(`/chat/${groupId}/members`, { memberIds }),
+    removeGroupMember: (groupId: number, memberId: number) =>
+        api.delete(`/chat/${groupId}/members/${memberId}`),
+    updateMemberRole: (groupId: number, memberId: number, role: 'admin' | 'member') =>
+        api.put(`/chat/${groupId}/members/${memberId}/role`, { role }),
+    leaveGroup: (groupId: number) => api.post(`/chat/${groupId}/leave`),
+    createOrGetPrivateChat: (memberId: number) =>
+        api.post('/chat/group', { type: 'private', memberIds: [memberId] }),
+};
+
 export default api;
+export { api };

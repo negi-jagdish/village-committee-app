@@ -18,6 +18,7 @@ import { setCredentials, persistAuth } from '../store';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../theme/ThemeContext';
 import SimCardsManager from 'react-native-sim-cards-manager';
+import BackupService from '../services/BackupService';
 
 export default function LoginScreen() {
     const { colors } = useTheme();
@@ -115,6 +116,41 @@ export default function LoginScreen() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRestoreBackup = async () => {
+        Alert.alert(
+            'Restore Chat Backup',
+            'Select your exported .db backup file to restore your chat history.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Select File',
+                    onPress: async () => {
+                        try {
+                            const DocumentPicker = require('react-native-document-picker');
+                            const res = await DocumentPicker.default.pickSingle({
+                                type: [DocumentPicker.types.allFiles],
+                            });
+
+                            setLoading(true);
+                            const success = await BackupService.importBackup(res.uri);
+                            setLoading(false);
+
+                            if (success) {
+                                Alert.alert('Success', 'Chat history restored! You can now log in.');
+                            } else {
+                                Alert.alert('Error', 'Failed to restore backup.');
+                            }
+                        } catch (err: any) {
+                            if (!err.message?.includes('cancel')) {
+                                Alert.alert('Error', 'Failed to pick document. Please install react-native-document-picker if needed.');
+                            }
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     return (
@@ -218,6 +254,18 @@ export default function LoginScreen() {
                             </TouchableOpacity>
                         </>
                     )}
+
+                    {/* Restore Backup Link */}
+                    <TouchableOpacity
+                        style={styles.restoreButton}
+                        onPress={handleRestoreBackup}
+                        disabled={loading}
+                    >
+                        <Icon name="restore" size={18} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                        <Text style={[styles.restoreButtonText, { color: colors.textSecondary }]}>
+                            Restore Chat Backup
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </KeyboardAvoidingView>
@@ -270,4 +318,9 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: '#C8E6C9'
     },
     simButtonText: { color: '#1a5f2a', fontSize: 15, fontWeight: 'bold' },
+    restoreButton: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        marginTop: 20, paddingVertical: 10,
+    },
+    restoreButtonText: { fontSize: 14, fontWeight: '600' },
 });

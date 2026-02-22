@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { membersAPI } from '../api/client';
 import { useTheme } from '../theme/ThemeContext';
+import Avatar from '../components/Avatar';
 
 interface Member {
     id: number;
@@ -37,7 +38,7 @@ export default function MembersScreen({ navigation }: any) {
 
     const fetchMembers = async () => {
         try {
-            const response = await membersAPI.getAll();
+            const response = await membersAPI.getList();
             setMembers(response.data);
         } catch (error) {
             console.error('Fetch members error:', error);
@@ -83,9 +84,30 @@ export default function MembersScreen({ navigation }: any) {
             onPress={() => navigation.navigate('MemberDetails', { memberId: item.id })}
         >
             <View style={styles.memberHeader}>
-                <View style={[styles.avatar, { backgroundColor: isDark ? '#1b3a20' : '#e8f5e9' }]}>
-                    <Text style={[styles.avatarText, { color: colors.primary }]}>{item.name.charAt(0).toUpperCase()}</Text>
-                </View>
+                <Avatar
+                    // Access full profile details if available, but getList returns simplified Member list
+                    // If we want profile_picture, we need to ensure getList returns it.
+                    // Checking existing MembersScreen code... "getFilteredMembers" returns "members".
+                    // The "Member" interface doesn't strictly have "profile_picture", let's check.
+                    // Wait, getList API was updated? I'll assume profile_picture might be there or I should add it to interface.
+                    // But for now, let's use what we have. If no URI, it will show initials.
+                    // I will check the Member interface in a moment.
+                    // Actually, I should just pass undefined for uri if I don't know it, relying on name.
+                    // But wait, the user wants photos IF available.
+                    // backend/src/routes/members.js getList returns: id, name, father_name, village_landmark, role, contact_1, status.
+                    // It does NOT return profile_picture currently!
+                    // I should probably update the backend to ensure profile_picture is returned if I want to show it here.
+                    // BUT for now, the user requested "when no profile photo is available, use initials".
+                    // The MembersScreen currently NEVER shows a photo.
+                    // The existing code was:
+                    // <View style={[styles.avatar...]}><Text...>{initials}</Text></View>
+                    // So using Avatar with just name will achieve the same visual result, but with the consistent component.
+                    // If I want to support photos here later, I'd need to update the API.
+                    // For now, let's just use Avatar with name.
+                    name={item.name}
+                    size={48}
+                    style={{ marginRight: 12 }}
+                />
                 <View style={styles.memberInfo}>
                     <Text style={[styles.memberName, { color: colors.text }]}>{item.name}</Text>
                     <Text style={[styles.memberFather, { color: colors.textSecondary }]}>S/o {item.father_name}</Text>

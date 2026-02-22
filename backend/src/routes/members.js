@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/list', auth, async (req, res) => {
     try {
         const { status } = req.query;
-        let query = 'SELECT id, name, contact_1, status, sex FROM members';
+        let query = 'SELECT id, name, father_name, village_landmark, role, contact_1, status, sex, profile_picture FROM members';
         const params = [];
 
         if (status && status !== 'all') {
@@ -112,13 +112,9 @@ router.get('/', auth, canManageMembers, async (req, res) => {
 // Get single member by ID
 router.get('/:id', auth, async (req, res) => {
     try {
-        // Members can only view their own profile unless they're secretary/president
-        if (req.user.role !== 'president' && req.user.role !== 'secretary' && req.user.id !== parseInt(req.params.id)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
 
         const [rows] = await db.query(
-            'SELECT id, name, father_name, mother_name, date_of_birth, village_landmark, current_address, contact_1, contact_2, email, role, is_active, sex, legacy_due, created_at FROM members WHERE id = ?',
+            'SELECT id, name, father_name, mother_name, date_of_birth, village_landmark, current_address, contact_1, contact_2, email, role, is_active, sex, legacy_due, created_at, profile_picture, background_picture, bio FROM members WHERE id = ?',
             [req.params.id]
         );
 
@@ -231,6 +227,10 @@ router.put('/:id', auth, async (req, res) => {
         addField('contact_2', contact_2);
         addField('email', email);
         addField('sex', sex);
+
+        // Bio can be updated by anyone for their own profile
+        const { bio } = req.body;
+        addField('bio', bio);
 
         // Only President can update legacy_due
         if (userRole === 'president' && legacy_due !== undefined) {

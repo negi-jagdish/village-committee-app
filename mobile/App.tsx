@@ -2,13 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider, useDispatch } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { Alert, View, ActivityIndicator, StatusBar, NativeModules, StyleSheet, Platform } from 'react-native';
 
 import { store, loadAuth, setCredentials, setLoading, loadLanguage, setLanguage, loadTheme, setThemeMode } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { SocketProvider } from './src/context/SocketContext';
+import { getDB } from './src/db/database';
 import './src/i18n';
 import i18n from './src/i18n';
+
+import notifee from '@notifee/react-native';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import PushNotificationService from './src/services/PushNotificationService';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -18,6 +25,41 @@ function AppContent() {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Request Notification Permission (Android 13+)
+        if (Platform.OS === 'android') {
+          // Initialize FCM and Notifee
+          await PushNotificationService.initialize();
+
+          // Only check battery optimization if we haven't asked already
+          const hasAskedBattery = await AsyncStorage.getItem('hasAskedBatteryOptimization');
+
+          if (!hasAskedBattery) {
+            const batteryOptimizationEnabled = await notifee.isBatteryOptimizationEnabled();
+            if (batteryOptimizationEnabled) {
+              Alert.alert(
+                'Instant Notifications',
+                'To receive chat messages instantly on your lock screen, please allow the app to run in the background without battery restrictions.',
+                [
+                  {
+                    text: 'Later',
+                    style: 'cancel',
+                    onPress: async () => {
+                      await AsyncStorage.setItem('hasAskedBatteryOptimization', 'true');
+                    }
+                  },
+                  {
+                    text: 'Settings',
+                    onPress: async () => {
+                      await AsyncStorage.setItem('hasAskedBatteryOptimization', 'true');
+                      notifee.openBatteryOptimizationSettings();
+                    }
+                  }
+                ]
+              );
+            }
+          }
+        }
+
         // Load saved language
         const lang = await loadLanguage();
         dispatch(setLanguage(lang));
@@ -29,11 +71,18 @@ function AppContent() {
 
         // Load saved auth
         const auth = await loadAuth();
+
+        // Initialize local SQLite database before rendering UI
+        await getDB();
+
         if (auth) {
           dispatch(setCredentials(auth));
+          // Refresh token now that we have auth
+          PushNotificationService.refreshFCMToken();
         } else {
           dispatch(setLoading(false));
         }
+
       } catch (error) {
         console.error('Init error:', error);
         dispatch(setLoading(false));
@@ -83,7 +132,9 @@ export default function App() {
     <Provider store={store}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AppContent />
+          <SocketProvider>
+            <AppContent />
+          </SocketProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </Provider>

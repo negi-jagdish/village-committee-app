@@ -10,6 +10,7 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
     try {
         const { contact, password } = req.body;
+        console.log('Login attempt:', { contact, password: password ? '***' : 'missing' });
 
         if (!contact || !password) {
             return res.status(400).json({ error: 'Contact number and password are required' });

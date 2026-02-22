@@ -27,6 +27,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 import { useTheme } from '../theme/ThemeContext';
+import Avatar from '../components/Avatar';
+import BackupService from '../services/BackupService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_HEIGHT = 180;
@@ -136,6 +138,62 @@ export default function ProfileScreen({ navigation }: any) {
                         }
                     },
                 },
+            ]
+        );
+    };
+
+    const handleExportBackup = async () => {
+        Alert.alert(
+            'Export Chat Backup',
+            'This will create a backup file of all your local chats and messages. Save it securely.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Export',
+                    onPress: async () => {
+                        setLoading(true);
+                        const success = await BackupService.exportBackup();
+                        setLoading(false);
+                        if (!success) {
+                            Alert.alert('Error', 'Failed to export backup. Make sure you have messages to backup.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleRestoreBackup = async () => {
+        Alert.alert(
+            'Restore Chat Backup',
+            'To restore from a backup, please make sure you have the exported .db file ready. (Document picker required)',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Select File',
+                    onPress: async () => {
+                        try {
+                            const DocumentPicker = require('react-native-document-picker');
+                            const res = await DocumentPicker.default.pickSingle({
+                                type: [DocumentPicker.types.allFiles],
+                            });
+
+                            setLoading(true);
+                            const success = await BackupService.importBackup(res.uri);
+                            setLoading(false);
+
+                            if (success) {
+                                Alert.alert('Success', 'Chat history restored successfully! Restart the app to see changes.');
+                            } else {
+                                Alert.alert('Error', 'Failed to restore backup.');
+                            }
+                        } catch (err: any) {
+                            if (!err.message?.includes('cancel')) {
+                                Alert.alert('Error', 'Failed to pick document. Please install react-native-document-picker if needed.');
+                            }
+                        }
+                    }
+                }
             ]
         );
     };
@@ -526,6 +584,30 @@ export default function ProfileScreen({ navigation }: any) {
                         </View>
                         <Text style={styles.settingArrow}>›</Text>
                     </TouchableOpacity>
+                    <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />
+
+                    {/* Backup & Restore */}
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={handleExportBackup}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>💾</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>Export Chat Backup</Text>
+                        </View>
+                        <Text style={styles.settingArrow}>›</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={handleRestoreBackup}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>📥</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>Restore Chat Backup</Text>
+                        </View>
+                        <Text style={styles.settingArrow}>›</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -601,15 +683,12 @@ export default function ProfileScreen({ navigation }: any) {
                                 onPress={() => selectImage('profile')}
                                 disabled={uploadingProfile}
                             >
-                                {user?.profile_picture ? (
-                                    <Image source={{ uri: user.profile_picture }} style={styles.avatar} />
-                                ) : (
-                                    <View style={styles.avatarPlaceholder}>
-                                        <Text style={styles.avatarText}>
-                                            {user?.name?.charAt(0).toUpperCase()}
-                                        </Text>
-                                    </View>
-                                )}
+                                <Avatar
+                                    uri={user?.profile_picture}
+                                    name={user?.name || ''}
+                                    size={72}
+                                    style={styles.avatar}
+                                />
                                 {uploadingProfile ? (
                                     <View style={styles.avatarBadge}>
                                         <ActivityIndicator size="small" color="#1a5f2a" />

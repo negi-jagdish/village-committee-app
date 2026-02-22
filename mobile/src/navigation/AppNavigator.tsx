@@ -53,6 +53,7 @@ const TabIcon = ({ name, focused, color, size }: { name: string; focused: boolea
         case 'Transactions': iconName = 'receipt-long'; break;
         case 'News': iconName = 'article'; break;
         case 'Gallery': iconName = 'photo-library'; break;
+        case 'Chat': iconName = 'chat'; break;
         case 'Profile': iconName = 'person'; break;
     }
 
@@ -371,6 +372,60 @@ function GalleryStack() {
     );
 }
 
+// Chat Stack
+import ChatListScreen from '../screens/ChatListScreen';
+import ChatScreen from '../screens/ChatScreen';
+import NewChatScreen from '../screens/NewChatScreen';
+import ForwardMessageScreen from '../screens/ForwardMessageScreen';
+import GroupInfoScreen from '../screens/GroupInfoScreen';
+import ContactInfoScreen from '../screens/ContactInfoScreen';
+
+function ChatStack() {
+    const { colors } = useTheme();
+
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                headerStyle: { backgroundColor: colors.headerBg },
+                headerTintColor: colors.headerText,
+                headerTitleStyle: { fontWeight: 'bold' },
+            }}
+        >
+            <Stack.Screen
+                name="ChatList"
+                component={ChatListScreen}
+                options={{ title: 'Chat' }}
+            />
+            <Stack.Screen
+                name="ChatScreen"
+                component={ChatScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="NewChat"
+                component={NewChatScreen}
+                options={{ title: 'New Chat', headerShown: false }}
+            />
+            <Stack.Screen
+                name="ForwardMessage"
+                component={ForwardMessageScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="GroupInfo"
+                component={GroupInfoScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="ContactInfo"
+                component={ContactInfoScreen}
+                options={{ headerShown: false }}
+            />
+        </Stack.Navigator>
+
+    );
+}
+
 // Main Tab Navigator
 function MainTabs() {
     const { t } = useTranslation();
@@ -404,7 +459,8 @@ function MainTabs() {
                                 route.name === 'Transactions' ? t('tabs.transactions') :
                                     route.name === 'News' ? t('tabs.news') :
                                         route.name === 'Gallery' ? 'Gallery' :
-                                            t('tabs.profile')}
+                                            route.name === 'Chat' ? 'Chat' :
+                                                t('tabs.profile')}
                     </Text>
                 ),
                 headerStyle: {
@@ -448,6 +504,12 @@ function MainTabs() {
                 name="Gallery"
                 component={GalleryStack}
                 options={{ title: 'Gallery', headerShown: false }}
+            />
+
+            <Tab.Screen
+                name="Chat"
+                component={ChatStack}
+                options={{ title: 'Chat', headerShown: false }}
             />
 
             <Tab.Screen
