@@ -19,7 +19,8 @@ LogBox.ignoreLogs([
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
 
-    if (remoteMessage.data) {
+    // Only display local notification if there is NO native notification block
+    if (remoteMessage.data && !remoteMessage.notification) {
         // Ensure channel exists
         await notifee.createChannel({
             id: 'chamdoli_chat',

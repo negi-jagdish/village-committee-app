@@ -224,15 +224,23 @@ exports.sendMessage = async (req, res) => {
                 (groupInfo[0]?.group_name || 'Village Group');
 
             const message = {
-                data: {
+                notification: {
                     title: chatName,
                     body: content.startsWith('/uploads/') ? 'Sent an attachment' : content,
+                },
+                data: {
                     groupId: groupId.toString(),
                     type: isPrivate ? 'private' : 'group',
                     click_action: 'FLUTTER_NOTIFICATION_CLICK', // Legacy but still useful for some libs
                 },
                 android: {
                     priority: 'high',
+                    notification: {
+                        sound: 'default',
+                        channelId: 'chamdoli_chat',
+                        priority: 'max',
+                        visibility: 'public'
+                    }
                 },
                 tokens: tokens,
             };
