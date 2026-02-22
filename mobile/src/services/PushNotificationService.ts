@@ -16,7 +16,7 @@ class PushNotificationService {
 
             // 3. Create a channel for notifications
             await notifee.createChannel({
-                id: 'chamdoli_chat_v4',
+                id: 'chamdoli_chat_v5',
                 name: 'Chat Messages',
                 sound: 'jai_chamdoli',
                 importance: AndroidImportance.HIGH,

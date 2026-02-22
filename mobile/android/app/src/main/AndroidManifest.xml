@@ -12,7 +12,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
       android:name=".MainApplication"
@@ -26,8 +28,11 @@
       
       <meta-data
         android:name="com.google.firebase.messaging.default_notification_channel_id"
-        android:value="chamdoli_chat_v4"
+        android:value="chamdoli_chat_v5"
         tools:replace="android:value" />
+      <meta-data
+        android:name="com.google.firebase.messaging.default_notification_icon"
+        android:resource="@mipmap/ic_launcher" />
         
       <activity
         android:name=".MainActivity"
@@ -35,6 +40,8 @@
         android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
         android:launchMode="singleTask"
         android:windowSoftInputMode="adjustResize"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
         android:exported="true">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />

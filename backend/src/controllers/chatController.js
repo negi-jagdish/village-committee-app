@@ -236,7 +236,7 @@ exports.sendMessage = async (req, res) => {
                     priority: 'high',
                     notification: {
                         sound: 'jai_chamdoli',
-                        channelId: 'chamdoli_chat_v4',
+                        channelId: 'chamdoli_chat_v5',
                         priority: 'max',
                         visibility: 'public',
                         defaultSound: false,

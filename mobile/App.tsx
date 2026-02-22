@@ -35,26 +35,33 @@ function AppContent() {
 
           if (!hasAskedBattery) {
             const batteryOptimizationEnabled = await notifee.isBatteryOptimizationEnabled();
-            if (batteryOptimizationEnabled) {
+            const powerManagerInfo = await notifee.getPowerManagerInfo();
+
+            if (batteryOptimizationEnabled || powerManagerInfo.activity) {
               Alert.alert(
-                'Instant Notifications',
-                'To receive chat messages instantly on your lock screen, please allow the app to run in the background without battery restrictions.',
+                'Auto-Start Required',
+                'To get instant chat notifications when your phone is locked (especially on Realme/Xiaomi/Oppo phones), you must enable "Auto-Start" and remove "Battery Restrictions".',
                 [
                   {
-                    text: 'Later',
+                    text: 'Keep Disabled',
                     style: 'cancel',
                     onPress: async () => {
                       await AsyncStorage.setItem('hasAskedBatteryOptimization', 'true');
                     }
                   },
                   {
-                    text: 'Settings',
+                    text: 'Open Settings',
                     onPress: async () => {
                       await AsyncStorage.setItem('hasAskedBatteryOptimization', 'true');
-                      notifee.openBatteryOptimizationSettings();
+                      if (powerManagerInfo.activity) {
+                        notifee.openPowerManagerSettings();
+                      } else {
+                        notifee.openBatteryOptimizationSettings();
+                      }
                     }
                   }
-                ]
+                ],
+                { cancelable: false }
               );
             }
           }

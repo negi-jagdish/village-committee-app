@@ -23,7 +23,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     if (remoteMessage.data && !remoteMessage.notification) {
         // Ensure channel exists
         await notifee.createChannel({
-            id: 'chamdoli_chat_v4',
+            id: 'chamdoli_chat_v5',
             name: 'Chat Messages',
             sound: 'jai_chamdoli',
             importance: AndroidImportance.HIGH,
@@ -36,7 +36,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
             title: remoteMessage.data.title || 'Devbhoomi Chamdoli',
             body: remoteMessage.data.body || 'New message arrived',
             android: {
-                channelId: 'chamdoli_chat_v4',
+                channelId: 'chamdoli_chat_v5',
                 visibility: AndroidVisibility.PUBLIC,
                 importance: AndroidImportance.HIGH,
                 pressAction: {
