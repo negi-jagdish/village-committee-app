@@ -239,7 +239,10 @@ exports.sendMessage = async (req, res) => {
                         sound: 'default',
                         channelId: 'chamdoli_chat',
                         priority: 'max',
-                        visibility: 'public'
+                        visibility: 'public',
+                        defaultSound: true,
+                        defaultVibrateTimings: true,
+                        defaultLightSettings: true
                     }
                 },
                 tokens: tokens,
