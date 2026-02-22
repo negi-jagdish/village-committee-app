@@ -231,7 +231,6 @@ exports.sendMessage = async (req, res) => {
                 data: {
                     groupId: groupId.toString(),
                     type: isPrivate ? 'private' : 'group',
-                    click_action: 'FLUTTER_NOTIFICATION_CLICK', // Legacy but still useful for some libs
                 },
                 android: {
                     priority: 'high',
