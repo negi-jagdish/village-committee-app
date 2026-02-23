@@ -119,6 +119,7 @@ export class NotificationService {
             });
 
             await notifee.displayNotification({
+                id: gIdStr !== 'global' ? gIdStr : undefined, // Replace existing notification for this chat
                 title: title,
                 body: body,
                 android: {
@@ -128,6 +129,8 @@ export class NotificationService {
                     pressAction: { id: 'default' },
                     importance: AndroidImportance.HIGH,
                     visibility: AndroidVisibility.PUBLIC,
+                    // Grouping for Android
+                    groupId: gIdStr,
                 },
                 ios: {
                     sound: `${finalTone}.ogg`,

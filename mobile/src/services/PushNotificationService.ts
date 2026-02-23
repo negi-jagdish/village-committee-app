@@ -42,10 +42,14 @@ class PushNotificationService {
             onMessage(messaging, async remoteMessage => {
                 console.log('FCM Foreground message received:', remoteMessage);
                 const data = remoteMessage.data;
-                if (data) {
-                    const groupId = (data.group_id || data.groupId) as any;
-                    const title = (data.title || data.display_name || 'Village Member') as string;
-                    const body = (data.body || data.content || 'New message arrived') as string;
+                const notification = remoteMessage.notification;
+
+                if (data || notification) {
+                    const groupId = (data?.group_id || data?.groupId) as any;
+
+                    // Priority: Data > Notification > Fallback
+                    const title = (data?.title || data?.display_name || notification?.title || 'Village Member') as string;
+                    const body = (data?.body || data?.content || notification?.body || 'New message arrived') as string;
 
                     // Call the notification service just like the socket does
                     await NotificationService.displayChatNotification(title, body, true, groupId);
