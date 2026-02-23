@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useSocket } from '../context/SocketContext';
@@ -53,7 +53,7 @@ export default function ChatListScreen() {
             // Load from SQLite
             db.transaction((tx: any) => {
                 tx.executeSql(
-                    'SELECT * FROM local_chats ORDER BY id DESC',
+                    'SELECT * FROM local_chats ORDER BY is_pinned DESC, last_message_time DESC',
                     [],
                     (_: any, result: any) => {
                         const loadedChats = [];
@@ -85,6 +85,75 @@ export default function ChatListScreen() {
         }
     }, [refreshTrigger]);
 
+    const [selectedChat, setSelectedChat] = useState<any>(null);
+
+    const handlePinChat = async (chat: any) => {
+        const db = await getDB();
+        const isPinned = chat.is_pinned === 1;
+
+        // Count currently pinned
+        const pinnedCount = chats.filter(c => c.is_pinned === 1).length;
+        if (!isPinned && pinnedCount >= 4) {
+            Alert.alert('Limit Reached', 'You can only pin up to 4 chats.');
+            return;
+        }
+
+        db.transaction((tx: any) => {
+            tx.executeSql('UPDATE local_chats SET is_pinned = ? WHERE id = ?', [isPinned ? 0 : 1, chat.id]);
+        }, (err: any) => console.error(err), () => fetchChats(false));
+        setSelectedChat(null);
+    };
+
+    const handleMuteChat = async (chat: any, durationHours: number | 'always') => {
+        const db = await getDB();
+        let muteUntil: string | null = null;
+        if (durationHours === 'always') {
+            muteUntil = 'always';
+        } else if (typeof durationHours === 'number' && durationHours > 0) {
+            const date = new Date();
+            date.setHours(date.getHours() + durationHours);
+            muteUntil = date.toISOString();
+        }
+
+        db.transaction((tx: any) => {
+            tx.executeSql('UPDATE local_chats SET mute_until = ? WHERE id = ?', [muteUntil, chat.id]);
+        }, (err: any) => console.error(err), () => fetchChats(false));
+        setSelectedChat(null);
+    };
+
+    const handleMarkAsReadUnread = async (chat: any) => {
+        const db = await getDB();
+        const newUnreadCount = chat.unread_count > 0 ? 0 : 1;
+        db.transaction((tx: any) => {
+            tx.executeSql('UPDATE local_chats SET unread_count = ? WHERE id = ?', [newUnreadCount, chat.id]);
+        }, (err: any) => console.error(err), () => fetchChats(false));
+        setSelectedChat(null);
+    };
+
+    const handleDeleteChat = (chat: any) => {
+        Alert.alert('Delete Chat', `Are you sure you want to delete the chat with ${chat.name}?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    const db = await getDB();
+                    db.transaction((tx: any) => {
+                        tx.executeSql('DELETE FROM local_chats WHERE id = ?', [chat.id]);
+                        tx.executeSql('DELETE FROM local_messages WHERE group_id = ?', [chat.id]);
+                    }, (err: any) => console.error(err), () => fetchChats(false));
+                }
+            }
+        ]);
+        setSelectedChat(null);
+    };
+
+    const isMuted = (chat: any) => {
+        if (!chat || !chat.mute_until) return false;
+        if (chat.mute_until === 'always') return true;
+        return new Date(chat.mute_until) > new Date();
+    };
+
     const onRefresh = () => {
         setRefreshing(true);
         fetchChats(true);
@@ -92,6 +161,7 @@ export default function ChatListScreen() {
 
     const renderItem = ({ item }: { item: any }) => {
         const isChamBot = item.name === 'ChamBot';
+        const muted = isMuted(item);
 
         return (
             <TouchableOpacity
@@ -101,6 +171,8 @@ export default function ChatListScreen() {
                     name: item.name,
                     icon: item.icon_url
                 })}
+                onLongPress={() => setSelectedChat(item)}
+                activeOpacity={0.7}
             >
                 <Avatar
                     uri={item.icon_url}
@@ -111,11 +183,15 @@ export default function ChatListScreen() {
 
                 <View style={styles.chatContent}>
                     <View style={styles.headerRow}>
-                        <Text style={[styles.name, { color: colors.text }]}>
-                            {item.name} {isChamBot && '🤖'}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+                                {item.name} {isChamBot && '🤖'}
+                            </Text>
+                            {item.is_pinned === 1 && <Icon name="push-pin" size={14} color={colors.textSecondary} style={{ marginLeft: 5, transform: [{ rotate: '45deg' }] }} />}
+                            {muted && <Icon name="notifications-off" size={14} color={colors.textSecondary} style={{ marginLeft: 5 }} />}
+                        </View>
                         {item.last_message_time && (
-                            <Text style={[styles.time, { color: colors.textSecondary }]}>
+                            <Text style={[styles.time, { color: item.unread_count > 0 ? colors.success : colors.textSecondary }]}>
                                 {formatDistanceToNow(new Date(item.last_message_time), { addSuffix: true }).replace('about ', '')}
                             </Text>
                         )}
@@ -169,6 +245,59 @@ export default function ChatListScreen() {
                     </View>
                 }
             />
+
+            {/* Selection Modal */}
+            <Modal
+                visible={!!selectedChat}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setSelectedChat(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setSelectedChat(null)}
+                >
+                    <View style={[styles.menuContainer, { backgroundColor: colors.surface }]}>
+                        <View style={styles.menuHeader}>
+                            <Avatar uri={selectedChat?.icon_url} name={selectedChat?.name || ''} size={40} />
+                            <Text style={[styles.menuTitle, { color: colors.text }]}>{selectedChat?.name}</Text>
+                        </View>
+
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handlePinChat(selectedChat)}>
+                            <Icon name={selectedChat?.is_pinned === 1 ? 'push-pin' : 'push-pin'} size={24} color={colors.textSecondary} style={selectedChat?.is_pinned === 1 && { transform: [{ rotate: '45deg' }] }} />
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>{selectedChat?.is_pinned === 1 ? 'Unpin Chat' : 'Pin Chat'}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.menuItem} onPress={() => {
+                            if (isMuted(selectedChat)) {
+                                handleMuteChat(selectedChat, 0);
+                            } else {
+                                Alert.alert('Mute Chat', 'How long would you like to mute?', [
+                                    { text: '1 Hour', onPress: () => handleMuteChat(selectedChat, 1) },
+                                    { text: '12 Hours', onPress: () => handleMuteChat(selectedChat, 12) },
+                                    { text: '1 Day', onPress: () => handleMuteChat(selectedChat, 24) },
+                                    { text: 'Always', onPress: () => handleMuteChat(selectedChat, 'always') },
+                                    { text: 'Cancel', style: 'cancel' }
+                                ]);
+                            }
+                        }}>
+                            <Icon name={isMuted(selectedChat) ? 'notifications-active' : 'notifications-off'} size={24} color={colors.textSecondary} />
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>{isMuted(selectedChat) ? 'Unmute' : 'Mute Notifications'}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handleMarkAsReadUnread(selectedChat)}>
+                            <Icon name={selectedChat?.unread_count > 0 ? 'mark-chat-read' : 'mark-chat-unread'} size={24} color={colors.textSecondary} />
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>{selectedChat?.unread_count > 0 ? 'Mark as Read' : 'Mark as Unread'}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handleDeleteChat(selectedChat)}>
+                            <Icon name="delete" size={24} color="#E53935" />
+                            <Text style={[styles.menuItemText, { color: '#E53935' }]}>Delete Chat</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             <TouchableOpacity
                 style={[styles.fab, { backgroundColor: colors.primary }]}
@@ -261,4 +390,43 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         zIndex: 999,
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20
+    },
+    menuContainer: {
+        width: '80%',
+        borderRadius: 12,
+        padding: 10,
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.34,
+        shadowRadius: 6.27,
+    },
+    menuHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: 0.5,
+        borderBottomColor: '#eee',
+        marginBottom: 10
+    },
+    menuTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginLeft: 15
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+    },
+    menuItemText: {
+        fontSize: 16,
+        marginLeft: 15
+    }
 });

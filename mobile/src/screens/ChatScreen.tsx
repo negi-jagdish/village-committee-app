@@ -18,7 +18,7 @@ import ReactionPicker from '../components/ReactionPicker';
 import MessageBubble from '../components/MessageBubble';
 import ReactionDetailsSheet from '../components/ReactionDetailsSheet';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { Alert } from 'react-native';
+import { Alert, Share } from 'react-native';
 import Avatar from '../components/Avatar';
 
 // Helper for Unread Divider
@@ -363,6 +363,21 @@ export default function ChatScreen() {
 
 
 
+    const handleShare = async () => {
+        if (selectedMessages.length > 0) {
+            const selectedMsgs = messages.filter(m => selectedMessages.includes(m.id));
+            const shareContent = selectedMsgs.map(m => `[${m.sender_name}]: ${m.content}`).join('\n\n');
+            try {
+                await Share.share({
+                    message: shareContent,
+                });
+                clearSelection();
+            } catch (error) {
+                console.error('Share error:', error);
+            }
+        }
+    };
+
     const handleReactionPress = () => {
         if (selectedMessages.length === 1) {
             setReactionPickerVisible(true);
@@ -580,8 +595,8 @@ export default function ChatScreen() {
                             <TouchableOpacity onPress={handleCopy}>
                                 <Icon name="content-copy" size={24} color="#fff" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={handleForward}>
-                                <Icon name="share" size={24} color="#fff" />
+                            <TouchableOpacity onPress={handleShare}>
+                                <Icon name="share-variant" size={24} color="#fff" />
                             </TouchableOpacity>
                         </View>
                     </View>

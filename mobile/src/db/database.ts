@@ -38,9 +38,41 @@ const initSchema = async (database: SQLiteDatabase) => {
                         last_message TEXT,
                         last_message_type TEXT,
                         last_message_time TEXT,
-                        unread_count INTEGER DEFAULT 0
+                        unread_count INTEGER DEFAULT 0,
+                        is_pinned INTEGER DEFAULT 0,
+                        mute_until TEXT,
+                        notification_tone TEXT,
+                        vibration_enabled INTEGER DEFAULT 1
                     )
                 `);
+
+                // Migration for existing local_chats table
+                tx.executeSql(
+                    "PRAGMA table_info(local_chats)",
+                    [],
+                    (_: any, result: any) => {
+                        const columns = [];
+                        for (let i = 0; i < result.rows.length; i++) {
+                            columns.push(result.rows.item(i).name);
+                        }
+
+                        if (!columns.includes('is_pinned')) {
+                            tx.executeSql('ALTER TABLE local_chats ADD COLUMN is_pinned INTEGER DEFAULT 0');
+                        }
+                        if (!columns.includes('mute_until')) {
+                            tx.executeSql('ALTER TABLE local_chats ADD COLUMN mute_until TEXT');
+                        }
+                        if (!columns.includes('notification_tone')) {
+                            tx.executeSql('ALTER TABLE local_chats ADD COLUMN notification_tone TEXT');
+                        }
+                        if (!columns.includes('vibration_enabled')) {
+                            tx.executeSql('ALTER TABLE local_chats ADD COLUMN vibration_enabled INTEGER DEFAULT 1');
+                        }
+                        if (!columns.includes('vibration_intensity')) {
+                            tx.executeSql('ALTER TABLE local_chats ADD COLUMN vibration_intensity INTEGER DEFAULT 100');
+                        }
+                    }
+                );
 
                 // Table for actual Messages (Powers ChatScreen) — NO FK constraint
                 // FK constraint caused silent INSERT OR IGNORE failures when local_chats wasn't populated yet

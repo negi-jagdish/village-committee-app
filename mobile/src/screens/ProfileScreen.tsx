@@ -24,11 +24,15 @@ import { RootState, logout, clearAuth, setLanguage, persistLanguage, setUser, se
 import { membersAPI, reportsAPI, authAPI } from '../api/client';
 import i18n from '../i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import ImageResizer from 'react-native-image-resizer';
 import { useTheme } from '../theme/ThemeContext';
 import Avatar from '../components/Avatar';
 import BackupService from '../services/BackupService';
+import ToneSelectionModal from '../components/ToneSelectionModal';
+import { NOTIFICATION_TONES } from '../config/ToneConfig';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HEADER_HEIGHT = 180;
@@ -75,6 +79,11 @@ export default function ProfileScreen({ navigation }: any) {
     const [showAllDues, setShowAllDues] = useState(false);
     const { colors, isDark, themeMode } = useTheme();
 
+    const [vibrationEnabled, setVibrationEnabled] = useState(true);
+    const [vibrationIntensity, setVibrationIntensity] = useState(100);
+    const [notificationTone, setNotificationTone] = useState('default');
+    const [showToneModal, setShowToneModal] = useState(false);
+
     const toggleTheme = async (mode: 'system' | 'light' | 'dark') => {
         dispatch(setThemeMode(mode));
         await persistTheme(mode);
@@ -93,9 +102,19 @@ export default function ProfileScreen({ navigation }: any) {
         }
     };
 
+    const loadNotificationSettings = async () => {
+        const vibration = await AsyncStorage.getItem('app_vibration_enabled');
+        const intensity = await AsyncStorage.getItem('app_vibration_intensity');
+        const tone = await AsyncStorage.getItem('app_notification_tone');
+        if (vibration !== null) setVibrationEnabled(vibration === 'true');
+        if (intensity !== null) setVibrationIntensity(parseInt(intensity, 10));
+        if (tone !== null) setNotificationTone(tone);
+    };
+
     useFocusEffect(
         useCallback(() => {
             fetchContributions();
+            loadNotificationSettings();
         }, [user])
     );
 
@@ -203,6 +222,13 @@ export default function ProfileScreen({ navigation }: any) {
         await AsyncStorage.setItem('language', newLang);
         i18n.changeLanguage(newLang);
         dispatch(setLanguage(newLang)); // Changed from setLanguage(newLang) to dispatch(setLanguage(newLang))
+    };
+
+    const updateNotificationSetting = async (key: string, value: string) => {
+        await AsyncStorage.setItem(key, value);
+        if (key === 'app_vibration_enabled') setVibrationEnabled(value === 'true');
+        if (key === 'app_vibration_intensity') setVibrationIntensity(parseInt(value, 10));
+        if (key === 'app_notification_tone') setNotificationTone(value);
     };
 
     const [showMpinModal, setShowMpinModal] = useState(false);
@@ -496,6 +522,57 @@ export default function ProfileScreen({ navigation }: any) {
 
     const renderSettingsTab = () => (
         <View style={styles.tabContent}>
+            {/* Notifications */}
+            <View style={styles.settingsSection}>
+                <Text style={styles.settingsSectionTitle}>🔔 Notifications</Text>
+                <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>📳</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>Vibration</Text>
+                        </View>
+                        <Switch
+                            value={vibrationEnabled}
+                            onValueChange={(val) => updateNotificationSetting('app_vibration_enabled', val.toString())}
+                            trackColor={{ false: '#e0e0e0', true: '#bfe6c8' }}
+                            thumbColor={vibrationEnabled ? '#1a5f2a' : '#999'}
+                        />
+                    </View>
+                    {vibrationEnabled && (
+                        <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                                <Text style={{ fontSize: 12, color: colors.textSecondary }}>Intensity</Text>
+                                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: 'bold' }}>{vibrationIntensity}%</Text>
+                            </View>
+                            <Slider
+                                style={{ width: '100%', height: 40 }}
+                                minimumValue={0}
+                                maximumValue={100}
+                                step={1}
+                                value={vibrationIntensity}
+                                onSlidingComplete={(val) => updateNotificationSetting('app_vibration_intensity', val.toString())}
+                                minimumTrackTintColor={colors.primary}
+                                maximumTrackTintColor={colors.border}
+                                thumbTintColor={colors.primary}
+                            />
+                        </View>
+                    )}
+                    <View style={[styles.settingDivider, { backgroundColor: colors.border }]} />
+                    <TouchableOpacity
+                        style={styles.settingRow}
+                        onPress={() => setShowToneModal(true)}
+                    >
+                        <View style={styles.settingRowLeft}>
+                            <Text style={styles.settingIcon}>🎵</Text>
+                            <Text style={[styles.settingLabel, { color: colors.text }]}>Notification Tone</Text>
+                        </View>
+                        <Text style={[styles.settingLabel, { color: colors.primary, fontWeight: 'bold' }]}>
+                            {NOTIFICATION_TONES.find(t => t.id === notificationTone)?.name || 'Default'} ›
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
             {/* Language */}
             <View style={styles.settingsSection}>
                 <Text style={styles.settingsSectionTitle}>🌐 {t('profile.language') || 'Language'}</Text>
@@ -792,6 +869,16 @@ export default function ProfileScreen({ navigation }: any) {
                     </KeyboardAvoidingView>
                 </View>
             </Modal>
+
+            <ToneSelectionModal
+                visible={showToneModal}
+                selectedTone={notificationTone}
+                onSelect={(toneId) => {
+                    updateNotificationSetting('app_notification_tone', toneId);
+                    setShowToneModal(false);
+                }}
+                onClose={() => setShowToneModal(false)}
+            />
         </View>
     );
 }

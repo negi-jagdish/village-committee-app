@@ -14,18 +14,7 @@ class PushNotificationService {
             // 2. Clear badge
             await notifee.setBadgeCount(0);
 
-            // 3. Create a channel for notifications
-            await notifee.createChannel({
-                id: 'chamdoli_chat_v5',
-                name: 'Chat Messages',
-                sound: 'jai_chamdoli',
-                importance: AndroidImportance.HIGH,
-                visibility: AndroidVisibility.PUBLIC,
-                vibration: true,
-                vibrationPattern: [300, 500],
-            });
-
-            // 4. Register for remote notifications
+            // 3. Register for remote notifications
             if (!messaging().isDeviceRegisteredForRemoteMessages) {
                 await messaging().registerDeviceForRemoteMessages();
             }

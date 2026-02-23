@@ -61,7 +61,7 @@ const MessageBubble = ({ item, isMe, colors, onLongPress, onPress, onImagePress,
             <View style={[
                 styles.bubble,
                 isMe ? styles.bubbleRight : styles.bubbleLeft,
-                { backgroundColor: isMe ? colors.primary : (colors.isDark ? '#333' : '#fff') }
+                { backgroundColor: isMe ? colors.primary : (colors.isDark || colors.background === '#121212' ? '#262626' : '#fff') }
             ]}>
                 {!isMe && <Text style={[styles.senderName, { color: colors.primary }]}>{item.sender_name}</Text>}
 
@@ -126,13 +126,13 @@ const MessageBubble = ({ item, isMe, colors, onLongPress, onPress, onImagePress,
 
                     return (
                         <TouchableOpacity
-                            style={styles.reactionPill}
+                            style={[styles.reactionPill, { backgroundColor: colors.isDark || colors.background === '#121212' ? '#333' : '#fff', borderColor: colors.isDark || colors.background === '#121212' ? '#444' : '#f0f0f0' }]}
                             activeOpacity={0.7}
                             onPress={() => {
                                 if (onReactionDetails) onReactionDetails();
                             }}
                         >
-                            <Text style={styles.reactionText}>{displayEmojis} {totalCount > 1 && totalCount}</Text>
+                            <Text style={[styles.reactionText, { color: colors.isDark || colors.background === '#121212' ? '#ddd' : '#333' }]}>{displayEmojis} {totalCount > 1 && totalCount}</Text>
                         </TouchableOpacity>
                     );
                 })()}
