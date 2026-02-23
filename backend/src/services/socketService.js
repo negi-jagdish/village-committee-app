@@ -80,16 +80,17 @@ const init = (server) => {
         });
 
         socket.on('join_room', (room) => {
-            console.log(`User ${socket.user.id} joining room: ${room}`);
+            console.log(`[Socket] User ${socket.user.id} (${socket.user.name}) joining room: ${room}`);
             socket.join(room);
         });
 
         socket.on('leave_room', (room) => {
-            console.log(`User ${socket.user.id} leaving room: ${room}`);
+            console.log(`[Socket] User ${socket.user.id} (${socket.user.name}) leaving room: ${room}`);
             socket.leave(room);
         });
 
         socket.on('typing', (data) => {
+            console.log(`[Socket] Typing event from ${socket.user.name} in ${data.room}: ${data.isTyping}`);
             // Broadcast to room excluding sender
             socket.to(data.room).emit('display_typing', {
                 userId: socket.user.id,

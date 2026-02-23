@@ -147,27 +147,59 @@ export default function ChatScreen() {
     };
 
     // Initial fetch, focus tracking, and DB re-syncs
+    // Separate Effect for Socket Room Management
     useEffect(() => {
         dispatch(setActiveGroup(groupId));
         fetchMessages();
 
-        // Typing listener
+        const room = `group_${groupId}`;
+        const join = () => {
+            if (socket) {
+                socket.emit('join_room', room);
+                console.log('[ChatScreen] Joined room:', room);
+            }
+        };
+
+        join();
+
         if (socket) {
-            socket.on('display_typing', (data: { userId: number, name: string, isTyping: boolean }) => {
-                console.log('[ChatScreen] Recevied typing event:', data);
-                if (data.userId !== userId) {
-                    setTypingUser(data.isTyping ? data.name : null);
-                }
-            });
+            socket.on('connect', join);
         }
 
-        // Fetch user's role in this group and detect chat type
+        return () => {
+            dispatch(setActiveGroup(null));
+            if (socket) {
+                socket.off('connect', join);
+                socket.emit('leave_room', room);
+                console.log('[ChatScreen] Left room:', room);
+            }
+        };
+    }, [groupId, socket]);
+
+    // Separate Effect for Socket Listeners
+    useEffect(() => {
+        if (!socket) return;
+
+        const onTyping = (data: { userId: number, name: string, isTyping: boolean }) => {
+            console.log('[ChatScreen] typing event received:', data);
+            if (data.userId !== userId) {
+                setTypingUser(data.isTyping ? data.name : null);
+            }
+        };
+
+        socket.on('display_typing', onTyping);
+        return () => {
+            socket.off('display_typing', onTyping);
+        };
+    }, [socket, userId]);
+
+    // Metadata and Role effect
+    useEffect(() => {
         chatAPI.getGroupDetails(groupId).then((res: any) => {
             const members = res.data?.members || [];
             const me = members.find((m: any) => m.member_id === userId || m.id === userId);
             setIsGroupAdmin(me?.role === 'admin');
 
-            // Detect private chat type
             const groupType = res.data?.type || 'group';
             setChatType(groupType);
             if (groupType === 'private') {
@@ -175,38 +207,21 @@ export default function ChatScreen() {
                 if (other) setOtherMemberId(other.member_id || other.id);
             }
         }).catch(() => { });
-
-        // Join the socket room for real-time message delivery
-        if (socket) {
-            const room = `group_${groupId}`;
-            socket.emit('join_room', room);
-            console.log('Joined socket room:', room);
-        }
-
-        return () => {
-            dispatch(setActiveGroup(null));
-            // Leave the socket room when navigating away
-            if (socket) {
-                const room = `group_${groupId}`;
-                socket.emit('leave_room', room);
-                socket.off('display_typing');
-                console.log('Left socket room:', room);
-            }
-        };
-    }, [groupId, socket, userId]);
+    }, [groupId, userId]);
 
     const handleInputTextChange = (text: string) => {
         setInputText(text);
         if (!socket) return;
 
-        // Emit typing start
-        socket.emit('typing', { room: `group_${groupId}`, isTyping: true });
+        const room = `group_${groupId}`;
+        console.log('[ChatScreen] Emitting typing: true to', room);
+        socket.emit('typing', { room, isTyping: true });
 
-        // Debounce to emit typing stop
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit('typing', { room: `group_${groupId}`, isTyping: false });
-        }, 1500);
+            console.log('[ChatScreen] Emitting typing: false to', room);
+            socket.emit('typing', { room, isTyping: false });
+        }, 3000); // Increased to 3s for better visibility
     };
 
     // Re-fetch when ChatSyncService signals a change
