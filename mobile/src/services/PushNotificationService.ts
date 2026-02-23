@@ -57,7 +57,7 @@ class PushNotificationService {
             });
 
         } catch (error) {
-            console.error('PushNotificationService Init Error:', error);
+            console.warn('PushNotificationService Init Warning (FCM might be unavailable):', error);
         }
     }
 
@@ -67,8 +67,10 @@ class PushNotificationService {
             if (token) {
                 await this.saveTokenToServer(token);
             }
-        } catch (error) {
-            console.error('Failed to get FCM token:', error);
+        } catch (error: any) {
+            // Service might be unavailable on emulators or poor network
+            // Using warn instead of error to avoid development RedBox
+            console.warn('FCM Token Refresh: Service not available or network error.', error?.message || error);
         }
     }
 

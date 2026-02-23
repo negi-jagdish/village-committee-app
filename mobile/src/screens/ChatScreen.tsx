@@ -155,21 +155,28 @@ export default function ChatScreen() {
         const room = `group_${groupId}`;
         const join = () => {
             if (socket) {
+                console.log('[ChatScreen] Emitting join_room for:', room, 'Connected:', socket.connected);
                 socket.emit('join_room', room);
-                console.log('[ChatScreen] Joined room:', room);
+            } else {
+                console.log('[ChatScreen] Cannot join room, socket is null');
             }
         };
 
-        join();
+        const onConnect = () => {
+            console.log('[ChatScreen] Socket connected event triggered, re-joining room');
+            join();
+        };
+
+        join(); // Join immediately on mount / groupId change
 
         if (socket) {
-            socket.on('connect', join);
+            socket.on('connect', onConnect);
         }
 
         return () => {
             dispatch(setActiveGroup(null));
             if (socket) {
-                socket.off('connect', join);
+                socket.off('connect', onConnect);
                 socket.emit('leave_room', room);
                 console.log('[ChatScreen] Left room:', room);
             }
@@ -178,18 +185,30 @@ export default function ChatScreen() {
 
     // Separate Effect for Socket Listeners
     useEffect(() => {
+        console.log('[ChatScreen] Listeners effect running. Socket available:', !!socket);
         if (!socket) return;
 
         const onTyping = (data: { userId: number, name: string, isTyping: boolean }) => {
-            console.log('[ChatScreen] typing event received:', data);
-            if (data.userId !== userId) {
-                setTypingUser(data.isTyping ? data.name : null);
+            const currentUserIdStr = String(userId);
+            const eventUserIdStr = String(data.userId);
+            console.log(`[ChatScreen] Typing event: ${data.name} (${eventUserIdStr}), typing: ${data.isTyping}. Me: ${currentUserIdStr}`);
+
+            if (eventUserIdStr !== currentUserIdStr) {
+                setTypingUser(data.isTyping ? (data.name || 'Someone') : null);
             }
         };
 
+        const onRoomJoined = (data: any) => {
+            console.log('[ChatScreen] Server confirmed room join:', data);
+        };
+
         socket.on('display_typing', onTyping);
+        socket.on('joined_room', onRoomJoined);
+
         return () => {
+            console.log('[ChatScreen] Cleaning up listeners');
             socket.off('display_typing', onTyping);
+            socket.off('joined_room', onRoomJoined);
         };
     }, [socket, userId]);
 
@@ -211,17 +230,27 @@ export default function ChatScreen() {
 
     const handleInputTextChange = (text: string) => {
         setInputText(text);
-        if (!socket) return;
+        if (!socket) {
+            console.log('[ChatScreen] Skip typing emit: socket is null');
+            return;
+        }
 
         const room = `group_${groupId}`;
-        console.log('[ChatScreen] Emitting typing: true to', room);
-        socket.emit('typing', { room, isTyping: true });
+        // Only emit if connected
+        if (socket.connected) {
+            console.log('[ChatScreen] Emitting typing: true to', room);
+            socket.emit('typing', { room, isTyping: true });
+        } else {
+            console.log('[ChatScreen] Skip typing emit: socket disconnected');
+        }
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
-            console.log('[ChatScreen] Emitting typing: false to', room);
-            socket.emit('typing', { room, isTyping: false });
-        }, 3000); // Increased to 3s for better visibility
+            if (socket && socket.connected) {
+                console.log('[ChatScreen] Emitting typing: false to', room);
+                socket.emit('typing', { room, isTyping: false });
+            }
+        }, 3000);
     };
 
     // Re-fetch when ChatSyncService signals a change
@@ -810,7 +839,7 @@ const styles = StyleSheet.create({
     },
     backButton: { padding: 5 },
     headerAvatar: { width: 40, height: 40, borderRadius: 20, marginHorizontal: 10 },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', flex: 1 },
+    headerTitle: { fontSize: 18, fontWeight: 'bold' },
     listContent: { padding: 10, paddingBottom: 20 },
     bubble: {
         maxWidth: '80%',

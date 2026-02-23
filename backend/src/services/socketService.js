@@ -82,6 +82,7 @@ const init = (server) => {
         socket.on('join_room', (room) => {
             console.log(`[Socket] User ${socket.user.id} (${socket.user.name}) joining room: ${room}`);
             socket.join(room);
+            socket.emit('joined_room', { room });
         });
 
         socket.on('leave_room', (room) => {
@@ -90,11 +91,12 @@ const init = (server) => {
         });
 
         socket.on('typing', (data) => {
-            console.log(`[Socket] Typing event from ${socket.user.name} in ${data.room}: ${data.isTyping}`);
+            const userName = socket.user.name || 'someone';
+            console.log(`[Socket] Typing: ${userName} (${socket.user.id}) in ${data.room}: ${data.isTyping}`);
             // Broadcast to room excluding sender
             socket.to(data.room).emit('display_typing', {
                 userId: socket.user.id,
-                name: socket.user.name,
+                name: userName,
                 isTyping: data.isTyping
             });
         });
