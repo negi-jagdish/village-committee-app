@@ -143,7 +143,7 @@ class ChatSyncService {
                                 // Play Custom Sound/Vibrate/Foreground Notification
                                 const isCurrentlyInChat = activeGroupId === msg.group_id;
                                 const chatName = msg.display_name || msg.group_name || msg.sender_name || 'Village Member';
-                                NotificationService.displayChatNotification(chatName, msg.content, isCurrentlyInChat, msg.group_id);
+                                NotificationService.displayChatNotification(chatName, msg.content, isCurrentlyInChat, Number(msg.group_id));
                             }
                         }
                     }
@@ -204,7 +204,7 @@ class ChatSyncService {
 
                     // We also show a notification here since the user is not actively seeing the group chat!
                     const chatName = msg.display_name || msg.group_name || msg.sender_name || 'Village Member';
-                    NotificationService.displayChatNotification(chatName, msg.content, false, msg.group_id);
+                    NotificationService.displayChatNotification(chatName, msg.content, false, Number(msg.group_id));
                 }
             }, (error: any) => {
                 console.error("[ChatSync] Error updating chat list:", error);

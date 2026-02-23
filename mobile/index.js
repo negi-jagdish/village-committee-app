@@ -1,18 +1,20 @@
 import { AppRegistry } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import App from './App';
 import { name as appName } from './app.json';
 import { NotificationService } from './src/services/NotificationService';
 
 // Background message handler
-messaging().setBackgroundMessageHandler(async remoteMessage => {
+setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
-    if (remoteMessage.data) {
+    const data = remoteMessage.data;
+    if (data) {
+        const groupId = data.group_id || data.groupId;
         await NotificationService.displayChatNotification(
-            remoteMessage.data.title || 'Devbhoomi Chamdoli',
-            remoteMessage.data.body || 'New message arrived',
+            data.title || data.display_name || 'Village Member',
+            data.body || data.content || 'New message arrived',
             false,
-            remoteMessage.data.group_id || remoteMessage.data.groupId
+            groupId
         );
     }
 });

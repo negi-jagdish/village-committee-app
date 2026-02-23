@@ -28,7 +28,7 @@
       
       <meta-data
         android:name="com.google.firebase.messaging.default_notification_channel_id"
-        android:value="chamdoli_chat_v5"
+        android:value="v11_chat_default"
         tools:replace="android:value" />
       <meta-data
         android:name="com.google.firebase.messaging.default_notification_icon"

@@ -1,38 +1,55 @@
-import messaging from '@react-native-firebase/messaging';
+import {
+    getMessaging,
+    getToken,
+    onMessage,
+    onTokenRefresh,
+    registerDeviceForRemoteMessages,
+    isDeviceRegisteredForRemoteMessages
+} from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 import { chatAPI } from '../api/client';
 import notifee, { AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import { NotificationService } from './NotificationService';
 
 class PushNotificationService {
     async initialize() {
         try {
-            // 1. Request permissions
+            const messaging = getMessaging();
+
+            // 1. Request permissions and initialize channels
             if (Platform.OS === 'android') {
                 await notifee.requestPermission();
+                await NotificationService.initialize();
             }
 
             // 2. Clear badge
             await notifee.setBadgeCount(0);
 
             // 3. Register for remote notifications
-            if (!messaging().isDeviceRegisteredForRemoteMessages) {
-                await messaging().registerDeviceForRemoteMessages();
+            if (!isDeviceRegisteredForRemoteMessages(messaging)) {
+                await registerDeviceForRemoteMessages(messaging);
             }
 
             // 5. Get and save token
             await this.refreshFCMToken();
 
             // 6. Listen for token refresh
-            messaging().onTokenRefresh(token => {
+            onTokenRefresh(messaging, token => {
                 this.saveTokenToServer(token);
             });
 
             // 7. Handle foreground messages
-            messaging().onMessage(async remoteMessage => {
+            onMessage(messaging, async remoteMessage => {
                 console.log('FCM Foreground message received:', remoteMessage);
-                // Socket should handle foreground, but if screen is off but socket connected, 
-                // we might want to show local notification. 
-                // Actually, usually onMessage is only if app is open.
+                const data = remoteMessage.data;
+                if (data) {
+                    const groupId = (data.group_id || data.groupId) as any;
+                    const title = (data.title || data.display_name || 'Village Member') as string;
+                    const body = (data.body || data.content || 'New message arrived') as string;
+
+                    // Call the notification service just like the socket does
+                    await NotificationService.displayChatNotification(title, body, true, groupId);
+                }
             });
 
         } catch (error) {
@@ -42,7 +59,7 @@ class PushNotificationService {
 
     async refreshFCMToken() {
         try {
-            const token = await messaging().getToken();
+            const token = await getToken(getMessaging());
             if (token) {
                 await this.saveTokenToServer(token);
             }

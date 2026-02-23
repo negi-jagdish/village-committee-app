@@ -1,6 +1,6 @@
 import notifee, { AndroidImportance, AndroidVisibility, AndroidCategory } from '@notifee/react-native';
 import Sound from 'react-native-sound';
-import { Platform } from 'react-native';
+import { Platform, Vibration } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDB } from '../db/database';
 
@@ -8,8 +8,34 @@ import { getDB } from '../db/database';
 Sound.setCategory('Playback');
 
 export class NotificationService {
+    private static lastNotificationKey: string = '';
+    private static lastNotificationTime: number = 0;
+
+    static async initialize() {
+        // Create default channel used by FCM system notifications as fallback
+        await notifee.createChannel({
+            id: 'v11_chat_default',
+            name: 'General Notifications',
+            importance: AndroidImportance.HIGH,
+            visibility: AndroidVisibility.PUBLIC,
+            sound: 'altair',
+        });
+    }
+
     static async displayChatNotification(title: string, body: string, isForeground: boolean = false, groupId?: string | number) {
         try {
+            // Force groupId to string/number for key
+            const gIdStr = groupId?.toString() || 'global';
+            const dedupeKey = `${gIdStr}:${body}`; // Use body for better dedupe
+            const now = Date.now();
+
+            // De-duplication check (prevent socket + FCM double firing)
+            if (now - this.lastNotificationTime < 1500 && this.lastNotificationKey === dedupeKey) {
+                return;
+            }
+            this.lastNotificationTime = now;
+            this.lastNotificationKey = dedupeKey;
+
             // Check for mute status and custom settings if groupId is provided
             let customTone: string | null = null;
             let vibrationEnabled = true;
@@ -17,10 +43,12 @@ export class NotificationService {
             let isMuted = false;
 
             if (groupId) {
+                const gIdNum = typeof groupId === 'string' ? parseInt(groupId, 10) : groupId;
+
                 const db = await getDB();
                 const chat: any = await new Promise((resolve) => {
                     db.transaction((tx: any) => {
-                        tx.executeSql('SELECT * FROM local_chats WHERE id = ?', [groupId], (_: any, result: any) => {
+                        tx.executeSql('SELECT * FROM local_chats WHERE id = ?', [gIdNum], (_: any, result: any) => {
                             if (result.rows.length > 0) resolve(result.rows.item(0));
                             else resolve(null);
                         });
@@ -29,8 +57,14 @@ export class NotificationService {
 
                 if (chat) {
                     if (chat.mute_until) {
-                        if (chat.mute_until === 'always') isMuted = true;
-                        else if (new Date(chat.mute_until) > new Date()) isMuted = true;
+                        if (chat.mute_until === 'always') {
+                            isMuted = true;
+                        } else {
+                            const muteExpiry = new Date(chat.mute_until);
+                            if (!isNaN(muteExpiry.getTime()) && muteExpiry > new Date()) {
+                                isMuted = true;
+                            }
+                        }
                     }
                     customTone = chat.notification_tone;
                     vibrationEnabled = chat.vibration_enabled !== 0;
@@ -38,46 +72,47 @@ export class NotificationService {
                 }
             }
 
-            // If muted, just stop here (even in foreground, per usual behavior of mutes)
+            // If muted, just stop here
             if (isMuted) return;
 
             // Load app-level settings if not custom
-            if (customTone === null || customTone === 'default') {
+            if (!customTone || customTone === 'default') {
                 const appTone = await AsyncStorage.getItem('app_notification_tone');
                 customTone = appTone || 'default';
             }
 
             const appVibration = await AsyncStorage.getItem('app_vibration_enabled');
-            if (appVibration !== null && !groupId) { // App level only if no chat setting or default
+            if (appVibration !== null && !groupId) {
                 vibrationEnabled = appVibration === 'true';
             }
 
-            if (!groupId || (groupId && vibrationIntensity === 100)) {
+            if (!groupId) {
                 const appIntensity = await AsyncStorage.getItem('app_vibration_intensity');
-                if (appIntensity !== null && !groupId) {
+                if (appIntensity !== null) {
                     vibrationIntensity = parseInt(appIntensity, 10);
                 }
             }
 
+            // Designated Default: use altair if 'default' is requested
+            const finalTone = (customTone === 'default' || !customTone) ? 'altair' : customTone.toLowerCase();
+
             if (isForeground) {
-                this.playChatSound(customTone);
+                // In foreground: Play sound and Vibrate manually
+                this.playChatSound(finalTone, vibrationEnabled, vibrationIntensity);
                 return;
             }
 
-            // Create a channel ID based on tone and vibration to force Android to use correct settings
-            const soundName = customTone && customTone !== 'default' ? customTone : 'default';
-            // Use sound name as part of the ID, and a salt to ensure fresh channel if we ever change them
-            const channelId = `v7_chat_${soundName}_v${vibrationEnabled ? '1' : '0'}_i${vibrationIntensity}`;
+            // Android Channel ID: Standardized pattern
+            const channelId = `v11_chat_${finalTone}_v${vibrationEnabled ? '1' : '0'}_i${vibrationIntensity}`;
 
             // Map intensity 0-100 to vibration pattern [wait, vibrate]
-            // Standard is [300, 500]. We scale 500 based on intensity.
-            const vibPattern = vibrationEnabled ? [300, Math.round(vibrationIntensity * 5)] : [];
+            const vibPattern = vibrationEnabled ? [300, Math.max(50, Math.round(vibrationIntensity * 5))] : [];
 
             await notifee.createChannel({
                 id: channelId,
                 name: 'Chat Messages',
                 importance: AndroidImportance.HIGH,
-                sound: soundName,
+                sound: finalTone,
                 vibration: vibrationEnabled,
                 vibrationPattern: vibPattern,
                 visibility: AndroidVisibility.PUBLIC,
@@ -91,12 +126,11 @@ export class NotificationService {
                     category: AndroidCategory.MESSAGE,
                     smallIcon: 'ic_launcher',
                     pressAction: { id: 'default' },
-                    sound: soundName,
                     importance: AndroidImportance.HIGH,
                     visibility: AndroidVisibility.PUBLIC,
                 },
                 ios: {
-                    sound: soundName === 'default' ? 'default' : `${soundName}.ogg`,
+                    sound: `${finalTone}.ogg`,
                     critical: true,
                 }
             });
@@ -105,18 +139,27 @@ export class NotificationService {
         }
     }
 
-    static playChatSound(toneName: string | null = 'default') {
+    static playChatSound(toneName: string, vibrate: boolean = true, intensity: number = 100) {
         try {
-            if (!toneName || toneName === 'default') {
-                return;
+            // Handle Vibration (Sync with background pattern: [wait, vibrate])
+            if (vibrate) {
+                const duration = Math.max(50, Math.round(intensity * 5));
+                if (Platform.OS === 'android') {
+                    Vibration.vibrate([300, duration], false);
+                } else {
+                    Vibration.vibrate(duration);
+                }
             }
 
-            const soundFile = `${toneName}.ogg`;
+            // Handle Sound
+            // On Android, res/raw files should NOT include the extension in react-native-sound
+            const soundFile = Platform.OS === 'android' ? toneName : `${toneName}.ogg`;
             const sound = new Sound(soundFile, Sound.MAIN_BUNDLE, (error) => {
                 if (error) {
-                    console.log('Sound load error:', error);
+                    console.log('Sound load error:', error, soundFile);
                     return;
                 }
+                sound.setVolume(1.0);
                 sound.play((success) => sound.release());
             });
         } catch (err) {
