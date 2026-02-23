@@ -224,25 +224,15 @@ exports.sendMessage = async (req, res) => {
                 (groupInfo[0]?.group_name || 'Village Group');
 
             const message = {
-                notification: {
-                    title: chatName,
-                    body: content.startsWith('/uploads/') ? 'Sent an attachment' : content,
-                },
                 data: {
                     groupId: groupId.toString(),
                     type: isPrivate ? 'private' : 'group',
+                    title: chatName,
+                    body: content.startsWith('/uploads/') ? 'Sent an attachment' : content,
+                    sound: 'altair', // Default app sound
                 },
                 android: {
                     priority: 'high',
-                    notification: {
-                        sound: 'jai_chamdoli',
-                        channelId: 'chamdoli_chat_v5',
-                        priority: 'max',
-                        visibility: 'public',
-                        defaultSound: false,
-                        defaultVibrateTimings: true,
-                        defaultLightSettings: true
-                    }
                 },
                 tokens: tokens,
             };
