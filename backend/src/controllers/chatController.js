@@ -439,6 +439,21 @@ exports.createGroup = async (req, res) => {
             await db.query('INSERT INTO group_members (group_id, member_id, role) VALUES ?', [values]);
         }
 
+        // --- BROADCAST SYSTEM MESSAGES (WhatsApp Style) ---
+        // This also ensures the group appears instantly for all members via chat_list_update
+        const [creator] = await db.query('SELECT name FROM members WHERE id = ?', [creatorId]);
+        const creatorName = creator[0]?.name || 'Admin';
+
+        // 1. "X created group 'GroupName'"
+        await broadcastSystemMessage(groupId, `${creatorName} created group "${name}"`);
+
+        // 2. "X added Y, Z..."
+        if (otherMemberIds.length > 0) {
+            const [addedMembers] = await db.query('SELECT name FROM members WHERE id IN (?)', [otherMemberIds]);
+            const addedNames = addedMembers.map(m => m.name).join(', ');
+            await broadcastSystemMessage(groupId, `${creatorName} added ${addedNames}`);
+        }
+
         res.status(201).json({ id: groupId, name, type: 'group' });
 
     } catch (error) {
