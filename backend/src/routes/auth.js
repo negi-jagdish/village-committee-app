@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, role: user.role },
+            { id: user.id, role: user.role, name: user.name },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );
@@ -145,7 +145,7 @@ router.post('/login-sim', async (req, res) => {
 
         // Generate Token
         const token = jwt.sign(
-            { id: user.id, role: user.role },
+            { id: user.id, role: user.role, name: user.name },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );
@@ -213,7 +213,7 @@ router.post('/login-mpin', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, role: user.role },
+            { id: user.id, role: user.role, name: user.name },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN }
         );

@@ -154,7 +154,7 @@ export default function ChatScreen() {
         // Typing listener
         if (socket) {
             socket.on('display_typing', (data: { userId: number, name: string, isTyping: boolean }) => {
-                // If it's a group chat, we can show which user. If private, just "typing..."
+                console.log('[ChatScreen] Recevied typing event:', data);
                 if (data.userId !== userId) {
                     setTypingUser(data.isTyping ? data.name : null);
                 }
@@ -193,7 +193,7 @@ export default function ChatScreen() {
                 console.log('Left socket room:', room);
             }
         };
-    }, [groupId, socket]);
+    }, [groupId, socket, userId]);
 
     const handleInputTextChange = (text: string) => {
         setInputText(text);
@@ -649,7 +649,9 @@ export default function ChatScreen() {
                             <View style={{ flex: 1, marginLeft: 10 }}>
                                 <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>{name}</Text>
                                 {typingUser && (
-                                    <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '500' }}>{typingUser} is typing...</Text>
+                                    <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '500' }}>
+                                        {chatType === 'private' ? 'typing...' : `${typingUser} is typing...`}
+                                    </Text>
                                 )}
                             </View>
                         </TouchableOpacity>
