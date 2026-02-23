@@ -62,6 +62,9 @@ export default function ChatScreen() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
+    const [typingUser, setTypingUser] = useState<string | null>(null);
+    const typingTimeoutRef = useRef<any>(null);
+
     const fetchMessages = async (silent = false, pageNum = 0) => {
         if (!silent && pageNum === 0) setLoading(true);
         if (pageNum > 0) setLoadingMore(true);
@@ -148,6 +151,16 @@ export default function ChatScreen() {
         dispatch(setActiveGroup(groupId));
         fetchMessages();
 
+        // Typing listener
+        if (socket) {
+            socket.on('display_typing', (data: { userId: number, name: string, isTyping: boolean }) => {
+                // If it's a group chat, we can show which user. If private, just "typing..."
+                if (data.userId !== userId) {
+                    setTypingUser(data.isTyping ? data.name : null);
+                }
+            });
+        }
+
         // Fetch user's role in this group and detect chat type
         chatAPI.getGroupDetails(groupId).then((res: any) => {
             const members = res.data?.members || [];
@@ -176,10 +189,25 @@ export default function ChatScreen() {
             if (socket) {
                 const room = `group_${groupId}`;
                 socket.emit('leave_room', room);
+                socket.off('display_typing');
                 console.log('Left socket room:', room);
             }
         };
     }, [groupId, socket]);
+
+    const handleInputTextChange = (text: string) => {
+        setInputText(text);
+        if (!socket) return;
+
+        // Emit typing start
+        socket.emit('typing', { room: `group_${groupId}`, isTyping: true });
+
+        // Debounce to emit typing stop
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit('typing', { room: `group_${groupId}`, isTyping: false });
+        }, 1500);
+    };
 
     // Re-fetch when ChatSyncService signals a change
     useEffect(() => {
@@ -618,7 +646,12 @@ export default function ChatScreen() {
                             }}
                         >
                             <Avatar uri={icon} name={name} size={40} style={styles.headerAvatar} />
-                            <Text style={[styles.headerTitle, { color: colors.text }]}>{name}</Text>
+                            <View style={{ flex: 1, marginLeft: 10 }}>
+                                <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>{name}</Text>
+                                {typingUser && (
+                                    <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '500' }}>{typingUser} is typing...</Text>
+                                )}
+                            </View>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -682,7 +715,7 @@ export default function ChatScreen() {
                             placeholder="Message..."
                             placeholderTextColor={colors.textSecondary}
                             value={inputText}
-                            onChangeText={setInputText}
+                            onChangeText={handleInputTextChange}
                             multiline
                         />
 

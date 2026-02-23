@@ -628,11 +628,13 @@ const broadcastSystemMessage = async (groupId, content) => {
         );
         const messageId = result.insertId;
 
-        // Fetch full message details
+        // Fetch full message details with group info
         const [newMessage] = await db.query(
-            `SELECT m.*, u.name as sender_name, u.profile_picture as sender_avatar
+            `SELECT m.*, u.name as sender_name, u.profile_picture as sender_avatar,
+             cg.name as group_name, cg.type as group_type, cg.icon_url as group_icon
              FROM messages m
              LEFT JOIN members u ON m.sender_id = u.id
+             LEFT JOIN chat_groups cg ON m.group_id = cg.id
              WHERE m.id = ?`,
             [messageId]
         );
