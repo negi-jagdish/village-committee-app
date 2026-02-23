@@ -53,7 +53,7 @@ export default function ChatListScreen() {
             // Load from SQLite
             db.transaction((tx: any) => {
                 tx.executeSql(
-                    'SELECT * FROM local_chats ORDER BY is_pinned DESC, last_message_time DESC',
+                    'SELECT * FROM local_chats WHERE type = "group" OR last_message_time IS NOT NULL ORDER BY is_pinned DESC, last_message_time DESC',
                     [],
                     (_: any, result: any) => {
                         const loadedChats = [];

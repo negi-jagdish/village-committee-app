@@ -57,7 +57,11 @@ exports.getChatList = async (req, res) => {
             FROM chat_groups g
             JOIN group_members gm ON g.id = gm.group_id
             WHERE gm.member_id = ?
-            ORDER BY last_message_time DESC
+            AND (
+                g.type = 'group'
+                OR EXISTS (SELECT 1 FROM messages WHERE group_id = g.id LIMIT 1)
+            )
+            ORDER BY COALESCE(last_message_time, g.created_at) DESC
         `;
 
         const chamBotIcon = 'http://178.16.138.41/uploads/chambot.png';
