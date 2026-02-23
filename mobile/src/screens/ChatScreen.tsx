@@ -649,41 +649,49 @@ export default function ChatScreen() {
                 ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 10 }} /> : null}
             />
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "padding"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-                style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.borderLight }]}
-            >
-                {replyingTo && (
-                    <View style={[styles.replyPreview, { backgroundColor: colors.background, borderLeftColor: colors.primary }]}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={[styles.replySender, { color: colors.primary }]}>{replyingTo.sender_name}</Text>
-                            <Text numberOfLines={1} style={{ color: colors.textSecondary }}>{replyingTo.content}</Text>
+            {name === 'ChamBot' ? (
+                <View style={[styles.readOnlyContainer, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.readOnlyText, { color: colors.textSecondary }]}>
+                        READ ONLY: ChamBot is for one-way announcements.
+                    </Text>
+                </View>
+            ) : (
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "padding"}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+                    style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.borderLight }]}
+                >
+                    {replyingTo && (
+                        <View style={[styles.replyPreview, { backgroundColor: colors.background, borderLeftColor: colors.primary }]}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.replySender, { color: colors.primary }]}>{replyingTo.sender_name}</Text>
+                                <Text numberOfLines={1} style={{ color: colors.textSecondary }}>{replyingTo.content}</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setReplyingTo(null)}>
+                                <Icon name="close" size={20} color={colors.textSecondary} />
+                            </TouchableOpacity>
                         </View>
-                        <TouchableOpacity onPress={() => setReplyingTo(null)}>
-                            <Icon name="close" size={20} color={colors.textSecondary} />
+                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity style={styles.attachButton} onPress={handleAttachment}>
+                            <Icon name="plus" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+
+                        <TextInput
+                            style={[styles.input, { backgroundColor: isDark ? '#333' : '#f0f0f0', color: colors.text }]}
+                            placeholder="Message..."
+                            placeholderTextColor={colors.textSecondary}
+                            value={inputText}
+                            onChangeText={setInputText}
+                            multiline
+                        />
+
+                        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                            <Icon name="send" size={20} color="#fff" />
                         </TouchableOpacity>
                     </View>
-                )}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <TouchableOpacity style={styles.attachButton} onPress={handleAttachment}>
-                        <Icon name="plus" size={24} color={colors.primary} />
-                    </TouchableOpacity>
-
-                    <TextInput
-                        style={[styles.input, { backgroundColor: isDark ? '#333' : '#f0f0f0', color: colors.text }]}
-                        placeholder="Message..."
-                        placeholderTextColor={colors.textSecondary}
-                        value={inputText}
-                        onChangeText={setInputText}
-                        multiline
-                    />
-
-                    <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-                        <Icon name="send" size={20} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
+            )}
 
             <ImagePreviewModal
                 visible={previewVisible}
@@ -845,5 +853,18 @@ const styles = StyleSheet.create({
     },
     reactionOptionText: {
         fontSize: 24
+    },
+    readOnlyContainer: {
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.05)',
+    },
+    readOnlyText: {
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
+        opacity: 0.8
     }
 });
